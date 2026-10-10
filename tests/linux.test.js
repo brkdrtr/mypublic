@@ -9,7 +9,7 @@ const ctx = { console, module: { exports: {} }, require };
 vm.createContext(ctx);
 const order = ['shell.js'].concat(fs.readdirSync(dir).filter(f => /^ext-.*\.js$/.test(f)).sort(), ['missions.js'], fs.readdirSync(dir).filter(f => /^missions-.*\.js$/.test(f)).sort());
 for (const f of order) vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f });
-const { Shell, CHAPTERS, QUIZ, BADGES, LAB_EXT } = vm.runInContext('({ Shell, CHAPTERS, QUIZ, BADGES, LAB_EXT })', ctx);
+const { Shell, CHAPTERS, QUIZ, BADGES, LAB_EXT, VimEditor } = vm.runInContext('({ Shell, CHAPTERS, QUIZ, BADGES, LAB_EXT, VimEditor })', ctx);
 const sh = new Shell(); let fails = 0; let total = 0;
 const ids = new Set();
 for (const c of CHAPTERS) for (const m of c.missions) {
@@ -19,11 +19,19 @@ for (const c of CHAPTERS) for (const m of c.missions) {
   if (m.setup) m.setup(sh);
   let passed = false;
   for (const line of m.solution.split('\n')) {
-    if (/^(nano|vim|vi) /.test(line)) {
-      /* editor adimi, gorev kendi editorContent alanini verir */
-      const f = line.split(/\s+/)[1];
-      if (m.editorContent) { const abs = sh.resolve(f); const n = sh.node(abs); sh.writeFile(abs, typeof m.editorContent === 'function' ? m.editorContent(n ? n.d : '') : m.editorContent, false, 'nano'); }
-      if (m.check(sh, { line: 'nano', out: '', submit: null })) passed = true;
+    if (/^(sudo )?(nano|vim|vi|crontab -e)\b/.test(line)) {
+      /* editor adimi. editorContent dosya icerigini verir, vimKeys ise tus dizisini vim motorundan gecirir */
+      const root = line.startsWith('sudo ');
+      const f = line.replace(/^sudo /, '').split(/\s+/)[1];
+      const isCron = /crontab -e/.test(line);
+      const abs = isCron ? '__crontab__' : sh.resolve(f);
+      const n = isCron ? null : sh.node(abs);
+      const old = isCron ? sh.crontab : (n ? n.d : '');
+      let content = null;
+      if (m.vimKeys) { const v = new VimEditor(old).feed(typeof m.vimKeys === 'function' ? m.vimKeys(old) : m.vimKeys); sh.vimLog.push(...v.log); if (v.done && v.done.save) content = v.text(); }
+      else if (m.editorContent !== undefined) content = typeof m.editorContent === 'function' ? m.editorContent(old) : m.editorContent;
+      if (content !== null) { if (isCron) sh.crontab = content; else { const was = sh.isRoot; sh.isRoot = root; sh.writeFile(abs, content, false, 'nano'); sh.isRoot = was; } }
+      if (m.check(sh, { line: line.replace(/^sudo /, '').split(/\s+/)[0], out: '', submit: null })) passed = true;
       continue;
     }
     const r = sh.run(line);
