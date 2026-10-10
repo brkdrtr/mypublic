@@ -169,3 +169,28 @@ textarea.answer { min-height: 180px; resize: vertical; line-height: 1.5; }
 .wordrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .wordrow .nl { font-weight: 700; }
 .wordrow .lvl { margin-left: auto; font-size: 12px; color: var(--muted); flex: none; }
+
+/* v3 */
+#tabs button em { font-style: normal; }
+.who-chip { background: var(--card2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 14px; font-weight: 600; }
+#app.picking #tabs, #app.picking .stats { visibility: hidden; }
+.who-screen { text-align: center; padding-top: 6vh; }
+.flag.big { width: 66px; height: 46px; border-radius: 8px; margin: 0 auto 14px; display: flex; }
+.who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+.who-btn { background: var(--card); border: 1.5px solid var(--line); border-radius: 20px; padding: 22px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: var(--shadow); }
+.who-btn .e { font-size: 52px; line-height: 1; }
+.who-btn b { font-size: 20px; }
+.who-btn:active { border-color: var(--brand); }
+.text-in { width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); outline: 0; }
+.text-in:focus { border-color: var(--brand); }
+.diff { white-space: pre-wrap; line-height: 1.7; margin-top: 8px; font-size: 16px; }
+s.del { color: var(--bad); background: var(--bad-bg); text-decoration: line-through; border-radius: 4px; padding: 0 2px; }
+b.ins { color: var(--good); background: var(--good-bg); font-weight: 700; border-radius: 4px; padding: 0 2px; }
+.changes { padding-left: 18px; margin: 8px 0 0; }
+.changes li { margin-bottom: 8px; }
+.score { display: inline-block; padding: 3px 10px; border-radius: 999px; font-weight: 800; font-size: 13px; color: #fff; }
+.score.s1 { background: #b91c1c; } .score.s2 { background: #ea580c; } .score.s3 { background: #ca8a04; } .score.s4 { background: #16a34a; } .score.s5 { background: #15803d; }
+.gap { display: inline-block; min-width: 46px; border-bottom: 2px solid var(--brand); }
+.seg.mini { margin: 0; }
+.seg.mini button { padding: 6px 10px; font-size: 13px; }
+.play:disabled { opacity: .4; }

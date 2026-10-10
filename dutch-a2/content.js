@@ -6,7 +6,7 @@
 const LEZEN = [
   {
     id: 'l1', title: 'Brief van de gemeente', type: 'brief',
-    text: `Beste meneer Yilmaz,\n\nU heeft een nieuw paspoort aangevraagd. Uw paspoort is nu klaar. U kunt het ophalen bij het Stadskantoor in Purmerend.\n\nU moet eerst een afspraak maken. Dat kan via de website van de gemeente of telefonisch via 14 0299. Wij zijn open van maandag tot en met vrijdag van 9.00 tot 16.30 uur. Op donderdag zijn wij ook open tot 20.00 uur.\n\nNeem uw oude paspoort mee. U moet het nieuwe paspoort zelf ophalen. Iemand anders mag het niet voor u ophalen.\n\nLet op! Haal uw paspoort binnen drie maanden op.\n\nMet vriendelijke groet,\n\nAfdeling Burgerzaken\nGemeente Purmerend`,
+    text: `Beste meneer Yilmaz,\n\nU heeft een nieuw paspoort aangevraagd. Uw paspoort is nu klaar. U kunt het ophalen bij het Stadskantoor in Purmerend.\n\nU moet eerst een afspraak maken. Dat kan via de website van de gemeente of telefonisch via 14 0299. Wij zijn open van maandag tot en met vrijdag van 9.00 tot 16.30 uur. Op donderdag zijn wij open tot 20.00 uur.\n\nNeem uw oude paspoort mee. U moet het nieuwe paspoort zelf ophalen. Iemand anders mag het niet voor u ophalen.\n\nLet op! Haal uw paspoort binnen drie maanden op.\n\nMet vriendelijke groet,\n\nAfdeling Burgerzaken\nGemeente Purmerend`,
     questions: [
       { q: 'Wat moet meneer Yilmaz eerst doen?', a: ['Een afspraak maken', 'Zonder afspraak naar het Stadskantoor gaan', 'Een brief terugsturen'] },
       { q: 'Wat moet meneer Yilmaz meenemen?', a: ['Zijn oude paspoort', 'Een pasfoto', 'Zijn rijbewijs'] },
@@ -29,7 +29,7 @@ const LEZEN = [
     questions: [
       { q: 'Hoe laat vertrekt de bus?', a: ['Om 8.45 uur', 'Om 8.30 uur', 'Om 15.00 uur'] },
       { q: 'Wat moet uw kind meenemen?', a: ['Eten en drinken', 'Geld voor de bus', 'Snoep'] },
-      { q: 'U wilt mee met de klas. Wat moet u doen?', a: ['Voor vrijdag een e-mail sturen', 'Op donderdag voor 8.30 uur bellen', 'Naar het museum komen'] }
+      { q: 'U wilt meegaan met de klas. Wat moet u doen?', a: ['Voor vrijdag een e-mail sturen', 'Op donderdag voor 8.30 uur bellen', 'Naar het museum komen'] }
     ]
   },
   {
@@ -43,7 +43,7 @@ const LEZEN = [
   },
   {
     id: 'l5', title: 'Buurtbarbecue', type: 'folder',
-    text: `Buurtvereniging De Gors\nUitnodiging buurtbarbecue\n\nBeste buren,\n\nOp zaterdag 20 juni organiseren wij een barbecue voor de hele buurt. Iedereen is welkom, jong en oud. Het feest is op het grasveld bij de speeltuin in de Bloemstraat. We beginnen om 16.00 uur en stoppen om 21.00 uur.\n\nLeden van de buurtvereniging betalen 5 euro per persoon. Andere buren betalen 8 euro. Kinderen tot 12 jaar eten gratis mee. Er is ook vegetarisch eten en halal vlees.\n\nWilt u komen? Meld u dan voor 13 juni aan bij Petra op nummer 12. U kunt ook een briefje in haar brievenbus doen.\n\nWilt u zelf een stoel meenemen?\n\nTot ziens!`,
+    text: `Buurtvereniging De Gors\nUitnodiging buurtbarbecue\n\nBeste buren,\n\nOp zaterdag 20 juni organiseren wij een barbecue voor de hele buurt. Iedereen is welkom, jong en oud. Het feest is op het grasveld bij de speeltuin in de Bloemstraat. We beginnen om 16.00 uur en stoppen om 21.00 uur.\n\nLeden van de buurtvereniging betalen 5 euro per persoon. Andere buren betalen 8 euro. Kinderen tot 12 jaar eten gratis mee. Er is ook vegetarisch eten en halal vlees.\n\nWilt u komen? Meld u dan voor 13 juni aan bij Petra op nummer 12. U kunt ook een briefje in haar brievenbus doen.\n\nNeem wel zelf een stoel mee.\n\nTot ziens!`,
     questions: [
       { q: 'Waar is de barbecue?', a: ['Op het grasveld bij de speeltuin', 'In het huis van Petra', 'In het buurthuis'] },
       { q: 'Hoeveel betaalt een kind van 8 jaar?', a: ['Niets', '5 euro', '8 euro'] },
@@ -61,7 +61,7 @@ const LEZEN = [
   },
   {
     id: 'l7', title: 'Storing op het spoor', type: 'bericht',
-    text: `Storing tussen Purmerend en Amsterdam Centraal\n\nDoor een kapotte trein rijden er vandaag minder treinen tussen Purmerend en Amsterdam Centraal. Er rijdt maar één trein per uur. De storing duurt waarschijnlijk tot 18.00 uur.\n\nWat kunt u doen?\nReist u naar Amsterdam? Neem dan de bus. Er rijden extra bussen van station Purmerend naar Amsterdam Centraal. U kunt in de bus betalen met uw OV-chipkaart of uw bankpas. U bent ongeveer 30 minuten langer onderweg.\n\nReist u naar Hoorn? Die treinen rijden wel normaal.\n\nKijk voor u vertrekt in de reisplanner in de app. Daar staat altijd de laatste informatie.`,
+    text: `Storing tussen Purmerend en Amsterdam Centraal\n\nDoor een kapotte trein rijden er vandaag minder treinen tussen Purmerend en Amsterdam Centraal. Er rijdt maar één trein per uur. De storing duurt waarschijnlijk tot 18.00 uur.\n\nWat kunt u doen?\nReist u naar Amsterdam? Neem dan de bus. Er rijden extra bussen van station Purmerend naar Amsterdam Centraal. U kunt in de bus betalen met uw OV-chipkaart of uw bankpas. U bent ongeveer 30 minuten langer onderweg.\n\nReist u naar Hoorn? Die treinen rijden wel normaal.\n\nKijk voordat u vertrekt in de reisplanner in de app. Daar staat altijd de laatste informatie.`,
     questions: [
       { q: 'Waarom rijden er minder treinen?', a: ['Er is een trein kapot', 'Er is slecht weer', 'Het personeel staakt'] },
       { q: 'Tot hoe laat duurt de storing waarschijnlijk?', a: ['Tot 18.00 uur', 'Tot 8.00 uur', 'Tot morgen'] },
@@ -73,7 +73,7 @@ const LEZEN = [
     text: `Afvalkalender wijk Weidevenne\n\nGroene container\nGroente, fruit en tuinafval. Elke twee weken op dinsdag.\n\nGrijze container\nRestafval. Elke twee weken op dinsdag, in de andere week.\n\nBlauwe container\nOud papier en karton. Elke vier weken op vrijdag.\n\nGlas\nBreng lege flessen en potten naar de glasbak bij het winkelcentrum.\n\nGrof afval\nHeeft u een oude bank of kast? Maak een afspraak met de gemeente. Wij halen het grof afval bij u thuis op. U kunt het ook zelf naar de milieustraat brengen.\n\nZet de container op de ophaaldag voor 7.30 uur aan de straat. Haal de container dezelfde dag weer weg.`,
     questions: [
       { q: 'Wat doet u met lege flessen?', a: ['Ik breng ze naar de glasbak', 'Ik doe ze in de grijze container', 'Ik doe ze in de blauwe container'] },
-      { q: 'Hoe laat moet de container aan de straat staan?', a: ['Voor 7.30 uur', 'Na 7.30 uur', 'Om 22.00 uur de avond ervoor'] },
+      { q: 'Hoe laat moet de container aan de straat staan?', a: ['Voor 7.30 uur', 'Na 7.30 uur', 'Om 9.00 uur'] },
       { q: 'U heeft een oude bank. Wat kunt u doen?', a: ['Een afspraak maken met de gemeente', 'De bank naast de container zetten', 'De bank in de grijze container doen'] }
     ]
   },
@@ -106,36 +106,36 @@ const LEZEN = [
   },
   {
     id: 'l12', title: 'Vacature schoonmaker', type: 'advertentie',
-    text: `Vacature\nSchoonmaker, 24 uur per week\n\nWij zoeken een schoonmaker voor een groot kantoor in Purmerend.\n\nWat ga je doen?\nJe maakt de kantoren, de keuken en de toiletten schoon. Je werkt meestal alleen.\n\nWerktijden\nJe werkt vier avonden per week, van 17.00 tot 23.00 uur.\n\nWat vragen wij?\nJe bent betrouwbaar en je werkt netjes. Je spreekt een beetje Nederlands. Ervaring is niet nodig, wij leren je het werk.\n\nWat bieden wij?\nEen contract voor een jaar. Daarna kan het contract langer worden. Je krijgt een goed salaris, vakantiegeld en reiskosten.\n\nInteresse? Stuur voor 30 april een e-mail met je cv naar vacature@schoonbedrijf.nl. Bellen mag ook, vraag dan naar Marco.`,
+    text: `Vacature\nSchoonmaker, 24 uur per week\n\nWij zoeken een schoonmaker voor een groot kantoor in Purmerend.\n\nWat ga je doen?\nJe maakt de kantoren, de keuken en de toiletten schoon. Je werkt meestal alleen.\n\nWerktijden\nJe werkt vier avonden per week, van 17.00 tot 23.00 uur.\n\nWat vragen wij?\nJe bent betrouwbaar en je werkt netjes. Je spreekt een beetje Nederlands. Ervaring is niet nodig, wij leren je het werk.\n\nWat bieden wij?\nEen contract voor een jaar. Daarna krijg je misschien een vast contract. Je krijgt een goed salaris, vakantiegeld en reiskosten.\n\nInteresse? Stuur voor 30 april een e-mail met je cv naar vacature@schoonbedrijf.nl. Bellen mag ook, vraag dan naar Marco.`,
     questions: [
-      { q: 'Hoeveel dagen per week werk je?', a: ['Vier', 'Vijf', 'Drie'] },
+      { q: 'Hoeveel avonden per week werk je?', a: ['Vier', 'Vijf', 'Drie'] },
       { q: 'Wat is waar?', a: ['Je hoeft geen ervaring te hebben', 'Je moet heel goed Nederlands spreken', 'Je werkt overdag'] },
       { q: 'Je wilt deze baan. Wat kun je doen?', a: ['Een e-mail met je cv sturen', 'Op 30 april langskomen op kantoor', 'Een brief naar de gemeente schrijven'] }
     ]
   },
   {
     id: 'l13', title: 'Openingstijden zwembad', type: 'bord',
-    text: `Zwembad De Waterlelie\nOpeningstijden\n\nBanenzwemmen\nMaandag tot en met vrijdag 7.00 tot 9.00 uur\n\nVrij zwemmen\nWoensdag 14.00 tot 17.00 uur\nZaterdag en zondag 10.00 tot 16.00 uur\n\nZwemles voor kinderen\nDinsdag en donderdag 16.00 tot 18.00 uur\n\nVrouwenzwemmen\nVrijdag 19.00 tot 21.00 uur\n\nIn de schoolvakanties zijn er andere tijden. Kijk op onze website.\n\nRegels\nKinderen onder de 10 jaar zonder zwemdiploma mogen alleen zwemmen met een volwassene. Douchen voor het zwemmen is verplicht.`,
+    text: `Zwembad De Waterlelie\nOpeningstijden\n\nBanenzwemmen\nMaandag tot en met vrijdag 7.00 tot 9.00 uur\n\nVrij zwemmen\nWoensdag 14.00 tot 17.00 uur\nZaterdag en zondag 10.00 tot 16.00 uur\n\nZwemles voor kinderen\nDinsdag en donderdag 16.00 tot 18.00 uur\n\nVrouwenzwemmen\nVrijdag 19.00 tot 21.00 uur\n\nIn de schoolvakanties zijn er andere tijden. Kijk op onze website.\n\nRegels\nKinderen onder de 10 jaar zonder zwemdiploma mogen alleen samen met een volwassene zwemmen. Douchen voor het zwemmen is verplicht.`,
     questions: [
       { q: 'U wilt vroeg in de ochtend banen zwemmen. Op welke dag kan dat?', a: ['Op dinsdag', 'Op zaterdag', 'Op zondag'] },
       { q: 'Wanneer is het vrouwenzwemmen?', a: ['Op vrijdagavond', 'Op woensdagmiddag', 'Op zaterdagochtend'] },
-      { q: 'Uw zoon is 7 jaar en heeft geen zwemdiploma. Wat is waar?', a: ['Hij mag alleen met een volwassene zwemmen', 'Hij mag alleen zwemmen', 'Hij mag niet in het zwembad komen'] }
+      { q: 'Uw zoon is 7 jaar en heeft geen zwemdiploma. Wat is waar?', a: ['Hij mag alleen met een volwassene zwemmen', 'Hij mag zonder volwassene zwemmen', 'Hij mag niet in het zwembad komen'] }
     ]
   },
   {
     id: 'l14', title: 'Bericht van de kinderopvang', type: 'e-mail',
     text: `Beste ouders,\n\nVanaf maandag 2 november gaat onze voordeur om 18.30 uur dicht. Haal uw kind dus op tijd op. Komt u later? Dan moet u extra betalen.\n\nHaalt iemand anders uw kind op, bijvoorbeeld opa of een buurvrouw? Vertel dat dan altijd van tevoren aan de pedagogisch medewerker. Wij geven uw kind niet mee aan iemand die wij niet kennen.\n\nIs uw kind ziek? Bel ons dan voor 8.00 uur. Kinderen met koorts mogen niet komen.\n\nOp vrijdag 18 december zijn wij gesloten. Ons team heeft dan een studiedag.\n\nVriendelijke groet,\nTeam Kinderdagverblijf Het Zonnetje`,
     questions: [
-      { q: 'Hoe laat moet u uw kind uiterlijk ophalen?', a: ['Om 18.30 uur', 'Om 18.00 uur', 'Om 8.00 uur'] },
+      { q: 'Hoe laat gaat de voordeur van het kinderdagverblijf dicht?', a: ['Om 18.30 uur', 'Om 18.00 uur', 'Om 8.00 uur'] },
       { q: 'De buurvrouw haalt uw kind op. Wat moet u doen?', a: ['Het van tevoren aan de medewerker vertellen', 'Niets', 'De buurvrouw een brief meegeven'] },
-      { q: 'Wat is waar?', a: ['Op 18 december is het kinderdagverblijf dicht', 'Kinderen met koorts mogen komen', 'U mag gratis later komen'] }
+      { q: 'Wat is waar?', a: ['Op 18 december is het kinderdagverblijf dicht', 'Kinderen met koorts mogen komen', 'U mag later komen zonder extra te betalen'] }
     ]
   },
   {
     id: 'l15', title: 'Herinnering tandarts', type: 'bericht',
     text: `Tandartspraktijk Witte Lach\n\nBeste mevrouw Demir,\n\nDit is een herinnering voor uw controle bij tandarts Visser op donderdag 15 oktober om 14.15 uur.\n\nWilt u 5 minuten eerder komen? Neem ook uw zorgpas mee.\n\nKunt u niet komen? Bel dan minimaal 24 uur van tevoren af via 0299 412 233. Belt u niet af en komt u niet? Dan moet u de afspraak toch betalen.\n\nU hoeft niet op dit bericht te reageren.`,
     questions: [
-      { q: 'Wanneer is de afspraak?', a: ['Donderdag 15 oktober om 14.15 uur', 'Donderdag 15 oktober om 14.10 uur', 'Dinsdag 15 oktober om 14.15 uur'] },
+      { q: 'Wanneer is de afspraak?', a: ['Donderdag 15 oktober om 14.15 uur', 'Donderdag 15 oktober om 14.45 uur', 'Dinsdag 15 oktober om 14.15 uur'] },
       { q: 'Wat moet mevrouw Demir meenemen?', a: ['Haar zorgpas', 'Haar paspoort', 'Geld'] },
       { q: 'Wat gebeurt er als zij niet afbelt en niet komt?', a: ['Zij moet de afspraak betalen', 'Zij krijgt een gratis nieuwe afspraak', 'Er gebeurt niets'] }
     ]
@@ -215,7 +215,7 @@ const LUISTEREN = [
       { s: 'Fatma', g: 'f', t: 'Hoi Marco, met Fatma. Ik bel om me ziek te melden.' },
       { s: 'Marco', g: 'm', t: 'O, wat vervelend. Wat is er aan de hand?' },
       { s: 'Fatma', g: 'f', t: 'Ik heb hoge koorts en ik ben erg moe. Vannacht was ik ook misselijk.' },
-      { s: 'Marco', g: 'm', t: 'Dan moet je zeker thuisblijven. Weet je al hoe lang je ziek bent?' },
+      { s: 'Marco', g: 'm', t: 'Dan moet je zeker thuisblijven. Weet je al hoe lang je thuis moet blijven?' },
       { s: 'Fatma', g: 'f', t: 'Nee, dat weet ik nog niet. Morgen ga ik naar de huisarts.' },
       { s: 'Marco', g: 'm', t: 'Goed. Bel je me morgen na de huisarts? Dan kan ik het rooster aanpassen.' },
       { s: 'Fatma', g: 'f', t: 'Ja, dat doe ik.' },
@@ -248,11 +248,11 @@ const LUISTEREN = [
   {
     id: 'u6', title: 'Op het station', setting: 'Omroepbericht op het station',
     lines: [
-      { s: 'Omroeper', g: 'f', t: 'Attentie, reizigers voor de trein naar Amsterdam Centraal, vertrektijd 14.12 uur.' },
-      { s: 'Omroeper', g: 'f', t: 'Deze trein vertrekt vandaag niet van spoor 2, maar van spoor 4.' },
-      { s: 'Omroeper', g: 'f', t: 'De trein heeft ongeveer tien minuten vertraging.' },
-      { s: 'Omroeper', g: 'f', t: 'Reizigers naar Schiphol stappen over in Amsterdam Sloterdijk.' },
-      { s: 'Omroeper', g: 'f', t: 'Onze excuses voor het ongemak.' }
+      { s: 'Omroepster', g: 'f', t: 'Attentie, reizigers voor de trein naar Amsterdam Centraal, vertrektijd 14.12 uur.' },
+      { s: 'Omroepster', g: 'f', t: 'Deze trein vertrekt vandaag niet van spoor 2, maar van spoor 4.' },
+      { s: 'Omroepster', g: 'f', t: 'De trein heeft ongeveer tien minuten vertraging.' },
+      { s: 'Omroepster', g: 'f', t: 'Reizigers naar Schiphol stappen over in Amsterdam Sloterdijk.' },
+      { s: 'Omroepster', g: 'f', t: 'Onze excuses voor het ongemak.' }
     ],
     questions: [
       { q: 'Van welk spoor vertrekt de trein?', a: ['Spoor 4', 'Spoor 2', 'Spoor 14'] },
@@ -269,7 +269,7 @@ const LUISTEREN = [
       { s: 'Hasan', g: 'm', t: 'Ja, hier is de bon.' },
       { s: 'Verkoopster', g: 'f', t: 'Dank u. Welke maat heeft u nodig?' },
       { s: 'Hasan', g: 'm', t: 'Een maat groter, dus een L.' },
-      { s: 'Verkoopster', g: 'f', t: 'Ik kijk even. Sorry, deze jas hebben we niet meer in maat L. Wel in het blauw. U kunt ook uw geld terugkrijgen.' },
+      { s: 'Verkoopster', g: 'f', t: 'Ik kijk even. Sorry, deze jas hebben we niet meer in maat L. Wel in het blauw, in maat L. U kunt ook uw geld terugkrijgen.' },
       { s: 'Hasan', g: 'm', t: 'Blauw vind ik niet mooi. Dan wil ik graag mijn geld terug.' },
       { s: 'Verkoopster', g: 'f', t: 'Dat kan. Ik zet het geld terug op uw bankpas.' }
     ],
@@ -282,7 +282,7 @@ const LUISTEREN = [
     id: 'u8', title: 'De buurman', setting: 'Buurman Peter staat bij Ayşe voor de deur',
     lines: [
       { s: 'Peter', g: 'm', t: 'Hallo, ik ben Peter van nummer 14. Mag ik even iets vragen?' },
-      { s: 'Ayşe', g: 'f', t: 'Hallo Peter. Ja natuurlijk, kom binnen.' },
+      { s: 'Ayşe', g: 'f', t: 'Hallo Peter. Ja, natuurlijk. Kom binnen.' },
       { s: 'Peter', g: 'm', t: 'Nee hoor, het is maar kort. Gisteravond hoorde ik tot half één harde muziek. Ik moet heel vroeg op voor mijn werk.' },
       { s: 'Ayşe', g: 'f', t: 'O, sorry! Mijn zoon had vrienden op bezoek. Ik wist niet dat het zo hard was.' },
       { s: 'Peter', g: 'm', t: 'Eén keer is niet erg. Maar na tien uur in de avond wil ik graag slapen.' },
@@ -311,7 +311,7 @@ const LUISTEREN = [
     questions: [
       { q: 'Hoe lang heeft Yusuf in een magazijn gewerkt?', a: ['Acht jaar', 'Vier jaar', 'Drie jaar'] },
       { q: 'Wat is waar?', a: ['Het bedrijf betaalt de cursus', 'Yusuf heeft al een heftruckcertificaat', 'Yusuf wil graag op zondag werken'] },
-      { q: 'Wanneer hoort Yusuf meer?', a: ['Op vrijdag', 'Op zaterdag', 'Morgen'] }
+      { q: 'Wanneer hoort Yusuf meer?', a: ['Op vrijdag', 'Op zaterdag', 'Op maandag'] }
     ]
   },
   {
@@ -337,14 +337,14 @@ const LUISTEREN = [
       { s: 'Chauffeur', g: 'm', t: 'Goedemiddag dames en heren, hier spreekt uw chauffeur.' },
       { s: 'Chauffeur', g: 'm', t: 'Door werkzaamheden aan de weg rijdt deze bus vandaag niet over de Gorslaan.' },
       { s: 'Chauffeur', g: 'm', t: 'De haltes Gorslaan en Bloemstraat vervallen.' },
-      { s: 'Chauffeur', g: 'm', t: 'Wilt u naar de Bloemstraat? Stap dan uit bij de halte Winkelcentrum. Van daar is het vijf minuten lopen.' },
+      { s: 'Chauffeur', g: 'm', t: 'Wilt u naar de Bloemstraat? Stap dan uit bij de halte Winkelcentrum. Vanaf daar is het vijf minuten lopen.' },
       { s: 'Chauffeur', g: 'm', t: 'De omleiding duurt tot en met vrijdag.' },
       { s: 'Chauffeur', g: 'm', t: 'Excuses voor het ongemak en nog een fijne dag.' }
     ],
     questions: [
       { q: 'Waarom rijdt de bus een andere route?', a: ['Er wordt aan de weg gewerkt', 'Er is een ongeluk gebeurd', 'De bus is kapot'] },
       { q: 'U wilt naar de Bloemstraat. Waar stapt u uit?', a: ['Bij de halte Winkelcentrum', 'Bij de halte Gorslaan', 'Bij de halte Bloemstraat'] },
-      { q: 'Tot wanneer duurt de omleiding?', a: ['Tot en met vrijdag', 'Tot vanavond', 'Tot morgen'] }
+      { q: 'Tot wanneer duurt de omleiding?', a: ['Tot en met vrijdag', 'Tot vanavond', 'Tot het eind van de maand'] }
     ]
   },
   {
@@ -352,7 +352,7 @@ const LUISTEREN = [
     lines: [
       { s: 'Medewerker', g: 'f', t: 'Klantenservice Warmtezorg, met Sandra.' },
       { s: 'Kemal', g: 'm', t: 'Goedemorgen, met Kemal Doğan. Mijn cv-ketel doet het niet. Ik heb geen warm water en de verwarming is koud.' },
-      { s: 'Medewerker', g: 'f', t: 'Vervelend. Heeft u de ketel al uit en weer aan gezet?' },
+      { s: 'Medewerker', g: 'f', t: 'Vervelend. Heeft u de ketel al uitgezet en weer aangezet?' },
       { s: 'Kemal', g: 'm', t: 'Ja, twee keer. Het helpt niet.' },
       { s: 'Medewerker', g: 'f', t: 'Dan stuur ik een monteur. Hij kan morgen tussen 8.00 en 12.00 uur komen. Is er dan iemand thuis?' },
       { s: 'Kemal', g: 'm', t: 'Morgenochtend moet ik werken, maar mijn vrouw is thuis.' },
@@ -436,7 +436,7 @@ const SCHRIJVEN = [
   {
     id: 's1', kind: 'formulier', title: 'Aanmelden bij de bibliotheek',
     prompt: 'U wilt lid worden van de bibliotheek. Vul het formulier in.',
-    tr: 'Kütüphaneye üye olmak istiyorsunuz. Formu doldurun.',
+    tr: 'Kütüphaneye üye olmak istiyorsun. Formu doldur.',
     fields: [
       { label: 'Voornaam', hint: 'bijvoorbeeld Burak' },
       { label: 'Achternaam', hint: 'bijvoorbeeld Yilmaz' },
@@ -453,7 +453,7 @@ const SCHRIJVEN = [
   {
     id: 's2', kind: 'formulier', title: 'Inschrijven bij de huisarts',
     prompt: 'U bent net verhuisd. U wilt zich inschrijven bij een nieuwe huisarts. Vul het formulier in.',
-    tr: 'Yeni taşındınız. Yeni bir aile hekimine kaydolmak istiyorsunuz. Formu doldurun.',
+    tr: 'Yeni taşındın ve yeni bir huisarts\'a kaydolmak istiyorsun. Formu doldur.',
     fields: [
       { label: 'Naam', hint: 'voornaam en achternaam' },
       { label: 'Geboortedatum', hint: 'dag, maand en jaar' },
@@ -465,12 +465,12 @@ const SCHRIJVEN = [
       { label: 'Waarom kiest u voor deze praktijk?', hint: 'Schrijf een hele zin.', long: true }
     ],
     points: [],
-    model: 'Naam\nFatma Kaya\nGeboortedatum\n3 februari 1987\nAdres\nKerkstraat 12, Purmerend\nTelefoonnummer\n06 12345678\nZorgverzekeraar\nZorgverzekering Noord\nNaam vorige huisarts\nDokter Smit in Zaandam\nGebruikt u medicijnen? Welke?\nJa, ik gebruik elke dag een pil voor mijn bloeddruk.\nWaarom kiest u voor deze praktijk?\nDe praktijk is dicht bij mijn huis. Ik kan lopend komen.'
+    model: 'Naam\nFatma Kaya\nGeboortedatum\n3 februari 1987\nAdres\nKerkstraat 12, Purmerend\nTelefoonnummer\n06 12345678\nZorgverzekeraar\nZorgverzekering Noord\nNaam vorige huisarts\nDokter Smit in Zaandam\nGebruikt u medicijnen? Welke?\nJa, ik neem elke dag een tablet voor mijn bloeddruk.\nWaarom kiest u voor deze praktijk?\nDe praktijk is dicht bij mijn huis. Ik kan lopend naar de praktijk komen.'
   },
   {
     id: 's3', kind: 'formulier', title: 'Aanmelden voor zwemles',
     prompt: 'Uw kind moet leren zwemmen. U meldt uw kind aan voor zwemles. Vul het formulier in.',
-    tr: 'Çocuğunuz yüzmeyi öğrenmeli. Çocuğunuzu yüzme dersine kaydediyorsunuz. Formu doldurun.',
+    tr: 'Çocuğunun yüzme öğrenmesi lazım. Onu yüzme kursuna yazdırıyorsun. Formu doldur.',
     fields: [
       { label: 'Naam kind', hint: 'voornaam en achternaam' },
       { label: 'Geboortedatum kind', hint: 'dag, maand en jaar' },
@@ -481,12 +481,12 @@ const SCHRIJVEN = [
       { label: 'Heeft uw kind een allergie of ziekte?', hint: 'Schrijf een hele zin.', long: true }
     ],
     points: [],
-    model: 'Naam kind\nEmir Aydın\nGeboortedatum kind\n4 juni 2019\nNaam ouder\nSevda Aydın\nTelefoonnummer\n06 23456789\nWelke dag past het best?\nDonderdag\nKan uw kind al een beetje zwemmen?\nNee, hij kan nog niet zwemmen. Hij vindt water wel leuk.\nHeeft uw kind een allergie of ziekte?\nNee, hij heeft geen allergie en hij is gezond.'
+    model: 'Naam kind\nEmir Aydın\nGeboortedatum kind\n4 juni 2019\nNaam ouder\nSevda Aydın\nTelefoonnummer\n06 23456789\nWelke dag past het best?\nDonderdag\nKan uw kind al een beetje zwemmen?\nNee, hij kan nog niet zwemmen. Maar hij speelt wel graag in het water.\nHeeft uw kind een allergie of ziekte?\nNee, hij heeft geen allergie en hij is gezond.'
   },
   {
     id: 's4', kind: 'formulier', title: 'Melding aan de gemeente',
     prompt: 'Bij u in de straat is een lantaarnpaal kapot. Het is in de avond erg donker. U doet een melding bij de gemeente. Vul het formulier in.',
-    tr: 'Sokağınızda bir sokak lambası bozuk. Akşamları çok karanlık. Belediyeye bildirimde bulunuyorsunuz. Formu doldurun.',
+    tr: 'Sokağındaki bir sokak lambası bozuk, akşamları ortalık zifiri karanlık. Bunu gemeente\'ye bildiriyorsun. Formu doldur.',
     fields: [
       { label: 'Naam', hint: 'voornaam en achternaam' },
       { label: 'Telefoonnummer', hint: 'bijvoorbeeld 06 12345678' },
@@ -501,79 +501,79 @@ const SCHRIJVEN = [
   {
     id: 's5', kind: 'bericht', title: 'Ziekmelden bij uw werk',
     prompt: 'U bent ziek. U kunt vandaag niet werken. Schrijf een e-mail aan uw leidinggevende, meneer De Boer. Zeg dat u ziek bent. Vertel wat u heeft. Zeg wanneer u denkt dat u weer kunt werken.',
-    tr: 'Hastasınız. Bugün çalışamıyorsunuz. Yöneticiniz Bay De Boer\'a bir e-posta yazın. Hasta olduğunuzu söyleyin. Neyiniz olduğunu anlatın. Ne zaman tekrar çalışabileceğinizi düşündüğünüzü söyleyin.',
+    tr: 'Hastasın, bugün işe gidemiyorsun. Şefin De Boer Bey\'e bir e-posta yaz. Hasta olduğunu söyle ve neyin olduğunu anlat. Ne zaman işe dönebileceğini düşündüğünü de yaz.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|hoi|geachte|lieve|\\bdag\\b' },
-      { label: 'Ziek melden', tr: 'Hasta olduğunu bildirme', re: 'ziek|niet (komen|werken)|kan niet' },
-      { label: 'Klacht', tr: 'Şikâyet', re: 'koorts|pijn|griep|verkou|misselijk|hoest|overgeven|duizelig|moe|keel|buik|hoofd' },
-      { label: 'Wanneer weer werken', tr: 'Ne zaman tekrar çalışacağı', re: 'morgen|overmorgen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|week|dag(en)?\\b|weer|terug|beter' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|tot|dank|bedankt' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|hoi|geachte|lieve|\\bdag\\b' },
+      { label: 'Ziek melden', tr: 'Hasta olduğunu söyle', re: 'ziek|niet (komen|werken)|kan niet' },
+      { label: 'Klacht', tr: 'Neyin olduğunu yaz', re: 'koorts|pijn|griep|verkou|misselijk|hoest|overgeven|duizelig|moe|keel|buik|hoofd' },
+      { label: 'Wanneer weer werken', tr: 'Ne zaman döneceğini yaz', re: 'morgen|overmorgen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|week|dag(en)?\\b|weer|terug|beter' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|tot|dank|bedankt' }
     ],
     min: 35,
-    model: 'Beste meneer De Boer,\n\nIk ben vandaag helaas ziek. Ik heb hoge koorts en hoofdpijn. Ik heb vannacht ook slecht geslapen. Daarom kan ik vandaag niet komen werken. Vanmiddag ga ik naar de huisarts. Ik denk dat ik over twee dagen weer kan werken. Morgen bel ik u om te vertellen hoe het gaat.\n\nMet vriendelijke groet,\nBurak Yilmaz'
+    model: 'Beste meneer De Boer,\n\nIk ben vandaag helaas ziek. Ik heb hoge koorts en hoofdpijn. Vannacht heb ik ook slecht geslapen. Daarom kan ik vandaag niet komen werken. Vanmiddag ga ik naar de huisarts. Ik denk dat ik over twee dagen weer kan werken. Morgen bel ik u om te vertellen hoe het gaat.\n\nMet vriendelijke groet,\nBurak Yilmaz'
   },
   {
     id: 's6', kind: 'bericht', title: 'Briefje aan de buren',
     prompt: 'Uw zoon wordt tien jaar. U geeft zaterdag een feest in de tuin. Schrijf een briefje aan de buren. Vertel wanneer het feest is. Zeg dat er misschien lawaai is. Vertel hoe laat het feest stopt. Geef uw telefoonnummer.',
-    tr: 'Oğlunuz on yaşına giriyor. Cumartesi bahçede bir parti veriyorsunuz. Komşulara kısa bir not yazın. Partinin ne zaman olduğunu anlatın. Biraz gürültü olabileceğini söyleyin. Partinin saat kaçta biteceğini söyleyin. Telefon numaranızı verin.',
+    tr: 'Oğlun on yaşına giriyor ve cumartesi bahçede parti veriyorsun. Komşulara kısa bir not yaz. Partinin ne zaman olduğunu söyle, biraz gürültü olabileceğini belirt. Saat kaçta biteceğini yaz ve telefon numaranı ver.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|hoi|geachte|lieve|\\bdag\\b' },
-      { label: 'Wanneer', tr: 'Ne zaman', re: 'zaterdag|vrijdag|zondag|morgen|\\d|volgende week' },
-      { label: 'Lawaai', tr: 'Gürültü', re: 'lawaai|geluid|muziek|herrie|druk|hard|overlast|last' },
-      { label: 'Eindtijd', tr: 'Bitiş saati', re: 'uur|middernacht|eindigt|stopt|afgelopen|klaar|tot (half|\\d|elf|twaalf|tien|negen)' },
-      { label: 'Telefoonnummer', tr: 'Telefon numarası', re: '06|\\d{6,}|nummer|bel' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|tot ziens|bedankt|dank|begrip' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|hoi|geachte|lieve|\\bdag\\b' },
+      { label: 'Wanneer', tr: 'Ne zaman olduğunu yaz', re: 'zaterdag|vrijdag|zondag|morgen|\\d|volgende week' },
+      { label: 'Lawaai', tr: 'Gürültü olabileceğini söyle', re: 'lawaai|geluid|muziek|herrie|druk|hard|overlast|last' },
+      { label: 'Eindtijd', tr: 'Saat kaçta biteceğini yaz', re: 'uur|middernacht|eindigt|stopt|afgelopen|klaar|tot (half|\\d|elf|twaalf|tien|negen)' },
+      { label: 'Telefoonnummer', tr: 'Numaranı ver', re: '06|\\d{6,}|nummer|bel' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|tot ziens|bedankt|dank|begrip' }
     ],
     min: 35,
-    model: 'Beste buren,\n\nAanstaande zaterdag wordt onze zoon Emir tien jaar. Wij geven dan een feest in onze tuin. Het feest begint om 15.00 uur en is om 22.00 uur afgelopen. Er komen veel kinderen en er is muziek. Misschien is er dus wat lawaai. Is er een probleem? Bel mij dan op 06 12345678.\n\nAlvast bedankt voor uw begrip!\n\nGroeten,\nAyşe en Burak, nummer 8'
+    model: 'Beste buren,\n\nAanstaande zaterdag wordt onze zoon Emir tien jaar. Wij geven dan een feest in onze tuin. Het feest begint om 15.00 uur en om 22.00 uur is het afgelopen. Er komen veel kinderen en er is muziek. Misschien is er dus wat lawaai. Is er een probleem? Bel mij dan op 06 12345678.\n\nAlvast bedankt voor uw begrip!\n\nGroeten,\nAyşe en Burak, nummer 8'
   },
   {
     id: 's7', kind: 'bericht', title: 'E-mail aan de juf',
     prompt: 'Uw dochter Elif moet morgen om 10.00 uur naar de tandarts. Schrijf een e-mail aan haar juf, juf Ellen. Vertel waarom Elif er niet is. Zeg hoe laat zij weggaat en wanneer zij terugkomt. Vraag of zij iets moet inhalen.',
-    tr: 'Kızınız Elif yarın saat 10.00\'da dişçiye gitmek zorunda. Öğretmeni Ellen Hanım\'a bir e-posta yazın. Elif\'in neden okulda olmayacağını anlatın. Saat kaçta çıkacağını ve ne zaman döneceğini söyleyin. Telafi etmesi gereken bir şey olup olmadığını sorun.',
+    tr: 'Kızın Elif\'in yarın saat 10.00\'da dişçi randevusu var. Öğretmeni juf Ellen\'e bir e-posta yaz. Elif\'in neden okulda olmayacağını anlat. Saat kaçta çıkıp ne zaman döneceğini söyle. Kaçırdığı bir şeyi telafi etmesi gerekiyor mu, onu da sor.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|hoi|geachte|lieve|\\bdag\\b' },
-      { label: 'Tandarts', tr: 'Dişçi', re: 'tandarts' },
-      { label: 'Tijd', tr: 'Saat', re: '\\d|uur|ochtend|middag' },
-      { label: 'Terugkomen', tr: 'Okula dönüş', re: 'terug|weer (op|naar) school|daarna|na de afspraak|komt (ze|zij)' },
-      { label: 'Vraag', tr: 'Soru', re: '\\?' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|tot|dank|bedankt' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|hoi|geachte|lieve|\\bdag\\b' },
+      { label: 'Tandarts', tr: 'Dişçiden bahset', re: 'tandarts' },
+      { label: 'Tijd', tr: 'Saati yaz', re: '\\d|uur|ochtend|middag' },
+      { label: 'Terugkomen', tr: 'Ne zaman döneceğini yaz', re: 'terug|weer (op|naar) school|daarna|na de afspraak|komt (ze|zij)' },
+      { label: 'Vraag', tr: 'Bir soru sor', re: '\\?' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|tot|dank|bedankt' }
     ],
     min: 35,
-    model: 'Beste juf Ellen,\n\nMijn dochter Elif uit groep 6 moet morgen naar de tandarts. De afspraak is om 10.00 uur. Ik haal haar om 9.30 uur op school op. Om ongeveer 11.00 uur breng ik haar weer terug naar school. Moet Elif nog iets inhalen van de les? Laat het mij maar weten.\n\nMet vriendelijke groet,\nMehmet Şahin'
+    model: 'Beste juf Ellen,\n\nMijn dochter Elif uit groep 6 moet morgen naar de tandarts. De afspraak is om 10.00 uur. Ik haal haar om 9.30 uur op school op. Rond 11.00 uur breng ik haar weer terug naar school. Moet Elif nog iets inhalen? Laat het mij maar weten.\n\nMet vriendelijke groet,\nMehmet Şahin'
   },
   {
     id: 's8', kind: 'bericht', title: 'Klacht over de verwarming',
     prompt: 'De verwarming in uw huis is al drie dagen kapot. Het is erg koud. Schrijf een e-mail aan de woningcorporatie. Vertel wat het probleem is. Zeg sinds wanneer. Vraag wanneer er een monteur komt. Zeg wanneer u thuis bent.',
-    tr: 'Evinizdeki kalorifer üç gündür bozuk. Hava çok soğuk. Konut kooperatifine bir e-posta yazın. Sorunun ne olduğunu anlatın. Ne zamandan beri olduğunu söyleyin. Teknisyenin ne zaman geleceğini sorun. Ne zaman evde olduğunuzu söyleyin.',
+    tr: 'Evdeki kalorifer üç gündür çalışmıyor ve ev buz gibi. Woningcorporatie\'ye bir e-posta yaz. Sorunu ve ne zamandır böyle olduğunu anlat. Monteur\'ün ne zaman geleceğini sor ve ne zaman evde olduğunu söyle.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|geachte|\\bdag\\b' },
-      { label: 'Probleem', tr: 'Sorun', re: 'verwarming|\\bcv|ketel|kachel|radiator' },
-      { label: 'Sinds wanneer', tr: 'Ne zamandan beri', re: 'sinds|dagen|week|gisteren|eergisteren|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag' },
-      { label: 'Monteur', tr: 'Teknisyen', re: 'monteur|reparat|repareren|maken|iemand' },
-      { label: 'Vraag', tr: 'Soru', re: '\\?' },
-      { label: 'Thuis', tr: 'Evde olduğu zaman', re: 'thuis' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|dank|bedankt' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|geachte|\\bdag\\b' },
+      { label: 'Probleem', tr: 'Sorunu anlat', re: 'verwarming|\\bcv|ketel|kachel|radiator' },
+      { label: 'Sinds wanneer', tr: 'Ne zamandır böyle olduğunu yaz', re: 'sinds|dagen|week|gisteren|eergisteren|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag' },
+      { label: 'Monteur', tr: 'Monteur iste', re: 'monteur|reparat|repareren|maken|iemand' },
+      { label: 'Vraag', tr: 'Bir soru sor', re: '\\?' },
+      { label: 'Thuis', tr: 'Ne zaman evde olduğunu yaz', re: 'thuis' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|dank|bedankt' }
     ],
     min: 40,
-    model: 'Geachte heer of mevrouw,\n\nSinds zaterdag doet de verwarming in mijn huis het niet meer. De radiatoren blijven koud en het is erg koud in huis. Mijn kinderen zijn nog klein en ik maak me zorgen. Wanneer kan er een monteur komen om de verwarming te repareren? Ik ben elke dag na 15.00 uur thuis. Op woensdag ben ik de hele dag thuis.\n\nMet vriendelijke groet,\nFatma Kaya\nKerkstraat 12, Purmerend'
+    model: 'Geachte heer of mevrouw,\n\nSinds zaterdag doet de verwarming in mijn huis het niet meer. Dat is nu al drie dagen. De radiatoren blijven koud en het is erg koud in huis. Ik heb twee kleine kinderen en ik maak me zorgen. Wanneer kan er een monteur komen? Ik ben elke dag na 15.00 uur thuis. Op woensdag ben ik de hele dag thuis.\n\nMet vriendelijke groet,\nFatma Kaya\nKerkstraat 12, Purmerend'
   },
   {
     id: 's9', kind: 'bericht', title: 'Reactie op een advertentie',
     prompt: 'U leest een advertentie op internet. Kees verkoopt een damesfiets voor 120 euro. U wilt de fiets graag kopen. Schrijf een e-mail aan Kees. Zeg dat u interesse heeft. Stel een vraag over de fiets. Vraag wanneer u de fiets kunt komen bekijken.',
-    tr: 'İnternette bir ilan okuyorsunuz. Kees 120 euroya bir kadın bisikleti satıyor. Bisikleti almak istiyorsunuz. Kees\'e bir e-posta yazın. İlgilendiğinizi söyleyin. Bisiklet hakkında bir soru sorun. Bisikleti ne zaman görmeye gelebileceğinizi sorun.',
+    tr: 'İnternette bir ilan gördün. Kees 120 euroya bir kadın bisikleti satıyor, sen de almak istiyorsun. Kees\'e bir e-posta yaz. İlgilendiğini söyle ve bisikletle ilgili bir soru sor. Ne zaman gelip bakabileceğini de sor.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|hoi|geachte|\\bdag\\b' },
-      { label: 'Interesse', tr: 'İlgi', re: 'interesse|kopen|graag|wil' },
-      { label: 'Vraag over de fiets', tr: 'Bisiklet hakkında soru', re: 'kapot|rem|licht|lamp|slot|kleur|maat|versnelling|band|nieuw|oud|staat|werkt|doet het|zadel|mand|jaar' },
-      { label: 'Bekijken', tr: 'Görmeye gelme', re: 'bekijken|kijken|langs|afspraak|komen|wanneer' },
-      { label: 'Vraag', tr: 'Soru', re: '\\?' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|tot|dank|bedankt' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|hoi|geachte|\\bdag\\b' },
+      { label: 'Interesse', tr: 'İlgilendiğini söyle', re: 'interesse|kopen|graag|wil' },
+      { label: 'Vraag over de fiets', tr: 'Bisikletle ilgili bir şey sor', re: 'kapot|rem|licht|lamp|slot|kleur|maat|versnelling|band|nieuw|oud|staat|werkt|doet het|zadel|mand|jaar' },
+      { label: 'Bekijken', tr: 'Gelip bakmak istediğini yaz', re: 'bekijken|kijken|langs|afspraak|komen|wanneer' },
+      { label: 'Vraag', tr: 'Bir soru sor', re: '\\?' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|tot|dank|bedankt' }
     ],
     min: 35,
     model: 'Beste Kees,\n\nIk heb uw advertentie gelezen. Ik heb interesse in de damesfiets. Ik heb nog wel een vraag. Doen de lampen en de remmen het goed? Ik wil de fiets graag komen bekijken. Kan ik morgenavond om 19.00 uur bij u langskomen? Of past zaterdag beter?\n\nMet vriendelijke groet,\nSevda Aydın'
@@ -581,31 +581,31 @@ const SCHRIJVEN = [
   {
     id: 's10', kind: 'bericht', title: 'Dienst ruilen met een collega',
     prompt: 'U moet volgende week dinsdag werken van 14.00 tot 22.00 uur. Maar u heeft die dag een afspraak in het ziekenhuis. Schrijf een bericht aan uw collega Linda. Vertel waarom u niet kunt. Vraag of zij met u wil ruilen. Zeg welke dienst u voor haar kunt doen.',
-    tr: 'Gelecek hafta salı günü 14.00 ile 22.00 arası çalışmanız gerekiyor. Ama o gün hastanede randevunuz var. İş arkadaşınız Linda\'ya bir mesaj yazın. Neden gelemeyeceğinizi anlatın. Sizinle vardiya değiştirmek isteyip istemediğini sorun. Onun yerine hangi vardiyada çalışabileceğinizi söyleyin.',
+    tr: 'Gelecek hafta salı 14.00 ile 22.00 arası vardiyan var ama o gün hastanede randevun var. İş arkadaşın Linda\'ya mesaj at. Neden gelemeyeceğini anlat ve vardiya değişmek ister mi diye sor. Onun yerine hangi vardiyaya girebileceğini de söyle.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|hoi|lieve|hey|\\bdag\\b' },
-      { label: 'Reden', tr: 'Sebep', re: 'ziekenhuis|afspraak|dokter|arts|omdat|want' },
-      { label: 'Ruilen', tr: 'Değiştirme', re: 'ruil|wissel|overnemen|voor mij werken|mijn dienst' },
-      { label: 'Andere dienst', tr: 'Diğer vardiya', re: 'voor jou|jouw|maandag|woensdag|donderdag|vrijdag|zaterdag|zondag|andere dag' },
-      { label: 'Vraag', tr: 'Soru', re: '\\?' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|\\btot\\b|dank|bedankt|doei|liefs' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|hoi|lieve|hey|\\bdag\\b' },
+      { label: 'Reden', tr: 'Sebebini söyle', re: 'ziekenhuis|afspraak|dokter|arts|omdat|want' },
+      { label: 'Ruilen', tr: 'Vardiya değişmeyi teklif et', re: 'ruil|wissel|overnemen|voor mij werken|mijn dienst' },
+      { label: 'Andere dienst', tr: 'Hangi vardiyaya girebileceğini yaz', re: 'voor jou|jouw|maandag|woensdag|donderdag|vrijdag|zaterdag|zondag|andere dag' },
+      { label: 'Vraag', tr: 'Bir soru sor', re: '\\?' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|\\btot\\b|dank|bedankt|doei|liefs' }
     ],
     min: 35,
-    model: 'Hoi Linda,\n\nVolgende week dinsdag moet ik van 14.00 tot 22.00 uur werken. Maar ik heb die middag een afspraak in het ziekenhuis. Wil jij met mij ruilen? Ik kan dan jouw dienst op donderdag doen. Dat is ook van 14.00 tot 22.00 uur. Laat je het mij weten?\n\nAlvast bedankt!\nGroetjes,\nFatma'
+    model: 'Hoi Linda,\n\nVolgende week dinsdag moet ik van 14.00 tot 22.00 uur werken. Maar ik heb die middag een afspraak in het ziekenhuis. Wil jij met mij ruilen? Dan kan ik jouw dienst op donderdag doen. Die is ook van 14.00 tot 22.00 uur. Laat je het mij weten?\n\nAlvast bedankt!\nGroetjes,\nFatma'
   },
   {
     id: 's11', kind: 'bericht', title: 'Uitnodiging voor een verjaardag',
     prompt: 'U wordt volgende maand dertig jaar. U geeft een feest. Schrijf een uitnodiging aan uw vrienden. Vertel wanneer en waar het feest is. Zeg wat jullie gaan doen. Vraag of ze laten weten of ze komen.',
-    tr: 'Gelecek ay otuz yaşına giriyorsunuz. Bir parti veriyorsunuz. Arkadaşlarınıza bir davet yazın. Partinin ne zaman ve nerede olduğunu anlatın. Ne yapacağınızı söyleyin. Gelip gelmeyeceklerini bildirmelerini isteyin.',
+    tr: 'Gelecek ay otuz yaşına giriyorsun ve parti veriyorsun. Arkadaşlarına bir davet yaz. Partinin ne zaman ve nerede olduğunu söyle, neler yapacağınızı anlat. Gelip gelmeyeceklerini haber vermelerini iste.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|hallo|hoi|lieve|hey|\\bdag\\b' },
-      { label: 'Wanneer', tr: 'Ne zaman', re: '\\d|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|avond|middag' },
-      { label: 'Waar', tr: 'Nerede', re: 'bij (mij|ons)|thuis|adres|straat|restaurant|café|cafe|tuin|zaal|in het|in de' },
-      { label: 'Activiteit', tr: 'Etkinlik', re: 'eten|drinken|dansen|muziek|barbecue|taart|spelletjes|vieren|feest' },
-      { label: 'Laten weten', tr: 'Haber verme', re: 'laat|laten weten|kom je|komen jullie|reageer|stuur|bel|app|\\?' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|\\btot\\b|liefs|doei|hoop' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|hallo|hoi|lieve|hey|\\bdag\\b' },
+      { label: 'Wanneer', tr: 'Ne zaman olduğunu yaz', re: '\\d|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|avond|middag' },
+      { label: 'Waar', tr: 'Nerede olduğunu yaz', re: 'bij (mij|ons)|thuis|adres|straat|restaurant|café|cafe|tuin|zaal|in het|in de' },
+      { label: 'Activiteit', tr: 'Ne yapacağınızı anlat', re: 'eten|drinken|dansen|muziek|barbecue|taart|spelletjes|vieren|feest' },
+      { label: 'Laten weten', tr: 'Haber vermelerini iste', re: 'laat|laten weten|kom je|komen jullie|reageer|stuur|bel|app|\\?' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|\\btot\\b|liefs|doei|hoop' }
     ],
     min: 35,
     model: 'Hallo allemaal,\n\nVolgende maand word ik dertig jaar. Dat wil ik graag met jullie vieren! Het feest is op zaterdag 14 november bij mij thuis, Kerkstraat 12 in Purmerend. We beginnen om 19.00 uur. Er is lekker eten en we gaan dansen. Laten jullie voor 7 november weten of jullie komen?\n\nIk hoop jullie te zien!\nGroetjes,\nBurak'
@@ -613,53 +613,53 @@ const SCHRIJVEN = [
   {
     id: 's12', kind: 'bericht', title: 'Afmelden bij de gemeente',
     prompt: 'U heeft volgende week maandag om 10.30 uur een afspraak bij de gemeente voor een nieuw paspoort. U kunt niet komen. Schrijf een e-mail aan de gemeente. Zeg dat u niet kunt komen. Vertel waarom. Vraag om een nieuwe afspraak.',
-    tr: 'Gelecek hafta pazartesi saat 10.30\'da yeni pasaport için belediyede randevunuz var. Gelemiyorsunuz. Belediyeye bir e-posta yazın. Gelemeyeceğinizi söyleyin. Nedenini anlatın. Yeni bir randevu isteyin.',
+    tr: 'Gelecek hafta pazartesi saat 10.30\'da yeni pasaport için gemeente\'de randevun var ama gidemiyorsun. Gemeente\'ye bir e-posta yaz. Gelemeyeceğini söyle ve nedenini anlat. Yeni bir randevu iste.',
     fields: [],
     points: [
-      { label: 'Aanhef', tr: 'Hitap', re: 'beste|geachte|hallo|\\bdag\\b' },
-      { label: 'Afmelden', tr: 'Randevu iptali', re: 'niet komen|kan niet|kunnen niet|afmelden|afzeggen|annuleren|verzetten|lukt niet' },
-      { label: 'Reden', tr: 'Sebep', re: 'omdat|want|ziek|werk|moet|helaas' },
-      { label: 'Nieuwe afspraak', tr: 'Yeni randevu', re: 'nieuwe afspraak|andere afspraak|andere dag|ander moment|andere datum|andere tijd|verzetten|nieuwe datum|nieuwe tijd' },
-      { label: 'Afsluiting', tr: 'Kapanış', re: 'groet|groeten|dank|bedankt' }
+      { label: 'Aanhef', tr: 'Hitapla başla', re: 'beste|geachte|hallo|\\bdag\\b' },
+      { label: 'Afmelden', tr: 'Gelemeyeceğini söyle', re: 'niet komen|kan niet|kunnen niet|afmelden|afzeggen|annuleren|verzetten|lukt niet' },
+      { label: 'Reden', tr: 'Sebebini söyle', re: 'omdat|want|ziek|werk|moet|helaas' },
+      { label: 'Nieuwe afspraak', tr: 'Yeni randevu iste', re: 'nieuwe afspraak|andere afspraak|andere dag|ander moment|andere datum|andere tijd|verzetten|nieuwe datum|nieuwe tijd' },
+      { label: 'Afsluiting', tr: 'Kapanışla bitir', re: 'groet|groeten|dank|bedankt' }
     ],
     min: 35,
-    model: 'Geachte heer of mevrouw,\n\nIk heb op maandag 19 oktober om 10.30 uur een afspraak voor een nieuw paspoort. Helaas kan ik niet komen, want ik moet die dag onverwacht werken. Mijn collega is ziek. Kan ik een nieuwe afspraak maken? Woensdag of vrijdag in de ochtend past mij het beste.\n\nMet vriendelijke groet,\nHasan Demir'
+    model: 'Geachte heer of mevrouw,\n\nIk heb volgende week maandag om 10.30 uur een afspraak voor een nieuw paspoort. Helaas kan ik niet komen, want ik moet die dag onverwacht werken. Mijn collega is ziek. Kan ik een nieuwe afspraak maken? Woensdag of vrijdag in de ochtend past mij het best.\n\nMet vriendelijke groet,\nHasan Demir'
   }
 ];
 
 const SPREKEN = [
-  { id: 'p1', part: 1, prompt: 'Waar woont u en hoe lang woont u daar al?', tr: 'Nerede oturuyorsunuz ve ne zamandır orada oturuyorsunuz?', model: 'Ik woon in Purmerend. Ik woon daar al drie jaar. Het is een rustige stad.', tip: 'Kısa ama tam cümle kur. Süre için al ... jaar kullan.' },
-  { id: 'p2', part: 1, prompt: 'Wat voor werk doet u? Of wat doet u overdag?', tr: 'Ne iş yapıyorsunuz? Ya da gün içinde ne yapıyorsunuz?', model: 'Ik werk in een magazijn in Zaandam. Ik werk vier dagen per week. Op vrijdag ga ik naar Nederlandse les.', tip: 'Çalışmıyorsan da cevap ver, mesela Ik zorg voor mijn kinderen veya Ik leer Nederlands de.' },
-  { id: 'p3', part: 1, prompt: 'Vertel iets over uw gezin.', tr: 'Aileniz hakkında bir şey anlatın.', model: 'Ik ben getrouwd en ik heb twee kinderen. Mijn zoon is acht jaar en mijn dochter is vijf. Mijn ouders wonen in Turkije.', tip: 'Yaşları söylerken is ... jaar kalıbını kullan. Kişi sayısı ve yaşlar yeterli.' },
-  { id: 'p4', part: 1, prompt: 'Wat doet u graag in uw vrije tijd?', tr: 'Boş zamanlarınızda ne yapmayı seversiniz?', model: 'In mijn vrije tijd wandel ik graag in het park. Ik kook ook graag voor vrienden. In het weekend kijk ik soms een film.', tip: 'graag kelimesini fiilden sonra koy, Ik wandel graag gibi. Bir iki örnek ver.' },
-  { id: 'p5', part: 1, prompt: 'Hoe gaat u naar uw werk of naar school?', tr: 'İşe ya da okula nasıl gidiyorsunuz?', model: 'Ik ga meestal met de fiets naar mijn werk. Het is ongeveer twintig minuten fietsen. Als het hard regent, neem ik de bus.', tip: 'Ulaşım için met de fiets, met de bus, met de trein de. Süreyi de eklersen cevap daha iyi olur.' },
-  { id: 'p6', part: 1, prompt: 'Wat eet u meestal als ontbijt?', tr: 'Kahvaltıda genellikle ne yersiniz?', model: 'Als ontbijt eet ik meestal brood met kaas. Ik drink er thee bij. In het weekend eet ik een Turks ontbijt met mijn familie.', tip: 'meestal kelimesi genellikle demektir ve cevabı doğal yapar. Hafta sonu ile hafta içini karşılaştırabilirsin.' },
-  { id: 'p7', part: 1, prompt: 'Welke talen spreekt u?', tr: 'Hangi dilleri konuşuyorsunuz?', model: 'Ik spreek Turks, dat is mijn moedertaal. Ik spreek ook een beetje Engels. Nu leer ik Nederlands.', tip: 'een beetje ve goed gibi kelimelerle seviyeyi belirt. Nu leer ik Nederlands cümlesi her zaman işe yarar.' },
-  { id: 'p8', part: 1, prompt: 'Wat heeft u afgelopen weekend gedaan?', tr: 'Geçen hafta sonu ne yaptınız?', model: 'Afgelopen zaterdag heb ik boodschappen gedaan. Op zondag zijn we naar het strand gegaan. Het was mooi weer.', tip: 'Geçmiş zaman kullan. heb ik ... gedaan ve zijn we ... gegaan kalıplarını ezberle.' },
-  { id: 'p9', part: 1, prompt: 'Hoe ziet uw huis eruit?', tr: 'Eviniz nasıl?', model: 'Ik woon in een appartement op de tweede verdieping. Het heeft drie kamers en een klein balkon. De keuken is nieuw.', tip: 'Oda sayısı, kat ve bir özellik söyle. Het heeft ... ile başlayan cümleler kolaydır.' },
-  { id: 'p10', part: 1, prompt: 'Wat doet u als u ziek bent?', tr: 'Hasta olduğunuzda ne yaparsınız?', model: 'Als ik ziek ben, blijf ik thuis. Ik bel mijn werk om me ziek te melden. Als het niet beter wordt, bel ik de huisarts.', tip: 'Als ile başlayan cümlede fiil hemen virgülden sonra gelir, Als ik ziek ben, blijf ik thuis gibi.' },
-  { id: 'p11', part: 1, prompt: 'Waarom leert u Nederlands?', tr: 'Neden Hollandaca öğreniyorsunuz?', model: 'Ik leer Nederlands omdat ik in Nederland woon. Ik wil met mijn buren en collega\'s praten. Ik wil ook Nederlander worden.', tip: 'omdat kullanırsan fiil cümlenin sonuna gider. Bir iki somut sebep yeterli.' },
-  { id: 'p12', part: 1, prompt: 'Welk feest vindt u leuk en wat doet u dan?', tr: 'Hangi bayramı ya da kutlamayı seversiniz ve o zaman ne yaparsınız?', model: 'Ik vind het Suikerfeest erg leuk. Dan bezoek ik mijn familie en vrienden. We eten veel lekkere dingen samen.', tip: 'Dan kelimesinden sonra fiil gelir, Dan bezoek ik gibi. Kendi bayramını anlatmak serbest.' },
+  { id: 'p1', part: 1, prompt: 'Waar woont u en hoe lang woont u daar al?', tr: 'Nerede oturuyorsun, ne zamandır orada yaşıyorsun?', model: 'Ik woon in Purmerend. Ik woon daar al drie jaar. Het is een rustige stad.', tip: 'Kısa ama tam cümle kur. Süreyi söylerken al ... jaar kalıbını kullan, mesela Ik woon hier al drie jaar.' },
+  { id: 'p2', part: 1, prompt: 'Wat voor werk doet u? Of wat doet u overdag?', tr: 'Ne iş yapıyorsun? Çalışmıyorsan gün içinde neler yapıyorsun?', model: 'Ik werk in een magazijn in Zaandam. Ik werk vier dagen per week. Op vrijdag ga ik naar Nederlandse les.', tip: 'Çalışmıyorsan da sorun değil. Mesela Ik zorg voor mijn kinderen ya da Ik leer Nederlands diyebilirsin.' },
+  { id: 'p3', part: 1, prompt: 'Vertel iets over uw gezin.', tr: 'Biraz ailenden bahset.', model: 'Ik ben getrouwd en ik heb twee kinderen. Mijn zoon is acht jaar en mijn dochter is vijf. Mijn ouders wonen in Turkije.', tip: 'Yaşları söylerken is ... jaar kalıbını kullan. Kaç kişi olduğunuzu ve yaşları söylemen yeter.' },
+  { id: 'p4', part: 1, prompt: 'Wat doet u graag in uw vrije tijd?', tr: 'Boş zamanlarında ne yapmayı seversin?', model: 'In mijn vrije tijd wandel ik graag in het park. Ik kook ook graag voor vrienden. In het weekend kijk ik soms een film.', tip: 'graag fiilden sonra gelir, Ik wandel graag gibi. Bir iki örnek vermen yeterli.' },
+  { id: 'p5', part: 1, prompt: 'Hoe gaat u naar uw werk of naar school?', tr: 'İşe ya da okula nasıl gidiyorsun?', model: 'Ik ga meestal met de fiets naar mijn werk. Het is ongeveer twintig minuten fietsen. Als het hard regent, neem ik de bus.', tip: 'Ulaşım için met de fiets, met de bus ya da met de trein de. Ne kadar sürdüğünü de eklersen cevabın daha iyi olur.' },
+  { id: 'p6', part: 1, prompt: 'Wat eet u meestal als ontbijt?', tr: 'Kahvaltıda genelde ne yersin?', model: 'Als ontbijt eet ik meestal brood met kaas. Ik drink er thee bij. In het weekend eet ik een Turks ontbijt met mijn familie.', tip: 'meestal genelde demek ve cevabı çok doğal yapar. Hafta içiyle hafta sonunu karşılaştırabilirsin.' },
+  { id: 'p7', part: 1, prompt: 'Welke talen spreekt u?', tr: 'Hangi dilleri konuşuyorsun?', model: 'Ik spreek Turks, dat is mijn moedertaal. Ik spreek ook een beetje Engels. Nu leer ik Nederlands.', tip: 'een beetje ya da goed gibi kelimelerle seviyeni belirt. Nu leer ik Nederlands cümlesi her zaman işe yarar.' },
+  { id: 'p8', part: 1, prompt: 'Wat heeft u afgelopen weekend gedaan?', tr: 'Geçen hafta sonu ne yaptın?', model: 'Afgelopen zaterdag heb ik boodschappen gedaan. Op zondag zijn we naar het strand gegaan. Het was mooi weer.', tip: 'Geçmiş zaman kullan. heb ik ... gedaan ve zijn we ... gegaan kalıplarını ezberle, çok işine yarar.' },
+  { id: 'p9', part: 1, prompt: 'Hoe ziet uw huis eruit?', tr: 'Evin nasıl bir yer?', model: 'Ik woon in een appartement op de tweede verdieping. Het heeft drie kamers en een klein balkon. De keuken is nieuw.', tip: 'Kaç oda olduğunu, kaçıncı katta olduğunu ve bir özelliğini söyle. Het heeft ... diye başlayan cümleler en kolayı.' },
+  { id: 'p10', part: 1, prompt: 'Wat doet u als u ziek bent?', tr: 'Hastalanınca ne yaparsın?', model: 'Als ik ziek ben, blijf ik thuis. Ik bel mijn werk om me ziek te melden. Als het niet beter wordt, bel ik de huisarts.', tip: 'Als ile başlayan cümlede virgülden hemen sonra fiil gelir, Als ik ziek ben, blijf ik thuis gibi.' },
+  { id: 'p11', part: 1, prompt: 'Waarom leert u Nederlands?', tr: 'Neden Hollandaca öğreniyorsun?', model: 'Ik leer Nederlands omdat ik in Nederland woon. Ik wil met mijn buren en collega\'s praten. Ik wil ook Nederlander worden.', tip: 'omdat dersen fiil cümlenin sonuna gider. Bir iki somut sebep yeterli.' },
+  { id: 'p12', part: 1, prompt: 'Welk feest vindt u leuk en wat doet u dan?', tr: 'Hangi bayramı ya da kutlamayı seviyorsun, o zaman neler yapıyorsun?', model: 'Ik vind het Suikerfeest erg leuk. Dan bezoek ik mijn familie en vrienden. We eten veel lekkere dingen samen.', tip: 'Dan kelimesinden hemen sonra fiil gelir, Dan bezoek ik gibi. Kendi bayramını anlatabilirsin, hiç sorun değil.' },
 
-  { id: 'p13', part: 2, prompt: 'U bent in de winkel. U wilt een broek ruilen, want hij is te klein. Wat zegt u?', tr: 'Mağazadasınız. Pantolonu değiştirmek istiyorsunuz çünkü küçük geldi. Ne dersiniz?', model: 'Goedemiddag. Ik heb vorige week deze broek gekocht, maar hij is te klein. Mag ik hem ruilen voor een grotere maat? Hier is de kassabon.', tip: 'Selamla başla, sorunu söyle, isteğini soru olarak sor. Kassabon\'dan bahsetmek iyi puan getirir.' },
-  { id: 'p14', part: 2, prompt: 'U belt de huisarts. U heeft al een week hoofdpijn. U wilt een afspraak maken. Wat zegt u?', tr: 'Aile hekimini arıyorsunuz. Bir haftadır baş ağrınız var. Randevu almak istiyorsunuz. Ne dersiniz?', model: 'Goedemorgen, met Burak Yilmaz. Ik heb al een week veel hoofdpijn. Ik wil graag een afspraak maken met de dokter. Kan dat vandaag of morgen?', tip: 'Telefonda adını met ... diye söyle. Şikâyetini ve süresini kısa anlat.' },
-  { id: 'p15', part: 2, prompt: 'U komt te laat op uw werk, want de trein had vertraging. Wat zegt u tegen uw leidinggevende?', tr: 'İşe geç kaldınız çünkü tren gecikti. Yöneticinize ne dersiniz?', model: 'Sorry dat ik te laat ben. De trein had een half uur vertraging. Ik werk vanmiddag een half uur langer, als dat goed is.', tip: 'Özür dile, sebebi söyle ve bir çözüm öner. Hollandalı işverenler çözüm önerisini sever.' },
-  { id: 'p16', part: 2, prompt: 'Uw buurman heeft elke avond laat nog harde muziek aan. U wilt dat hij zachter doet. Wat zegt u?', tr: 'Komşunuz her akşam geç saatte yüksek sesle müzik dinliyor. Sesini kısmasını istiyorsunuz. Ne dersiniz?', model: 'Hallo, ik ben uw buurman van nummer 10. Ik hoor elke avond laat harde muziek. Ik moet vroeg op voor mijn werk. Wilt u de muziek na tien uur zachter zetten?', tip: 'Kibar ama net ol. Wilt u ... ile başlayan bir soru isteği yumuşatır.' },
-  { id: 'p17', part: 2, prompt: 'U bent op het station. U weet niet van welk spoor de trein naar Amsterdam vertrekt. Wat vraagt u?', tr: 'İstasyondasınız. Amsterdam treninin hangi perondan kalktığını bilmiyorsunuz. Ne sorarsınız?', model: 'Pardon, mag ik iets vragen? Van welk spoor vertrekt de trein naar Amsterdam? En hoe laat gaat de volgende trein?', tip: 'Pardon ile söze başla. Van welk spoor kalıbı istasyonda çok kullanılır.' },
-  { id: 'p18', part: 2, prompt: 'Uw collega is vandaag jarig. Wat zegt u?', tr: 'İş arkadaşınızın bugün doğum günü. Ne dersiniz?', model: 'Gefeliciteerd met je verjaardag! Ik wens je een hele fijne dag. Ga je vanavond iets leuks doen?', tip: 'Gefeliciteerd en önemli kelimedir. Küçük bir soru sormak sohbeti sürdürür.' },
-  { id: 'p19', part: 2, prompt: 'U bent in een restaurant. Uw eten is koud. Wat zegt u tegen de ober?', tr: 'Bir restorandasınız. Yemeğiniz soğuk. Garsona ne dersiniz?', model: 'Pardon, mijn eten is helaas koud. Kunt u het nog even warm maken? Dank u wel.', tip: 'helaas kelimesi şikâyeti kibar yapar. Kunt u ... ile rica et.' },
-  { id: 'p20', part: 2, prompt: 'Uw zoon is ziek. Hij kan vandaag niet naar school. U belt de school. Wat zegt u?', tr: 'Oğlunuz hasta. Bugün okula gidemiyor. Okulu arıyorsunuz. Ne dersiniz?', model: 'Goedemorgen, met de moeder van Emir uit groep 4. Emir is ziek, hij heeft koorts. Hij komt vandaag niet naar school. Ik bel morgen weer als hij nog ziek is.', tip: 'Kim olduğunu, çocuğun adını ve sınıfını söyle. Hollanda\'da okula sabah ders başlamadan haber verilir.' },
-  { id: 'p21', part: 2, prompt: 'U bent op een verjaardag. Iemand biedt u nog een stuk taart aan, maar u wilt niet meer. Wat zegt u?', tr: 'Bir doğum günü partisindesiniz. Biri size bir dilim daha pasta ikram ediyor ama artık istemiyorsunuz. Ne dersiniz?', model: 'Nee, dank je wel. De taart was heel lekker, maar ik heb genoeg gehad.', tip: 'Nee, dank je wel demek Hollanda\'da kaba değildir. Yemeği övmek hoş olur.' },
-  { id: 'p22', part: 2, prompt: 'U zoekt het gemeentehuis. U vraagt de weg aan iemand op straat. Wat zegt u?', tr: 'Belediye binasını arıyorsunuz. Sokakta birine yolu soruyorsunuz. Ne dersiniz?', model: 'Pardon meneer, weet u waar het gemeentehuis is? Is het ver lopen? Dank u wel voor uw hulp.', tip: 'Yabancılara u diye hitap et. Teşekkür etmeyi unutma.' },
+  { id: 'p13', part: 2, prompt: 'U bent in de winkel. U wilt een broek ruilen, want hij is te klein. Wat zegt u?', tr: 'Mağazadasın. Aldığın pantolon küçük geldi, değiştirmek istiyorsun. Ne dersin?', model: 'Goedemiddag. Ik heb vorige week deze broek gekocht, maar hij is te klein. Mag ik hem ruilen voor een grotere maat? Hier is de kassabon.', tip: 'Önce selam ver, sonra sorunu söyle, isteğini de soru şeklinde sor. Fişi yani kassabon\'u gösterirsen artı puan.' },
+  { id: 'p14', part: 2, prompt: 'U belt de huisarts. U heeft al een week hoofdpijn. U wilt een afspraak maken. Wat zegt u?', tr: 'Huisarts\'ı arıyorsun. Bir haftadır başın ağrıyor ve afspraak almak istiyorsun. Ne dersin?', model: 'Goedemorgen, met Burak Yilmaz. Ik heb al een week veel hoofdpijn. Ik wil graag een afspraak maken met de dokter. Kan dat vandaag of morgen?', tip: 'Telefonda kendini met ... diye tanıt. Şikâyetini ve ne zamandır sürdüğünü kısaca anlat.' },
+  { id: 'p15', part: 2, prompt: 'U komt te laat op uw werk, want de trein had vertraging. Wat zegt u tegen uw leidinggevende?', tr: 'Tren rötar yaptı, işe geç kaldın. Şefine ne dersin?', model: 'Sorry dat ik te laat ben. De trein had een half uur vertraging. Ik werk vanmiddag een half uur langer, als dat goed is.', tip: 'Özür dile, sebebini söyle ve bir çözüm öner. Hollandalı şefler çözüm önermeni sever.' },
+  { id: 'p16', part: 2, prompt: 'Uw buurman heeft elke avond laat nog harde muziek aan. U wilt dat hij zachter doet. Wat zegt u?', tr: 'Komşun her akşam geç saatte müziği sonuna kadar açıyor. Sesi kısmasını istiyorsun. Ne dersin?', model: 'Hallo, ik ben uw buurman van nummer 10. Ik hoor elke avond laat harde muziek. Ik moet vroeg op voor mijn werk. Wilt u de muziek na tien uur zachter zetten?', tip: 'Kibar ama net ol. Wilt u ... diye başlayan bir soru isteğini yumuşatır.' },
+  { id: 'p17', part: 2, prompt: 'U bent op het station. U weet niet van welk spoor de trein naar Amsterdam vertrekt. Wat vraagt u?', tr: 'İstasyondasın ve Amsterdam treninin hangi perondan kalktığını bilmiyorsun. Ne sorarsın?', model: 'Pardon, mag ik iets vragen? Van welk spoor vertrekt de trein naar Amsterdam? En hoe laat gaat de volgende trein?', tip: 'Söze Pardon diye başla. Van welk spoor kalıbını istasyonda çok duyarsın.' },
+  { id: 'p18', part: 2, prompt: 'Uw collega is vandaag jarig. Wat zegt u?', tr: 'Bugün iş arkadaşının doğum günü. Ne dersin?', model: 'Gefeliciteerd met je verjaardag! Ik wens je een heel fijne dag. Ga je vanavond iets leuks doen?', tip: 'Burada sihirli kelime Gefeliciteerd. Küçük bir soru sorarsan sohbet devam eder.' },
+  { id: 'p19', part: 2, prompt: 'U bent in een restaurant. Uw eten is koud. Wat zegt u tegen de ober?', tr: 'Restorandasın ve yemeğin soğuk gelmiş. Garsona ne dersin?', model: 'Pardon, mijn eten is helaas koud. Kunt u het nog even warm maken? Dank u wel.', tip: 'helaas şikâyetini kibar gösterir. Rica ederken Kunt u ... kalıbını kullan.' },
+  { id: 'p20', part: 2, prompt: 'Uw zoon is ziek. Hij kan vandaag niet naar school. U belt de school. Wat zegt u?', tr: 'Oğlun hasta, bugün okula gidemeyecek. Okulu arıyorsun. Ne dersin?', model: 'Goedemorgen, met de moeder van Emir uit groep 4. Emir is ziek, hij heeft koorts. Hij komt vandaag niet naar school. Ik bel morgen weer als hij nog ziek is.', tip: 'Kim olduğunu, çocuğun adını ve sınıfını söyle. Burada okula sabah dersler başlamadan haber verilir.' },
+  { id: 'p21', part: 2, prompt: 'U bent op een verjaardag. Iemand biedt u nog een stuk taart aan, maar u wilt niet meer. Wat zegt u?', tr: 'Bir doğum günündesin. Biri sana bir dilim daha pasta uzatıyor ama artık istemiyorsun. Ne dersin?', model: 'Nee, dank je wel. De taart was heel lekker, maar ik heb genoeg gehad.', tip: 'Burada Nee, dank je wel demek hiç ayıp değil. Pastayı övmek de hoş olur.' },
+  { id: 'p22', part: 2, prompt: 'U zoekt het gemeentehuis. U vraagt de weg aan iemand op straat. Wat zegt u?', tr: 'Belediye binasını arıyorsun ve sokakta birine yolu soruyorsun. Ne dersin?', model: 'Pardon meneer, weet u waar het gemeentehuis is? Is het ver lopen? Dank u wel voor uw hulp.', tip: 'Tanımadığın insanlara u diye hitap et. Teşekkür etmeyi de unutma.' },
 
-  { id: 'p23', part: 3, prompt: 'Wat vindt u beter, in de stad wonen of in een dorp? Waarom?', tr: 'Hangisini daha iyi buluyorsunuz, şehirde mi köyde mi yaşamak? Neden?', model: 'Ik vind wonen in de stad beter. In de stad zijn veel winkels en scholen dicht bij huis. Ik heb geen auto, dus ik vind de bus en de trein belangrijk. Een dorp is wel rustiger, want er is minder verkeer. Maar ik woon toch liever in de stad, omdat er meer werk is.', tip: 'Önce fikrini söyle, sonra want ve omdat ile iki sebep ver. Diğer seçeneğin bir artısını da söylemek iyi puan getirir.' },
-  { id: 'p24', part: 3, prompt: 'Gaat u liever met de fiets of met de auto naar uw werk? Waarom?', tr: 'İşe bisikletle mi yoksa arabayla mı gitmeyi tercih edersiniz? Neden?', model: 'Ik ga liever met de fiets naar mijn werk. Fietsen is gezond, want je beweegt elke dag. Het is ook goedkoop, omdat je geen benzine en parkeergeld betaalt. Als het hard regent, is de auto wel makkelijker. Maar meestal neem ik de fiets.', tip: 'liever kelimesi tercih anlatır. want sonrası normal cümle düzeni, omdat sonrası fiil sona gider.' },
-  { id: 'p25', part: 3, prompt: 'Vindt u het belangrijk dat kinderen sporten? Waarom?', tr: 'Çocukların spor yapmasını önemli buluyor musunuz? Neden?', model: 'Ja, ik vind sporten heel belangrijk voor kinderen. Het is goed voor hun gezondheid, want ze bewegen veel. Ze leren ook samenwerken in een team. Mijn zoon zit op voetbal en daar heeft hij veel vrienden gemaakt. Ik denk dat sport kinderen gelukkiger maakt, omdat ze lekker buiten zijn.', tip: 'Kendi hayatından bir örnek ekle. Ik denk dat ile başlayan cümlede fiil sona gider.' },
-  { id: 'p26', part: 3, prompt: 'Beschrijf een feest uit uw land. Wat doen mensen dan?', tr: 'Ülkenizden bir bayramı anlatın. İnsanlar o zaman ne yapar?', model: 'In Turkije vieren we het Suikerfeest na de ramadan. Mensen trekken mooie kleren aan en ze bezoeken hun familie. Kinderen krijgen snoep en soms een beetje geld. Ik vind dit feest mooi, omdat de hele familie samen is. Ook hier in Nederland vieren we het met vrienden.', tip: 'Ne zaman, kim ve ne yapılır sorularını cevapla. Sonunda kendi fikrini omdat ile ekle.' },
-  { id: 'p27', part: 3, prompt: 'Wat vindt u van het weer in Nederland? Waarom?', tr: 'Hollanda\'nın havası hakkında ne düşünüyorsunuz? Neden?', model: 'Ik vind het weer in Nederland niet zo fijn. Het regent vaak en er staat veel wind. In de winter is het ook vroeg donker. In mijn land is het in de zomer warmer, want daar schijnt de zon vaker. Maar ik vind de lente hier wel mooi, omdat alles groen wordt.', tip: 'Olumsuz bir fikir de söyleyebilirsin. Karşılaştırma için warmer ve vaker gibi biçimleri kullan.' },
-  { id: 'p28', part: 3, prompt: 'Wat vindt u beter, boodschappen doen in de winkel of online? Waarom?', tr: 'Hangisini daha iyi buluyorsunuz, alışverişi mağazada mı yoksa internetten mi yapmak? Neden?', model: 'Ik doe mijn boodschappen liever in de winkel. Dan kan ik zelf kijken of het fruit en de groente vers zijn. In de winkel zie ik ook de aanbiedingen. Online bestellen is wel makkelijk, want je hoeft niet te sjouwen. Maar ik vind het ook gezellig om naar de winkel te gaan, omdat ik daar mensen ontmoet.', tip: 'Her iki seçeneği de kısaca an. Maar ile kendi tercihine geri dön.' },
-  { id: 'p29', part: 3, prompt: 'Wat is anders in Nederland dan in uw land? Vertel en leg uit.', tr: 'Hollanda\'da ülkenize göre farklı olan ne? Anlatın ve açıklayın.', model: 'In Nederland fietsen veel mensen, ook naar hun werk. In Turkije gaan mensen vaker met de auto of de bus. Ook maken Nederlanders voor bijna alles een afspraak, want ze plannen graag. In mijn land kun je vaak zomaar bij vrienden langsgaan. Ik vind de Nederlandse manier soms moeilijk, omdat ik spontaan bezoek gezellig vind.', tip: 'İki somut farkı karşılaştır. Afspraak kültürü KNM sınavında da sık sorulur.' },
-  { id: 'p30', part: 3, prompt: 'Vindt u het goed dat winkels op zondag open zijn? Waarom?', tr: 'Mağazaların pazar günü açık olmasını doğru buluyor musunuz? Neden?', model: 'Ja, ik vind het goed dat winkels op zondag open zijn. Veel mensen werken door de week en hebben weinig tijd. Op zondag kunnen ze dan rustig boodschappen doen. Maar het is wel jammer voor het personeel, want zij zijn dan niet bij hun familie. Toch vind ik het handig, omdat ik soms op zaterdag moet werken.', tip: 'Ik vind het goed dat ile başla. Bir karşı görüşü maar ile eklemek cevabını güçlendirir.' }
+  { id: 'p23', part: 3, prompt: 'Wat vindt u beter, in de stad wonen of in een dorp? Waarom?', tr: 'Sence şehirde yaşamak mı daha iyi, köyde mi? Neden?', model: 'Ik vind wonen in de stad beter. In de stad zijn veel winkels en scholen dicht bij huis. Ik heb geen auto, dus ik vind de bus en de trein belangrijk. Een dorp is wel rustiger, want er is minder verkeer. Maar ik woon toch liever in de stad, omdat er meer werk is.', tip: 'Önce fikrini söyle, sonra want ve omdat ile iki sebep ver. Öbür seçeneğin bir artısını da söylersen artı puan alırsın.' },
+  { id: 'p24', part: 3, prompt: 'Gaat u liever met de fiets of met de auto naar uw werk? Waarom?', tr: 'İşe bisikletle mi gitmeyi tercih edersin, arabayla mı? Neden?', model: 'Ik ga liever met de fiets naar mijn werk. Fietsen is gezond, want je beweegt elke dag. Het is ook goedkoop, omdat je geen benzine en parkeergeld betaalt. Als het hard regent, is de auto wel makkelijker. Maar meestal neem ik de fiets.', tip: 'liever tercih anlatır. want\'tan sonra cümle normal devam eder, omdat\'tan sonra fiil sona gider.' },
+  { id: 'p25', part: 3, prompt: 'Vindt u het belangrijk dat kinderen sporten? Waarom?', tr: 'Sence çocukların spor yapması önemli mi? Neden?', model: 'Ja, ik vind sporten heel belangrijk voor kinderen. Het is goed voor hun gezondheid, want ze bewegen veel. Ze leren ook samenwerken in een team. Mijn zoon zit op voetbal en daar heeft hij veel vrienden gemaakt. Ik denk dat sport kinderen gelukkiger maakt, omdat ze lekker buiten zijn.', tip: 'Kendi hayatından bir örnek ver. Ik denk dat ile başlayan cümlede fiil sona gider.' },
+  { id: 'p26', part: 3, prompt: 'Beschrijf een feest uit uw land. Wat doen mensen dan?', tr: 'Ülkenden bir bayramı anlat. İnsanlar o gün neler yapar?', model: 'In Turkije vieren we het Suikerfeest na de ramadan. Mensen trekken mooie kleren aan en ze bezoeken hun familie. Kinderen krijgen snoep en soms een beetje geld. Ik vind dit feest mooi, omdat de hele familie samen is. Ook hier in Nederland vieren we het met vrienden.', tip: 'Ne zaman, kimlerle ve neler yapıldığını anlat. Sonunda omdat ile kendi fikrini ekle.' },
+  { id: 'p27', part: 3, prompt: 'Wat vindt u van het weer in Nederland? Waarom?', tr: 'Hollanda\'nın havası hakkında ne düşünüyorsun? Neden?', model: 'Ik vind het weer in Nederland niet zo fijn. Het regent vaak en er staat veel wind. In de winter is het ook vroeg donker. In mijn land is het in de zomer warmer, want daar schijnt de zon vaker. Maar ik vind de lente hier wel mooi, omdat alles groen wordt.', tip: 'Olumsuz bir fikir söylemen de sorun değil. Karşılaştırma için warmer ve vaker gibi kelimeler kullan.' },
+  { id: 'p28', part: 3, prompt: 'Wat vindt u beter, boodschappen doen in de winkel of online? Waarom?', tr: 'Sence alışverişi markette yapmak mı daha iyi, internetten mi? Neden?', model: 'Ik doe mijn boodschappen liever in de winkel. Dan kan ik zelf kijken of het fruit en de groente vers zijn. In de winkel zie ik ook de aanbiedingen. Online bestellen is wel makkelijk, want je hoeft niet te sjouwen. Maar ik vind het ook gezellig om naar de winkel te gaan, omdat ik daar mensen ontmoet.', tip: 'İki seçeneğe de kısaca değin. Sonra maar ile kendi tercihine dön.' },
+  { id: 'p29', part: 3, prompt: 'Wat is anders in Nederland dan in uw land? Vertel en leg uit.', tr: 'Hollanda\'da senin ülkene göre farklı olan ne? Anlat ve açıkla.', model: 'In Nederland fietsen veel mensen, ook naar hun werk. In Turkije gaan mensen vaker met de auto of de bus. Ook maken Nederlanders voor bijna alles een afspraak, want ze plannen graag. In mijn land kun je vaak zomaar bij vrienden langsgaan. Ik vind de Nederlandse manier soms moeilijk, omdat ik spontaan bezoek gezellig vind.', tip: 'İki somut farkı karşılaştır. Afspraak kültürü KNM sınavında da sık çıkar.' },
+  { id: 'p30', part: 3, prompt: 'Vindt u het goed dat winkels op zondag open zijn? Waarom?', tr: 'Mağazaların pazar günü açık olması sence iyi bir şey mi? Neden?', model: 'Ja, ik vind het goed dat winkels op zondag open zijn. Veel mensen werken door de week en hebben weinig tijd. Op zondag kunnen ze dan rustig boodschappen doen. Maar het is wel jammer voor het personeel, want zij zijn dan niet bij hun familie. Toch vind ik het handig, omdat ik soms op zaterdag moet werken.', tip: 'Ik vind het goed dat diye başla. maar ile bir karşı görüş eklersen cevabın daha güçlü olur.' }
 ];
 
 if (typeof module !== 'undefined') module.exports = { LEZEN, LUISTEREN, SCHRIJVEN, SPREKEN };

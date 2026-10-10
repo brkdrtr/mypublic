@@ -18,15 +18,15 @@
 <div id="app">
   <header id="top">
     <div class="brand"><span class="flag"><i></i><i></i><i></i></span> A2 Nederlands</div>
-    <div class="stats"><span id="streak">🔥 0</span><span id="xp" class="pill">0 XP</span></div>
+    <div class="stats"><button id="who" class="who-chip" aria-label="profile"></button><span id="streak">🔥 0</span><span id="xp" class="pill">0 XP</span></div>
   </header>
   <main id="main"></main>
   <nav id="tabs">
-    <button data-t="home" class="on"><span>🏠</span>Vandaag</button>
-    <button data-t="words"><span>📇</span>Woorden</button>
-    <button data-t="practice"><span>🧩</span>Oefenen</button>
-    <button data-t="exam"><span>📝</span>Examen</button>
-    <button data-t="me"><span>⚙️</span>Profiel</button>
+    <button data-t="home" class="on"><span>🏠</span><em>Bugün</em></button>
+    <button data-t="words"><span>📇</span><em>Kelimeler</em></button>
+    <button data-t="practice"><span>🧩</span><em>Pratik</em></button>
+    <button data-t="exam"><span>📝</span><em>Sınav</em></button>
+    <button data-t="me"><span>⚙️</span><em>Profil</em></button>
   </nav>
 </div>
 <div id="toast" class="toast hidden"></div>
@@ -37,6 +37,10 @@
 <script src="content.js"></script>
 <script src="knm.js"></script>
 <script src="lexicon.js"></script>
+<script src="lexicon-en.js"></script>
+<script src="en-vocab.js"></script>
+<script src="en-content.js"></script>
+<script src="i18n-en.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

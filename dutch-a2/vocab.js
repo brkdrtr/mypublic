@@ -11,14 +11,14 @@ het adres|adres|Wat is uw adres?
 de straat|sokak, cadde|Ik woon in een rustige straat.
 het huisnummer|kapı numarası|Mijn huisnummer is 12.
 de postcode|posta kodu|Wat is uw postcode?
-de woonplaats|ikamet edilen yer|Mijn woonplaats is Purmerend.
+de woonplaats|ikamet yeri, oturduğun şehir|Mijn woonplaats is Purmerend.
 wonen|oturmak, yaşamak|Ik woon in Purmerend.
 de geboortedatum|doğum tarihi|Wat is uw geboortedatum?
 de geboorteplaats|doğum yeri|Mijn geboorteplaats is Ankara.
 de nationaliteit|uyruk, vatandaşlık|Ik heb de Turkse nationaliteit.
 getrouwd|evli|Ik ben getrouwd.
 gescheiden|boşanmış|Mijn buurman is gescheiden.
-alleenstaand|bekâr, yalnız yaşayan|Zij is alleenstaand en woont alleen.
+alleenstaand|bekâr, yalnız yaşayan|Zij is alleenstaand en heeft twee kinderen.
 het telefoonnummer|telefon numarası|Mag ik uw telefoonnummer?
 het e-mailadres|e-posta adresi|Wat is uw e-mailadres?
 de handtekening|imza|Zet hier uw handtekening.
@@ -191,7 +191,7 @@ fulltime|tam zamanlı|Ik werk fulltime.
 parttime|yarı zamanlı|Mijn vrouw werkt parttime.
 de dienst|vardiya|Ik heb vandaag een late dienst.
 het rooster|çalışma çizelgesi|Het nieuwe rooster hangt in de kantine.
-zich ziek melden|işe hasta olduğunu bildirmek|Ik meld me ziek bij mijn baas.
+zich ziek melden|işe hastayım diye haber vermek|Ik meld me ziek bij mijn baas.
 de vakantiedagen|izin günleri|Ik heb nog tien vakantiedagen.
 het uitzendbureau|geçici iş ajansı|Ik heb werk via een uitzendbureau.
 de vergadering|toplantı|De vergadering begint om negen uur.
@@ -222,7 +222,7 @@ het recept|reçete, yemek tarifi|De huisarts geeft mij een recept.
 het medicijn|ilaç|Dit medicijn moet je drie keer per dag nemen.
 de pil|hap|Ik neem een pil tegen de pijn.
 de zorgverzekering|sağlık sigortası|Iedereen in Nederland moet een zorgverzekering hebben.
-het eigen risico|sigortada kendi ödenen pay|Ik heb mijn eigen risico al betaald.
+het eigen risico|sigortada cepten ödenen pay|Ik heb mijn eigen risico al betaald.
 de tandarts|diş hekimi|Ik ga twee keer per jaar naar de tandarts.
 de koorts|ateş|Het kind heeft koorts.
 de pijn|ağrı|Ik heb pijn in mijn rug.
@@ -253,7 +253,7 @@ de nek|ense, boyun|Ik heb last van mijn nek.
 de schouder|omuz|Mijn schouder doet pijn.
 de arm|kol|Hij heeft zijn arm gebroken.
 de hand|el|Was je handen voor het eten.
-de vinger|parmak|Ik heb in mijn vinger gesneden.
+de vinger|parmak|Ik heb me in mijn vinger gesneden.
 de buik|karın|Mijn buik doet pijn.
 de rug|sırt|Ik heb last van mijn rug.
 het been|bacak|Zij heeft haar been gebroken.
@@ -291,7 +291,7 @@ het verkeer|trafik|Er is veel verkeer in de ochtend.
 de file|trafik sıkışıklığı|Ik sta in de file.
 het stoplicht|trafik ışığı|Stop bij het rode stoplicht.
 de kruising|kavşak|Ga bij de kruising naar links.
-links|sol, sola|Ga hier links.
+links|sol, sola|Ga hier naar links.
 rechts|sağ, sağa|Neem de tweede straat rechts.
 rechtdoor|dümdüz|Ga rechtdoor tot het station.
 het vliegtuig|uçak|Wij gaan met het vliegtuig naar Turkije.
@@ -335,7 +335,7 @@ de agenda|ajanda|Ik zet de afspraak in mijn agenda.
 ` },
 
   { id: 'weer', icon: '🌦️', title: 'Hava', words: `
-het weer|hava durumu|Het weer is vandaag slecht.
+het weer|hava|Het weer is vandaag slecht.
 de zon|güneş|De zon schijnt.
 de regen|yağmur|Vandaag komt er veel regen.
 regenen|yağmur yağmak|Het regent al de hele dag.
@@ -409,7 +409,7 @@ de gymles|beden eğitimi dersi|Op donderdag heeft hij gymles.
 het schoolreisje|okul gezisi|Morgen gaat de klas op schoolreisje.
 de schoolvakantie|okul tatili|In de schoolvakantie gaan we naar Turkije.
 de luizencontrole|bit kontrolü|Na de vakantie is er luizencontrole.
-de kinderopvang|çocuk bakım yeri|De baby gaat twee dagen naar de kinderopvang.
+de kinderopvang|çocuk bakım yeri|De baby gaat twee dagen per week naar de kinderopvang.
 het kinderdagverblijf|kreş|Ons kind gaat naar het kinderdagverblijf.
 de buitenschoolse opvang|okul sonrası bakım|Na school gaat hij naar de buitenschoolse opvang.
 leren|öğrenmek|Ik leer Nederlands.
@@ -487,12 +487,12 @@ beginnen|başlamak|De cursus begint in september.
 stoppen|durmak, bırakmak|De bus stopt hier.
 blijven|kalmak|Ik blijf vandaag thuis.
 worden|olmak, haline gelmek|Mijn zoon wordt morgen tien.
-staan|ayakta durmak|De fiets staat buiten.
+staan|durmak, ayakta durmak|De fiets staat buiten.
 zitten|oturmak|Ik zit in de trein.
 liggen|yatmak, durmak|Het boek ligt op tafel.
 lopen|yürümek|Ik loop naar de winkel.
 rijden|araç sürmek|Ik rijd in een kleine auto.
-bellen|telefon etmek|Ik bel je morgen.
+bellen|aramak, telefon etmek|Ik bel je morgen.
 opbellen|telefonla aramak|Ik bel de tandarts op.
 opstaan|kalkmak|Ik sta om zeven uur op.
 meenemen|yanına almak|Neem je paspoort mee.
@@ -515,14 +515,14 @@ slecht|kötü|Ik slaap slecht.
 makkelijk|kolay|Deze oefening is makkelijk.
 moeilijk|zor|Nederlands is soms moeilijk.
 snel|hızlı|De trein is snel.
-langzaam|yavaş|Kunt u langzaam praten?
+langzaam|yavaş|Kunt u wat langzamer praten?
 druk|kalabalık, yoğun|Het is druk in de winkel.
 rustig|sakin|Purmerend is een rustige stad.
 blij|mutlu, memnun|Ik ben blij met mijn nieuwe baan.
 moe|yorgun|Na het werk ben ik moe.
 boos|kızgın|Mijn vader is boos.
 aardig|nazik, sevimli|Mijn collega's zijn aardig.
-vriendelijk|güler yüzlü|De buschauffeur is vriendelijk.
+vriendelijk|kibar, güler yüzlü|De buschauffeur is vriendelijk.
 lang|uzun|De rij bij de kassa is lang.
 kort|kısa|De pauze is kort.
 schoon|temiz|De keuken is schoon.

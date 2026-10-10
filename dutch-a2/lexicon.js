@@ -1272,5 +1272,20 @@ zwemles|yüzme dersi · de zwemles
 één|bir
 ömer|kişi adı
 öztürk|soyadı
+aangezet|açtı, açılmış · aanzetten
+bemoeien|karışmak · zich bemoeien met
+beëindigen|sona erdirmek, bitirmek
+gewone|normal, sıradan · gewoon
+langzamer|daha yavaş · langzaam
+meegaan|birlikte gitmek, katılmak
+organisaties|kuruluşlar · de organisatie
+religieuze|dini · religieus
+rond|civarında, yaklaşık, etrafında
+tablet|tablet, hap · de tablet
+toeslagen|devlet yardımları · de toeslag
+tweeënhalf|iki buçuk
+uitgezet|kapattı, kapatılmış · uitzetten
+vast|sabit, kalıcı, vast contract süresiz sözleşme
+zussen|kız kardeşler · de zus
 `;
 if (typeof module !== 'undefined') module.exports = { LEXICON };

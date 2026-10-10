@@ -15,19 +15,30 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 
 ## A2 Nederlands
 
-Inburgeringsexamen A2 hazırlığı. Arayüz Türkçe, içerik Hollandaca.
+Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya İngilizce.
 
-- Woorden. Temalara ayrılmış kelimeler, SM-2 tarzı aralıklı tekrar, de of het hız oyunu, yazarak test
-- Lezen. Sınav tarzı kısa metinler, kelimeye dokununca anlam
-- Luisteren. Diyaloglar cihazın Hollandaca sesiyle okunur, kadın ve erkek ses ayrı
-- Schrijven. Form doldurma ve mesaj yazma, istenen noktaların otomatik kontrolü, örnek cevap
-- Spreken. Soruyu dinle, cevabını kaydet, dinle, örnek cevapla karşılaştır
-- KNM. Temalara göre sorular, Türkçe açıklama, hatalarım listesi
-- Grammatica. Dersler ve alıştırmalar, fiil çekimi antrenörü
-- Examen. Süreli deneme sınavları ve geçmiş sonuçlar
-- Günlük plan, sınav geri sayımı, yedek indir ve yükle
+- İki profil, Burak ve Bahu. İlerleme, ayarlar ve dil profil başına ayrı
+- Woorden. 17 tema, 515 kelime, SM-2 tarzı aralıklı tekrar, de of het hız oyunu, yazarak test
+- Lezen, Luisteren. 16 metin, 16 diyalog. Her Hollandaca kelimeye dokununca çeviri, şıklarda basılı tut
+- Schrijven. Yazdığın metin düzeltilmiş haliyle ve kelime kelime farkla gelir. Claude API anahtarı varsa tam düzeltme ve puan, yoksa de/het, fiil çekimi, yazım ve büyük harf için kural tabanlı düzeltme
+- Spreken. Kaydet, dinle, söylediğin metni kontrol ettir. Metin konuşma tanımadan ya da klavye diktesinden gelir, Claude ile ya da temel kurallarla puanlanır
+- KNM. 100 soru, açıklamalı, hatalarım listesi
+- Grammatica. 15 ders, 201 alıştırma, 40 fiillik çekim antrenörü
+- Examen. KNM 40 soru 45 dakika, Lezen ve Luisteren denemeleri
+- Ses. iPhone'daki en iyi Hollandaca ses otomatik seçilir, Enhanced Xander ve Claire önerilir
+- Yedek indir ve yükle
 
-Daha doğal ses için iPhone'da Ayarlar, Erişilebilirlik, Seslendirilen İçerik, Sesler, Nederlands altından gelişmiş bir ses indir.
+Claude entegrasyonu için Profil sekmesine Anthropic API anahtarı girilir. Anahtar sadece cihazda saklanır. SDK `dutch-a2/vendor` altında yerel olarak gelir, CDN gerekmez.
+
+## Testler
+
+```
+python3 -m http.server 8765 &
+node tests/linux.test.js
+NODE_PATH=$(npm root -g) node tests/a2.e2e.js
+```
+
+A2 testi Playwright ile iPhone 13 ekranında her ekranı, her içerik öğesini, iki dili, iki profili, yedeklemeyi ve sahte API yanıtıyla Claude düzeltme akışını çalıştırır.
 
 ## Yayınlama
 
