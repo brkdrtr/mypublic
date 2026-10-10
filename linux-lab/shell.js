@@ -622,7 +622,7 @@ class Shell {
       if (name.includes('/')) return this.runScript(name, args, true);
       const fn = COMMANDS[name];
       if (!fn) {
-        const hint = SUGGEST[name] ? `\nIpucu: ${SUGGEST[name]}` : '';
+        const hint = SUGGEST[name] ? `\n💡 ${SUGGEST[name]}` : '';
         return fail(`${name}: command not found${hint}`, 127);
       }
       return fn.call(this, args, stdin == null ? null : stdin) || ok();
@@ -637,7 +637,7 @@ class Shell {
     if (!n) return fail(`bash: ${path}: No such file or directory`, 127);
     if (n.t === 'd') return fail(`bash: ${path}: Is a directory`, 126);
     if (!this.canRead(n) || (needExec && !this.canExec(n))) return fail(`bash: ${path}: Permission denied`, 126);
-    if (n.d.startsWith('\x7fELF')) return fail(`${path}: binary calistirma bu labda desteklenmiyor`);
+    if (n.d.startsWith('\x7fELF')) return fail(`${path}: binary çalıştırmak bu lab'da desteklenmiyor`);
     if (this.depth > 6) return fail('bash: maximum recursion');
     const out = []; const err = [];
     const savedPos = this.positional;
@@ -692,19 +692,19 @@ class Shell {
 /* ---------- komutlar ---------- */
 
 const SUGGEST = {
-  dir: 'Linux\'ta ls kullanilir',
-  cls: 'ekrani temizlemek icin clear',
-  ipconfig: 'Linux\'ta ip addr kullanilir',
+  dir: "Linux'ta ls kullanılır",
+  cls: 'ekranı temizlemek için clear',
+  ipconfig: "Linux'ta ip addr kullanılır",
   ifconfig: 'modern sistemlerde ip addr tercih edilir',
-  type: 'dosya okumak icin cat',
-  copy: 'kopyalamak icin cp',
-  move: 'tasimak icin mv',
-  del: 'silmek icin rm',
-  netstat: 'modern karsiligi ss -tulpn',
-  tracert: 'Linux\'ta traceroute',
+  type: 'dosya okumak için cat',
+  copy: 'kopyalamak için cp',
+  move: 'taşımak ya da rename için mv',
+  del: 'silmek için rm',
+  netstat: 'modern karşılığı ss -tulpn',
+  tracert: "Linux'ta traceroute kullanılır",
   service: 'systemctl status servis_adi',
-  apt: 'bu labda paket kurulumu yok, ama gercek Ubuntu\'da sudo apt install paket',
-  python: 'python3 bu labda yok, ama gercek sistemde var',
+  apt: "bu lab'da package kurulumu yok, gerçek Ubuntu'da sudo apt install paket",
+  python: "python3 bu lab'da yok, gerçek sistemde var",
   vi: 'nano ya da vim dene',
 };
 
@@ -803,15 +803,15 @@ function cowsay(msg) {
 }
 
 const FORTUNES = [
-  'Bir sistem yoneticisinin en iyi arkadasi man sayfasidir.',
-  'rm -rf yazmadan once iki kez dusun, enter\'a bir kez bas.',
+  "Bir sysadmin'in en iyi arkadaşı man page'dir.",
+  "rm -rf yazmadan önce iki kez düşün, enter'a bir kez bas.",
   'It\'s always DNS.',
-  'Hersey bir dosyadir. Yazici bile.',
-  'Yedeklenmemis veri, silinmeyi bekleyen veridir.',
-  'Bir pipe, bin tiklamaya bedeldir.',
-  'chmod 777 bir cozum degil, bir itiraftir.',
-  'Calisiyorsa dokunma, dokunduysan commit et.',
-  'BGP\'nin bile bir yonetici gibi kotu gunleri olur.',
+  "Linux'ta her şey bir dosyadır. Printer bile.",
+  "Backup'ı olmayan veri, silinmeyi bekleyen veridir.",
+  'İyi bir pipe, bin tıklamaya bedeldir.',
+  'chmod 777 bir çözüm değil, bir itiraftır.',
+  'Çalışıyorsa dokunma, dokunduysan commit et.',
+  "BGP'nin bile kötü günleri olur, tıpkı bir sysadmin gibi.",
 ];
 
 const COMMANDS = {
@@ -952,7 +952,7 @@ const COMMANDS = {
     const { flags, rest } = parseOpts(args);
     const rec = flags.has('r') || flags.has('R'), force = flags.has('f');
     if (rec && rest.some(r => this.resolve(r) === '/')) {
-      return fail('rm: \'/\' uzerinde islem yapmak tehlikeli. Iyi ki bir lab burasi. Gercek sistemde --no-preserve-root bile yazdirmazlar insana. 😅');
+      return fail('rm: \'/\' üzerinde rm çalıştırmak felaket. İyi ki burası bir lab. Gerçek sistemde --no-preserve-root bile yazdırmazlar adama. 😅');
     }
     if (!rest.length) return fail('rm: missing operand');
     let err = '';
@@ -963,7 +963,7 @@ const COMMANDS = {
       if (n.t === 'd' && !rec) { err += `rm: cannot remove '${f}': Is a directory\n`; continue; }
       const { dir, name } = this.parent(abs);
       if (!this.canWrite(dir)) { err += `rm: cannot remove '${f}': Permission denied\n`; continue; }
-      if (abs === HOME || abs === this.cwd) { err += `rm: '${f}' silinmedi, bu dizinin icindesin ya da ev dizinin\n`; continue; }
+      if (abs === HOME || abs === this.cwd) { err += `rm: '${f}' silinmedi, ya bu directory'nin içindesin ya da burası senin home directory'n\n`; continue; }
       delete dir.c[name];
     }
     return { out: '', err, code: err ? 1 : 0 };
@@ -1036,7 +1036,7 @@ const COMMANDS = {
     if (vals.n) { if (vals.n.startsWith('+')) fromStart = true; n = parseInt(vals.n.replace('+', ''), 10); }
     const { texts, errs } = readInputs(this, rest, stdin, 'tail');
     const out = texts.map(t => { const l = lines(t); return join(fromStart ? l.slice(n - 1) : l.slice(Math.max(0, l.length - n))); }).join('');
-    const extra = flags.has('f') ? '\n[tail -f canli takip eder. Bu labda dosya degismedigi icin burada duruyoruz]\n' : '';
+    const extra = flags.has('f') ? "\n[tail -f dosyayı canlı takip eder. Bu lab'da dosya değişmediği için burada duruyoruz]\n" : '';
     return { out: out + extra, err: errs, code: errs ? 1 : 0 };
   },
 
@@ -1211,7 +1211,7 @@ const COMMANDS = {
             if (idx + 1 >= a && idx + 1 <= b) { if (m[3] === 'd') del = true; else { out.push(line); printed = true; } }
           } else if ((m = /^\$([dp])$/.exec(c))) {
             if (idx === ls.length - 1) { if (m[1] === 'd') del = true; else out.push(line); }
-          } else throw new Error('sed: bu labda desteklenmeyen ifade: ' + c);
+          } else throw new Error("sed: bu lab'da desteklenmeyen expression, " + c);
         }
         if (!del && !quiet) out.push(line);
         void printed;
@@ -1256,7 +1256,7 @@ const COMMANDS = {
     }
     if ((m = /^\s*END\s*\{\s*print\s+NR\s*\}\s*$/.exec(prog))) return ok(ls.length + '\n');
     m = /^\s*(?:\/(.*?)\/|(NR|NF|\$\d+)\s*(==|!=|>=|<=|>|<)\s*("?[^{"]*"?))?\s*(?:\{\s*(.*?)\s*\})?\s*$/.exec(prog);
-    if (!m) return fail('awk: bu labda desteklenen kaliplar /desen/ {print $1}, NR==2, -F, toplam icin {s+=$2} END {print s}');
+    if (!m) return fail("awk: bu lab'da desteklenen pattern'ler /desen/ {print $1}, NR==2, -F, toplam için {s+=$2} END {print s}");
     const [, reSrc, lhs, op, rhsRaw, action] = m;
     const re = reSrc !== undefined ? new RegExp(reSrc) : null;
     ls.forEach((l, i) => {
@@ -1379,7 +1379,7 @@ const COMMANDS = {
 
   sudo(args, stdin) {
     if (!args.length) return fail('usage: sudo command');
-    if (args[0] === '-i' || args[0] === 'su' || (args[0] === '-s')) return ok('Interaktif root kabugu bu labda kapali. Her komutun basina sudo yazmak iyi bir aliskanliktir.\n');
+    if (args[0] === '-i' || args[0] === 'su' || (args[0] === '-s')) return ok("Interactive root shell bu lab'da kapalı. Her komutun başına sudo yazmak iyi bir alışkanlık.\n");
     const was = this.isRoot;
     this.isRoot = true;
     try {
@@ -1387,7 +1387,7 @@ const COMMANDS = {
     } finally { this.isRoot = was; }
   },
 
-  su() { return fail('su: Authentication failure. Bu labda sudo kullan.'); },
+  su() { return fail("su: Authentication failure. Bu lab'da sudo kullan."); },
 
   whoami() { return ok(this.user + '\n'); },
   id() { return ok(this.isRoot ? 'uid=0(root) gid=0(root) groups=0(root)\n' : 'uid=1000(burak) gid=1000(burak) groups=1000(burak),4(adm),27(sudo),999(docker)\n'); },
@@ -1437,7 +1437,7 @@ const COMMANDS = {
   true() { return ok(); },
   false() { return { out: '', err: '', code: 1 }; },
   sleep() { return ok(); },
-  exit() { return ok('logout\n[Bu bir lab, kacis yok 😄 Gorev ekranina donmek icin alttaki sekmeleri kullan]\n'); },
+  exit() { return ok('logout\n[Bu bir lab, kaçış yok 😄 Görev ekranına dönmek için alttaki sekmeleri kullan]\n'); },
   seq(args) {
     const n = args.map(Number);
     let [a, step, b] = n.length === 1 ? [1, 1, n[0]] : n.length === 2 ? [n[0], 1, n[1]] : n;
@@ -1456,7 +1456,7 @@ const COMMANDS = {
     const cmd = args.length ? args : ['echo'];
     return this.execSimple(cmd.concat(items), null, {});
   },
-  bash(args) { if (!args.length) return ok('Zaten bash icindesin 🙂\n'); return this.runScript(args[0], args.slice(1), false); },
+  bash(args) { if (!args.length) return ok("Zaten bash shell'inin içindesin 🙂\n"); return this.runScript(args[0], args.slice(1), false); },
   sh(args) { return COMMANDS.bash.call(this, args); },
   source(args) { return this.runScript(args[0] || '', args.slice(1), false); },
 
@@ -1465,10 +1465,10 @@ const COMMANDS = {
     if (!c) return fail('What manual page do you want?');
     const info = typeof MANUAL !== 'undefined' && MANUAL[c];
     if (!info) return fail(`No manual entry for ${c}`, 16);
-    return ok(`${c.toUpperCase()}(1)\n\nAD\n    ${c}. ${info.d}\n\nKULLANIM\n${info.u.map(u => '    ' + u).join('\n')}\n\nORNEKLER\n${info.e.map(e => '    $ ' + e).join('\n')}\n`);
+    return ok(`${c.toUpperCase()}(1)\n\nAD\n    ${c}. ${info.d}\n\nKULLANIM\n${info.u.map(u => '    ' + u).join('\n')}\n\nÖRNEKLER\n${info.e.map(e => '    $ ' + e).join('\n')}\n`);
   },
   help() {
-    return ok('Linux Lab kabugu. Desteklenen komutlar\n\n' + Object.keys(COMMANDS).filter(c => !c.startsWith('_')).sort().join('  ') + '\n\nBir komut hakkinda bilgi icin man komut yaz, ornek man grep\nPipe |, yonlendirme > >> <, && || ; ve $(komut) desteklenir.\n');
+    return ok("Linux Lab shell'i. Desteklenen komutlar\n\n" + Object.keys(COMMANDS).filter(c => !c.startsWith('_')).sort().join('  ') + '\n\nBir komutun detayı için man komut yaz, örnek man grep\nPipe |, redirect > >> <, && || ; ve $(komut) destekleniyor.\n');
   },
 
   ps(args) {
@@ -1488,7 +1488,7 @@ const COMMANDS = {
       `Tasks: ${this.procs.length} total`, `%Cpu(s): ${Math.min(99.9, load).toFixed(1)} us`, '',
       '    PID USER       %CPU %MEM COMMAND'];
     sorted.forEach(p => out.push(`${String(p.pid).padStart(7)} ${p.user.padEnd(10)} ${p.cpu.toFixed(1).padStart(4)} ${p.mem.toFixed(1).padStart(4)} ${p.cmd.split(' ')[0]}`));
-    out.push('', '[Gercek top canli guncellenir ve q ile cikilir. Burada tek bir anlik goruntu var]');
+    out.push('', '[Gerçek top canlı güncellenir, q ile çıkılır. Burada tek bir snapshot var]');
     return ok(join(out));
   },
   kill(args) {
@@ -1499,9 +1499,9 @@ const COMMANDS = {
       const i = this.procs.findIndex(p => p.pid === pid);
       if (i < 0) { err += `bash: kill: (${pid}) - No such process\n`; continue; }
       const p = this.procs[i];
-      if (pid === 1) { err += `bash: kill: (1) - init surecini oldurmek sistemi kapatir. Lab izin vermiyor.\n`; continue; }
+      if (pid === 1) { err += `bash: kill: (1) - init process'ini kill etmek sistemi kapatır. Lab izin vermiyor.\n`; continue; }
       if (!this.isRoot && p.user !== USER) { err += `bash: kill: (${pid}) - Operation not permitted\n`; continue; }
-      if (pid === 733) { err += `bash: kill: kendi kabugunu kapatmak uzere degilsin 🙂\n`; continue; }
+      if (pid === 733) { err += `bash: kill: kendi shell'ini kill etmeye kalkma 🙂\n`; continue; }
       this.procs.splice(i, 1);
     }
     return { out: '', err, code: err ? 1 : 0 };
@@ -1541,12 +1541,12 @@ const COMMANDS = {
       const dot = st === 'active' ? '●' : '×';
       const lines2 = [`${dot} ${unit}.service`, `     Loaded: loaded (/lib/systemd/system/${unit}.service; enabled)`,
         `     Active: ${st === 'active' ? 'active (running) since today' : st === 'failed' ? 'failed (Result: exit-code)' : 'inactive (dead)'}`];
-      if (unit === 'nginx' && st === 'failed') lines2.push('    Process: 901 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)', '', 'Ipucu: ayrinti icin journalctl -u nginx');
+      if (unit === 'nginx' && st === 'failed') lines2.push('    Process: 901 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)', '', '💡 Detay için journalctl -u nginx');
       return { out: join(lines2), err: '', code: st === 'active' ? 0 : 3 };
     }
     if (action === 'is-active') return { out: (st === 'failed' ? 'failed' : st) + '\n', err: '', code: st === 'active' ? 0 : 3 };
     if (['start', 'stop', 'restart', 'reload', 'enable', 'disable'].includes(action)) {
-      if (!this.isRoot) return fail(`Failed to ${action} ${unit}.service: Access denied\nIpucu: servis yonetimi root yetkisi ister, sudo kullan`);
+      if (!this.isRoot) return fail(`Failed to ${action} ${unit}.service: Access denied\n💡 Servis yönetimi root yetkisi ister, sudo kullan`);
       if (action === 'stop') { this.services[unit] = 'inactive'; return ok(); }
       if (action === 'enable' || action === 'disable') return ok(`${action === 'enable' ? 'Created symlink' : 'Removed'} /etc/systemd/system/multi-user.target.wants/${unit}.service\n`);
       if (unit === 'nginx') {
@@ -1583,7 +1583,7 @@ const COMMANDS = {
       if (e) return fail(`nginx: [emerg] ${e}\nnginx: configuration file /etc/nginx/nginx.conf test failed`);
       return { out: '', err: 'nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful\n', code: 0 };
     }
-    return fail('nginx servisini systemctl ile yonet, ayar testi icin sudo nginx -t');
+    return fail('nginx servisini systemctl ile yönet, config testi için sudo nginx -t');
   },
 
   ip(args) {
@@ -1616,7 +1616,7 @@ const COMMANDS = {
     for (let i = 1; i <= count; i++) { const t = +(base + Math.random() * base * 0.3).toFixed(2); times.push(t); out.push(`64 bytes from ${ip}: icmp_seq=${i} ttl=${ip.startsWith('127.') ? 64 : 117} time=${t} ms`); }
     const min = Math.min(...times), max = Math.max(...times), avg = times.reduce((a, b) => a + b, 0) / times.length;
     out.push('', `--- ${host} ping statistics ---`, `${count} packets transmitted, ${count} received, 0% packet loss, time ${(count - 1) * 1001}ms`, `rtt min/avg/max/mdev = ${min.toFixed(3)}/${avg.toFixed(3)}/${max.toFixed(3)}/0.120 ms`);
-    if (!vals.c) out.push('', '[Gercek Linux\'ta ping durmaz, Ctrl+C gerekir. Burada 4 paketle sinirli. Ileride -c kullan]');
+    if (!vals.c) out.push('', "[Gerçek Linux'ta ping durmaz, Ctrl+C gerekir. Burada 4 paketle sınırlı. Bundan sonra -c kullan]");
     return ok(join(out));
   },
   traceroute(args) {
@@ -1649,7 +1649,7 @@ const COMMANDS = {
     if (host === 'ifconfig.me' || host === 'icanhazip.com') return ok('84.104.22.17\n');
     if (host.startsWith('api.')) return ok('{"status":"ok","version":"2.4.1","uptime":86400}\n');
     if (head) return ok('HTTP/2 200\ncontent-type: text/html; charset=UTF-8\nserver: ECS\n');
-    return ok(`<!doctype html><html><head><title>${host}</title></head><body>Lab ortaminda dis dunya simule ediliyor.</body></html>\n`);
+    return ok(`<!doctype html><html><head><title>${host}</title></head><body>Lab ortamında dış dünya simüle ediliyor.</body></html>\n`);
   },
   wget(args) { return COMMANDS.curl.call(this, args.filter(a => !a.startsWith('-'))); },
   dig(args) {
@@ -1678,16 +1678,16 @@ const COMMANDS = {
       return r.out.trim() ? ok(r.out.trim() + '\t' + args[1] + '\n') : { out: '', err: '', code: 2 };
     }
     if (args[0] === 'passwd') return COMMANDS.grep.call(this, [args[1] ? '^' + args[1] + ':' : '', '/etc/passwd']);
-    return fail('getent: hosts veya passwd destekleniyor');
+    return fail('getent: sadece hosts ve passwd destekleniyor');
   },
   ssh(args) {
     const target = args.filter(a => !a.startsWith('-'))[0] || '';
-    if (/192\.168\.1\.10|localhost/.test(target)) return fail(`ssh: connect to host ${target.split('@').pop()} port 22: Connection refused\nIpucu: bu sunucunun ssh portu farkli olabilir, ss -tlnp ile bak`);
+    if (/192\.168\.1\.10|localhost/.test(target)) return fail(`ssh: connect to host ${target.split('@').pop()} port 22: Connection refused\n💡 Bu sunucunun ssh port'u farklı olabilir, ss -tlnp ile bak`);
     return fail(`ssh: connect to host ${target.split('@').pop()} port 22: Connection timed out`);
   },
   nano(args) {
     const f = args.filter(a => !a.startsWith('-'))[0];
-    if (!f) return fail('nano: dosya adi ver, ornek nano notlar.txt');
+    if (!f) return fail('nano: dosya adı ver, örnek nano notlar.txt');
     const abs = this.resolve(f);
     const n = this.node(abs);
     if (n && n.t === 'd') return fail(`nano: ${f} is a directory`);
@@ -1733,12 +1733,12 @@ const COMMANDS = {
   },
   submit(args) {
     const ans = args.join(' ').trim();
-    if (!ans) return fail('submit: cevabi yaz, ornek submit 42');
+    if (!ans) return fail('submit: cevabı yaz, örnek submit 42');
     this.lastSubmit = ans;
     this.ui.submit = ans;
-    return ok(`📨 Cevap gonderildi ${ans}\n`);
+    return ok(`📨 Cevap gönderildi ${ans}\n`);
   },
-  cowsay(args) { return ok(cowsay(args.join(' ') || 'Moo! Linux ogreniyorum')); },
+  cowsay(args) { return ok(cowsay(args.join(' ') || 'Moo! Linux öğreniyorum')); },
   fortune() { return ok(FORTUNES[Math.floor(Math.random() * FORTUNES.length)] + '\n'); },
   sl() { return ok('      ====        ________                ___________\n  _D _|  |_______/        \\__I_I_____===__|_________|\n   |(_)---  |   H\\________/ |   |        =|___ ___|\n   /     |  |   H  |  |     |   |         ||_| |_||\n  |      |  |   H  |__--------------------| [___] |\n  | ________|___H__/__|_____/[][]~\\_______|       |\n  |/ |   |-----------I_____I [][] []  D   |=======|_\n__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__\n |/-=|___|=    ||    ||    ||    |_____/~\\___/\n  \\_/      \\O=====O=====O=====O_/      \\_/\n\nls yazacaktin galiba 🚂\n'); },
   neofetch() { return ok('        .-/+oossssoo+/-.         burak@linuxlab\n    `:+ssssssssssssssssss+:`     --------------\n  -+ssssssssssssssssssyyssss+-   OS: Ubuntu 24.04 LTS x86_64\n.ossssssssssssssssssdMMMNysssso. Kernel: 6.8.0-45-generic\n/ssssssssssshdmmNNmmyNMMMMhssss/ Shell: bash 5.2\n+ssssssssshmydMMMMMMMNddddyssss+ Terminal: Linux Lab PWA\n/sssssssshNMMMyhhyyyyhmNMMMNhss/ CPU: Virtual CPU 2 cores\n.ssssssssdMMMNhsssssssssshNMMMd. Memory: 1.6GiB / 3.8GiB\n'); },
@@ -1747,59 +1747,59 @@ const COMMANDS = {
 
 /* Komut sozlugu, man ve sozluk sekmesi icin */
 const MANUAL = {
-  pwd: { d: 'Bulundugun dizinin tam yolunu yazdirir', u: ['pwd'], e: ['pwd'] },
-  ls: { d: 'Dizin icerigini listeler', u: ['ls [-l] [-a] [-h] [dizin]', '-l uzun format, -a gizliler dahil, -h okunabilir boyut'], e: ['ls', 'ls -la', 'ls -lh /var/log'] },
-  cd: { d: 'Dizin degistirir', u: ['cd dizin', 'cd .. bir ust dizin', 'cd ~ ev dizini', 'cd - onceki dizin'], e: ['cd /var/log', 'cd ..', 'cd'] },
-  cat: { d: 'Dosya icerigini yazdirir veya birlestirir', u: ['cat [-n] dosya...'], e: ['cat /etc/hostname', 'cat -n notes.txt'] },
-  echo: { d: 'Metni yazdirir', u: ['echo metin', 'echo $DEGISKEN'], e: ['echo "merhaba"', 'echo $HOME', 'echo "satir" >> dosya.txt'] },
-  touch: { d: 'Bos dosya olusturur ya da zaman damgasini gunceller', u: ['touch dosya'], e: ['touch yeni.txt'] },
-  mkdir: { d: 'Dizin olusturur', u: ['mkdir [-p] dizin', '-p ara dizinleri de olusturur'], e: ['mkdir lab', 'mkdir -p a/b/c'] },
-  rmdir: { d: 'Bos dizini siler', u: ['rmdir dizin'], e: ['rmdir eski'] },
-  rm: { d: 'Dosya veya dizin siler. Geri donusum kutusu yoktur', u: ['rm [-r] [-f] hedef', '-r dizinleri ozyinelemeli siler, -f sormadan siler'], e: ['rm dosya.txt', 'rm -r eski_dizin'] },
-  cp: { d: 'Kopyalar', u: ['cp [-r] kaynak hedef'], e: ['cp a.txt b.txt', 'cp -r proje proje_yedek'] },
-  mv: { d: 'Tasir veya yeniden adlandirir', u: ['mv kaynak hedef'], e: ['mv eski.txt yeni.txt', 'mv dosya.txt ~/Documents/'] },
-  head: { d: 'Dosyanin ilk satirlarini gosterir', u: ['head [-n N] dosya'], e: ['head -n 5 /var/log/syslog', 'head -3 dosya'] },
-  tail: { d: 'Dosyanin son satirlarini gosterir', u: ['tail [-n N] [-f] dosya', '-f dosyayi canli takip eder'], e: ['tail -n 20 /var/log/syslog', 'tail -f /var/log/auth.log'] },
-  wc: { d: 'Satir, kelime, karakter sayar', u: ['wc [-l] [-w] [-c] dosya'], e: ['wc -l /etc/passwd', 'cat dosya | wc -w'] },
-  grep: { d: 'Metin icinde desen arar', u: ['grep [-i] [-v] [-n] [-c] [-r] [-o] [-E] desen [dosya]', '-i harf duyarsiz, -v eslesmeyenler, -c sayi, -n satir no, -r ozyinelemeli'], e: ['grep error /var/log/syslog', 'grep -ic error /var/log/syslog', 'grep -r TODO ~'] },
-  sort: { d: 'Satirlari siralar', u: ['sort [-n] [-r] [-u] [-k N] [-t ayrac]'], e: ['sort isimler.txt', 'sort -k2 -n -r scores.txt'] },
-  uniq: { d: 'Ardisik tekrarlari teklestirir. Genelde sort ile kullanilir', u: ['uniq [-c] [-d]'], e: ['sort fruits.txt | uniq -c'] },
-  cut: { d: 'Satirlardan alan veya karakter keser', u: ['cut -d ayrac -f alanlar', 'cut -c 1-5'], e: ['cut -d: -f1 /etc/passwd', 'cut -d, -f1,3 cities.csv'] },
-  tr: { d: 'Karakter donusturur veya siler', u: ['tr set1 set2', 'tr -d set'], e: ['echo merhaba | tr a-z A-Z', "tr -d '\\r'"] },
-  sed: { d: 'Akis editoru. Bul ve degistir icin klasik arac', u: ["sed 's/eski/yeni/g' dosya", "sed -i 's/a/b/' dosya yerinde degistirir", "sed -n '2,4p' dosya", "sed '/desen/d'"], e: ["sed 's/TODO/YAPILACAK/g' notes.txt", "sudo sed -i 's/80q/80/' /etc/nginx/nginx.conf"] },
-  awk: { d: 'Satir ve sutun bazli metin isleme dili', u: ["awk '{print $1}'", "awk -F: '{print $1,$7}'", "awk '/desen/ {print $2}'", "awk '{s+=$2} END {print s}'"], e: ["awk '{print $1}' /var/log/nginx/access.log", "awk -F, 'NR>1 {print $1}' cities.csv"] },
-  find: { d: 'Dosya sistemi icinde arama yapar', u: ['find yol [-name desen] [-type f|d] [-user ad] [-perm 777] [-empty]'], e: ['find / -name "*.sh"', 'find /tmp -type f', 'find ~ -name "*.txt"'] },
-  tree: { d: 'Dizin agacini gosterir', u: ['tree [-a] [dizin]'], e: ['tree ~/projects'] },
-  chmod: { d: 'Dosya izinlerini degistirir', u: ['chmod 755 dosya', 'chmod +x dosya', 'chmod u+rw,go-rwx dosya', 'r=4 w=2 x=1, sira sahip grup diger'], e: ['chmod +x script.sh', 'chmod 600 gizli.txt'] },
-  chown: { d: 'Dosya sahibini degistirir, root gerekir', u: ['sudo chown kullanici[:grup] dosya'], e: ['sudo chown burak:burak dosya'] },
-  sudo: { d: 'Komutu root yetkisiyle calistirir', u: ['sudo komut'], e: ['sudo cat /etc/shadow', 'sudo systemctl restart nginx'] },
-  whoami: { d: 'Aktif kullanici adini yazdirir', u: ['whoami'], e: ['whoami', 'sudo whoami'] },
-  id: { d: 'Kullanici ve grup kimliklerini gosterir', u: ['id'], e: ['id'] },
-  ps: { d: 'Calisan surecleri listeler', u: ['ps', 'ps aux tum surecler'], e: ['ps aux', 'ps aux | grep python'] },
-  top: { d: 'Surecleri kaynak kullanimina gore canli gosterir', u: ['top'], e: ['top'] },
-  kill: { d: 'Surece sinyal gonderir, varsayilan SIGTERM', u: ['kill PID', 'kill -9 PID zorla oldurur'], e: ['kill 1024', 'sudo kill -9 1337'] },
-  pkill: { d: 'Ada gore surec oldurur', u: ['pkill isim'], e: ['sudo pkill cryptominer'] },
-  systemctl: { d: 'systemd servislerini yonetir', u: ['systemctl status|start|stop|restart|enable servis', 'systemctl --failed'], e: ['systemctl status nginx', 'sudo systemctl restart nginx'] },
-  journalctl: { d: 'systemd loglarini okur', u: ['journalctl -u servis'], e: ['journalctl -u nginx', 'journalctl -u sshd'] },
-  ip: { d: 'Ag arayuzleri, adres ve rotalari yonetir', u: ['ip addr', 'ip route', 'ip link', 'ip neigh'], e: ['ip a', 'ip r'] },
-  ping: { d: 'ICMP echo ile erisilebilirlik testi', u: ['ping [-c sayi] hedef'], e: ['ping -c 3 8.8.8.8'] },
-  traceroute: { d: 'Hedefe giden hop listesini gosterir', u: ['traceroute hedef'], e: ['traceroute 1.1.1.1'] },
-  ss: { d: 'Soket istatistikleri, dinleyen portlar', u: ['ss -tulpn'], e: ['ss -tlnp', 'ss -tulpn | grep 2222'] },
-  curl: { d: 'URL ile veri transferi, HTTP testleri', u: ['curl [-I] url', '-I sadece header'], e: ['curl http://localhost', 'curl -I http://localhost'] },
-  dig: { d: 'DNS sorgusu', u: ['dig alan_adi [+short]'], e: ['dig google.com +short'] },
-  getent: { d: 'NSS veritabanlarini sorgular, /etc/hosts dahil', u: ['getent hosts isim'], e: ['getent hosts intranet.local'] },
-  tee: { d: 'stdin\'i hem ekrana hem dosyaya yazar', u: ['komut | tee [-a] dosya'], e: ['echo "10.0.0.5 srv" | sudo tee -a /etc/hosts'] },
-  nano: { d: 'Basit metin editoru', u: ['nano dosya'], e: ['nano notlar.txt'] },
-  history: { d: 'Komut gecmisini gosterir', u: ['history'], e: ['history | grep ssh'] },
-  alias: { d: 'Komut kisayolu tanimlar', u: ["alias isim='komut'"], e: ["alias gs='git status'", 'alias'] },
-  export: { d: 'Ortam degiskenini alt sureclere aktarir', u: ['export AD=deger'], e: ['export EDITOR=vim'] },
-  env: { d: 'Ortam degiskenlerini listeler', u: ['env'], e: ['env | grep PATH'] },
+  pwd: { d: "Bulunduğun directory'nin full path'ini yazdırır", u: ['pwd'], e: ['pwd'] },
+  ls: { d: 'Directory içeriğini listeler', u: ['ls [-l] [-a] [-h] [dizin]', "-l long format, -a hidden file'lar dahil, -h okunabilir boyut"], e: ['ls', 'ls -la', 'ls -lh /var/log'] },
+  cd: { d: 'Directory değiştirir', u: ['cd dizin', 'cd .. bir üst directory', 'cd ~ home directory', 'cd - önceki directory'], e: ['cd /var/log', 'cd ..', 'cd'] },
+  cat: { d: 'Dosya içeriğini yazdırır ya da dosyaları birleştirir', u: ['cat [-n] dosya...'], e: ['cat /etc/hostname', 'cat -n notes.txt'] },
+  echo: { d: "Metni output'a yazar", u: ['echo metin', 'echo $DEGISKEN'], e: ['echo "merhaba"', 'echo $HOME', 'echo "satir" >> dosya.txt'] },
+  touch: { d: "Boş dosya oluşturur ya da timestamp'i günceller", u: ['touch dosya'], e: ['touch yeni.txt'] },
+  mkdir: { d: 'Directory oluşturur', u: ['mkdir [-p] dizin', "-p ara directory'leri de oluşturur"], e: ['mkdir lab', 'mkdir -p a/b/c'] },
+  rmdir: { d: "Boş directory'yi siler", u: ['rmdir dizin'], e: ['rmdir eski'] },
+  rm: { d: 'Dosya ya da directory siler. Çöp kutusu yok, gitti mi gitti', u: ['rm [-r] [-f] hedef', "-r directory'leri recursive siler, -f sormadan siler"], e: ['rm dosya.txt', 'rm -r eski_dizin'] },
+  cp: { d: 'Dosya ya da directory kopyalar', u: ['cp [-r] kaynak hedef'], e: ['cp a.txt b.txt', 'cp -r proje proje_yedek'] },
+  mv: { d: 'Taşır ya da rename eder', u: ['mv kaynak hedef'], e: ['mv eski.txt yeni.txt', 'mv dosya.txt ~/Documents/'] },
+  head: { d: 'Dosyanın ilk satırlarını gösterir', u: ['head [-n N] dosya'], e: ['head -n 5 /var/log/syslog', 'head -3 dosya'] },
+  tail: { d: 'Dosyanın son satırlarını gösterir', u: ['tail [-n N] [-f] dosya', '-f dosyayı canlı takip eder, log izlerken birebir'], e: ['tail -n 20 /var/log/syslog', 'tail -f /var/log/auth.log'] },
+  wc: { d: 'Satır, kelime ve karakter sayar', u: ['wc [-l] [-w] [-c] dosya'], e: ['wc -l /etc/passwd', 'cat dosya | wc -w'] },
+  grep: { d: 'Metin içinde pattern arar', u: ['grep [-i] [-v] [-n] [-c] [-r] [-o] [-E] desen [dosya]', '-i case insensitive, -v eşleşmeyenler, -c sayı, -n satır no, -r recursive'], e: ['grep error /var/log/syslog', 'grep -ic error /var/log/syslog', 'grep -r TODO ~'] },
+  sort: { d: 'Satırları sıralar', u: ['sort [-n] [-r] [-u] [-k N] [-t ayraç]'], e: ['sort isimler.txt', 'sort -k2 -n -r scores.txt'] },
+  uniq: { d: 'Ardışık tekrarları teke indirir. Genelde sort ile kullanılır', u: ['uniq [-c] [-d]'], e: ['sort fruits.txt | uniq -c'] },
+  cut: { d: 'Satırlardan field ya da karakter keser', u: ['cut -d ayraç -f alanlar', 'cut -c 1-5'], e: ['cut -d: -f1 /etc/passwd', 'cut -d, -f1,3 cities.csv'] },
+  tr: { d: 'Karakterleri dönüştürür ya da siler', u: ['tr set1 set2', 'tr -d set'], e: ['echo merhaba | tr a-z A-Z', "tr -d '\\r'"] },
+  sed: { d: 'Stream editor. Bul ve değiştir için klasik araç', u: ["sed 's/eski/yeni/g' dosya", "sed -i 's/a/b/' dosya, dosyayı in-place değiştirir", "sed -n '2,4p' dosya", "sed '/desen/d'"], e: ["sed 's/TODO/YAPILACAK/g' notes.txt", "sudo sed -i 's/80q/80/' /etc/nginx/nginx.conf"] },
+  awk: { d: 'Satır ve sütun bazlı text processing dili', u: ["awk '{print $1}'", "awk -F: '{print $1,$7}'", "awk '/desen/ {print $2}'", "awk '{s+=$2} END {print s}'"], e: ["awk '{print $1}' /var/log/nginx/access.log", "awk -F, 'NR>1 {print $1}' cities.csv"] },
+  find: { d: 'Filesystem içinde arama yapar', u: ['find yol [-name desen] [-type f|d] [-user ad] [-perm 777] [-empty]'], e: ['find / -name "*.sh"', 'find /tmp -type f', 'find ~ -name "*.txt"'] },
+  tree: { d: 'Directory ağacını gösterir', u: ['tree [-a] [dizin]'], e: ['tree ~/projects'] },
+  chmod: { d: "Dosya permission'larını değiştirir", u: ['chmod 755 dosya', 'chmod +x dosya', 'chmod u+rw,go-rwx dosya', 'r=4 w=2 x=1, sıra owner group others'], e: ['chmod +x script.sh', 'chmod 600 gizli.txt'] },
+  chown: { d: "Dosyanın owner'ını değiştirir, root gerekir", u: ['sudo chown kullanıcı[:grup] dosya'], e: ['sudo chown burak:burak dosya'] },
+  sudo: { d: 'Komutu root yetkisiyle çalıştırır', u: ['sudo komut'], e: ['sudo cat /etc/shadow', 'sudo systemctl restart nginx'] },
+  whoami: { d: 'Aktif kullanıcı adını yazdırır', u: ['whoami'], e: ['whoami', 'sudo whoami'] },
+  id: { d: "User ve group ID'lerini gösterir", u: ['id'], e: ['id'] },
+  ps: { d: "Çalışan process'leri listeler", u: ['ps', "ps aux tüm process'ler"], e: ['ps aux', 'ps aux | grep python'] },
+  top: { d: "Process'leri kaynak kullanımına göre canlı gösterir", u: ['top'], e: ['top'] },
+  kill: { d: "Process'e signal gönderir, default SIGTERM", u: ['kill PID', 'kill -9 PID zorla öldürür'], e: ['kill 1024', 'sudo kill -9 1337'] },
+  pkill: { d: 'İsme göre process kill eder', u: ['pkill isim'], e: ['sudo pkill cryptominer'] },
+  systemctl: { d: 'systemd servislerini yönetir', u: ['systemctl status|start|stop|restart|enable servis', 'systemctl --failed'], e: ['systemctl status nginx', 'sudo systemctl restart nginx'] },
+  journalctl: { d: "systemd log'larını okur", u: ['journalctl -u servis'], e: ['journalctl -u nginx', 'journalctl -u sshd'] },
+  ip: { d: 'Interface, adres ve route yönetimi', u: ['ip addr', 'ip route', 'ip link', 'ip neigh'], e: ['ip a', 'ip r'] },
+  ping: { d: 'ICMP echo ile erişilebilirlik testi', u: ['ping [-c sayı] hedef'], e: ['ping -c 3 8.8.8.8'] },
+  traceroute: { d: 'Hedefe giden hop listesini gösterir', u: ['traceroute hedef'], e: ['traceroute 1.1.1.1'] },
+  ss: { d: "Socket istatistikleri, dinleyen port'lar", u: ['ss -tulpn'], e: ['ss -tlnp', 'ss -tulpn | grep 2222'] },
+  curl: { d: 'URL ile veri transferi, HTTP testleri için birebir', u: ['curl [-I] url', '-I sadece header'], e: ['curl http://localhost', 'curl -I http://localhost'] },
+  dig: { d: 'DNS sorgusu atar', u: ['dig alan_adi [+short]'], e: ['dig google.com +short'] },
+  getent: { d: "NSS database'lerini sorgular, /etc/hosts dahil", u: ['getent hosts isim'], e: ['getent hosts intranet.local'] },
+  tee: { d: "stdin'i hem ekrana hem dosyaya yazar", u: ['komut | tee [-a] dosya'], e: ['echo "10.0.0.5 srv" | sudo tee -a /etc/hosts'] },
+  nano: { d: 'Basit text editor', u: ['nano dosya'], e: ['nano notlar.txt'] },
+  history: { d: 'Komut geçmişini gösterir', u: ['history'], e: ['history | grep ssh'] },
+  alias: { d: 'Komut kısayolu tanımlar', u: ["alias isim='komut'"], e: ["alias gs='git status'", 'alias'] },
+  export: { d: "Environment variable'ı child process'lere aktarır", u: ['export AD=deger'], e: ['export EDITOR=vim'] },
+  env: { d: "Environment variable'ları listeler", u: ['env'], e: ['env | grep PATH'] },
   df: { d: 'Disk doluluk durumu', u: ['df -h'], e: ['df -h'] },
-  du: { d: 'Dizin veya dosyanin disk kullanimi', u: ['du -sh yol'], e: ['du -sh /var/log'] },
-  free: { d: 'Bellek kullanimi', u: ['free -h'], e: ['free -h'] },
+  du: { d: 'Directory ya da dosyanın disk kullanımı', u: ['du -sh yol'], e: ['du -sh /var/log'] },
+  free: { d: 'Memory kullanımı', u: ['free -h'], e: ['free -h'] },
   uname: { d: 'Sistem bilgisi', u: ['uname [-a] [-r]'], e: ['uname -a'] },
-  xargs: { d: 'stdin\'den gelenleri komuta arguman yapar', u: ['komut | xargs komut2'], e: ['find /tmp -name "*.log" | xargs rm'] },
-  submit: { d: 'Lab ozel, dedektif gorevlerinde cevap gonderir', u: ['submit cevap'], e: ['submit 203.0.113.45'] },
+  xargs: { d: "stdin'den gelenleri komuta argument olarak verir", u: ['komut | xargs komut2'], e: ['find /tmp -name "*.log" | xargs rm'] },
+  submit: { d: "Lab'a özel, dedektif görevlerinde cevap gönderir", u: ['submit cevap'], e: ['submit 203.0.113.45'] },
 };
 
 if (typeof module !== 'undefined') module.exports = { Shell, LOGS, HOME, USER, lines, COMMANDS, MANUAL };
