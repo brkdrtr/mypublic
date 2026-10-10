@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="A2 Nederlands">
+<meta name="theme-color" content="#ff6b00">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>A2 Nederlands</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="brand"><span class="flag"><i></i><i></i><i></i></span> A2 Nederlands</div>
+    <div class="stats"><span id="streak">🔥 0</span><span id="xp" class="pill">0 XP</span></div>
+  </header>
+  <main id="main"></main>
+  <nav id="tabs">
+    <button data-t="home" class="on"><span>🏠</span>Vandaag</button>
+    <button data-t="words"><span>📇</span>Woorden</button>
+    <button data-t="practice"><span>🧩</span>Oefenen</button>
+    <button data-t="exam"><span>📝</span>Examen</button>
+    <button data-t="me"><span>⚙️</span>Profiel</button>
+  </nav>
+</div>
+<div id="toast" class="toast hidden"></div>
+<div id="pop" class="pop hidden"></div>
+
+<script src="vocab.js"></script>
+<script src="grammar.js"></script>
+<script src="content.js"></script>
+<script src="knm.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
