@@ -223,6 +223,16 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
     TTS.voices = saved;
     return [a, b, c];
   });
+  const dupTest = await page.evaluate(() => {
+    const saved = TTS.voices;
+    TTS.voices = [{ name: 'Ellen', lang: 'nl-BE', voiceURI: 'com.apple.voice.compact.nl-BE.Ellen' }, { name: 'Ellen', lang: 'nl-BE', voiceURI: 'com.apple.voice.enhanced.nl-BE.Ellen' }, { name: 'Xander', lang: 'nl-NL', voiceURI: 'com.apple.voice.compact.nl-NL.Xander' }];
+    S.set.voiceF = TTS.id(TTS.voices[1]);
+    const picked = TTS.pick('f');
+    const r = [TTS.label(TTS.voices[0]), TTS.label(TTS.voices[1]), picked === TTS.voices[1]];
+    S.set.voiceF = ''; TTS.voices = saved;
+    return r;
+  });
+  ok(dupTest[0] === 'Ellen #1 · nl-BE · Standart' && dupTest[1] === 'Ellen #2 · nl-BE · Enhanced' && dupTest[2] === true, 'ayni isimli sesler ayirt ediliyor ve secilen kimlikle bulunuyor', dupTest.join(' | '));
   ok(voiceTest[0] === 'Xander/Xander' && voiceTest[1] === 'Claire/Xander (Enhanced)' && voiceTest[2] === 'Xander/Xander', 'zayif veya Belcika kadin sesi yerine erkek ses, iyi nl-NL kadin ses varsa o', voiceTest.join(' | '));
 
   /* ---------- 8. KNM ---------- */

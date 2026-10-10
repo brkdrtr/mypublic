@@ -17,7 +17,7 @@ const STR = {
     back: 'Geri', start: 'Başla', again: 'Tekrar', next: 'Sonraki ›', result: 'Sonuç', check: 'Kontrol et', finish: 'Bitir',
     list_back: 'Listeye dön', listen: '🔊 Dinle',
     who_title: 'Kim çalışıyor?', who_sub: 'Her profilin ilerlemesi ve ayarları ayrı tutulur.', who_add: 'Yeni profil', new_title: 'Yeni profil', new_name: 'İsim', new_icon: 'Simge', new_create: 'Profili oluştur', new_err: 'Bir isim yaz', new_dup: 'Bu isimde bir profil zaten var',
-    me_delete: 'Profili sil', me_delete_q: '{name} profili ve tüm ilerlemesi silinecek. Emin misin?', me_voices_all: 'Telefondaki Hollandaca sesler', me_voices_reload: 'Ses listesini yenile', sp_autostop: 'Susunca kendiliğinden durur',
+    me_delete: 'Profili sil', me_delete_q: '{name} profili ve tüm ilerlemesi silinecek. Emin misin?', me_voices_all: 'Telefondaki Hollandaca sesler', me_voices_reload: 'Ses listesini yenile', me_voices_help: 'Aynı isimli sesler olabilir, Safari bunları ayırt etmez. Her birini ▶ ile dinle, en anlaşılır olanı yukarıdaki menüden seç.', sp_autostop: 'Susunca kendiliğinden durur',
     exam_left: 'Sınava kalan', exam_today: 'Sınav bugün, succes! 🍀', exam_past: 'Sınav tarihi geçti', exam_set: 'Sınav tarihini Profil\'den gir',
     days: '{n} gün', hello: 'Hoi {name} 👋', home_sub: '{w} kelime çalışıldı · bugünkü plan {d}/{t}',
     plan_title: 'Bugünkü plan', plan_cards: 'Flashcard tekrarı', plan_cards_s: 'Bugün {c} kart · {d} kart sırada',
@@ -87,7 +87,7 @@ const STR = {
     back: 'Back', start: 'Start', again: 'Again', next: 'Next ›', result: 'Result', check: 'Check', finish: 'Finish',
     list_back: 'Back to list', listen: '🔊 Listen',
     who_title: 'Who is studying?', who_sub: 'Each profile keeps its own progress and settings.', who_add: 'New profile', new_title: 'New profile', new_name: 'Name', new_icon: 'Icon', new_create: 'Create profile', new_err: 'Enter a name', new_dup: 'A profile with this name already exists',
-    me_delete: 'Delete profile', me_delete_q: 'The {name} profile and all its progress will be deleted. Are you sure?', me_voices_all: 'Dutch voices on this phone', me_voices_reload: 'Refresh voice list', sp_autostop: 'Stops by itself when you stop talking',
+    me_delete: 'Delete profile', me_delete_q: 'The {name} profile and all its progress will be deleted. Are you sure?', me_voices_all: 'Dutch voices on this phone', me_voices_reload: 'Refresh voice list', me_voices_help: 'There can be voices with the same name, Safari does not tell them apart. Play each with ▶ and pick the clearest one in the menus above.', sp_autostop: 'Stops by itself when you stop talking',
     exam_left: 'Until the exam', exam_today: 'Exam today, succes! 🍀', exam_past: 'Exam date has passed', exam_set: 'Set your exam date in Profile',
     days: '{n} days', hello: 'Hoi {name} 👋', home_sub: '{w} words studied · today\'s plan {d}/{t}',
     plan_title: 'Today\'s plan', plan_cards: 'Flashcard review', plan_cards_s: '{c} cards today · {d} due',
@@ -276,11 +276,23 @@ function vib(p) { if (navigator.vibrate) navigator.vibrate(p); }
 
 const TTS = {
   voices: [],
-  load() { if ('speechSynthesis' in window) this.voices = speechSynthesis.getVoices().filter(v => /^nl/i.test(v.lang)); },
+  load() {
+    if (!('speechSynthesis' in window)) return;
+    const seen = new Set();
+    this.voices = speechSynthesis.getVoices().filter(v => /^nl/i.test(v.lang)).filter(v => { const k = this.id(v); if (seen.has(k)) return false; seen.add(k); return true; });
+  },
+  /* Safari ayni adla birden fazla ses verebiliyor, kimlik voiceURI ve dil ile kurulur */
+  id(v) { return (v.voiceURI || v.name) + '|' + v.lang; },
+  label(v) {
+    const same = this.voices.filter(x => x.name === v.name && x.lang === v.lang);
+    const n = same.length > 1 ? ' #' + (same.indexOf(v) + 1) : '';
+    return v.name + n + ' · ' + v.lang + ' · ' + this.qualityLabel(v);
+  },
   quality(v) {
     const id = (v.voiceURI || '') + ' ' + v.name;
     if (/premium/i.test(id)) return 3;
-    if (/enhanced|verbeterd|gelişmiş|neural|natural|online/i.test(id)) return 2;
+    if (/enhanced|verbeterd|gelişmiş|neural|natural|online|-super|\.super/i.test(id)) return 2;
+    if (/compact/i.test(id)) return 1;
     return 1;
   },
   qualityLabel(v) { return v ? t(['', 'q_standard', 'q_enhanced', 'q_premium'][this.quality(v)]) : ''; },
@@ -299,7 +311,7 @@ const TTS = {
   pick(g) {
     if (!this.voices.length) this.load();
     const want = g === 'm' ? S.set.voiceM : S.set.voiceF;
-    const chosen = this.voices.find(x => x.name === want);
+    const chosen = this.voices.find(x => this.id(x) === want) || this.voices.find(x => x.name === want);
     if (chosen) return chosen;
     const best = gg => this.voices.slice().sort((a, b) => this.score(b, gg) - this.score(a, gg))[0] || null;
     const m = best('m'), f = best('f');
@@ -1502,7 +1514,7 @@ function ExamLuisteren() {
 
 function Me() {
   TTS.load();
-  const vOpt = sel => `<option value="">${esc(t('me_auto'))}</option>` + TTS.voices.map(v => `<option ${v.name === sel ? 'selected' : ''} value="${esc(v.name)}">${esc(v.name)} · ${esc(v.lang)} · ${esc(TTS.qualityLabel(v))}</option>`).join('');
+  const vOpt = sel => `<option value="">${esc(t('me_auto'))}</option>` + TTS.voices.map(v => `<option ${TTS.id(v) === sel || (sel && !TTS.voices.some(x => TTS.id(x) === sel) && v.name === sel) ? 'selected' : ''} value="${esc(TTS.id(v))}">${esc(TTS.label(v))}</option>`).join('');
   const vf = TTS.pick('f'), vm = TTS.pick('m');
   const best = Math.max(vf ? TTS.quality(vf) : 0, vm ? TTS.quality(vm) : 0);
   const prof = PROFILES.find(p => p.id === PROFILE) || {};
@@ -1521,7 +1533,7 @@ function Me() {
   h += `<div class="row" style="margin-top:8px"><button class="btn sm alt" id="s-test">${esc(t('me_test'))}</button></div>`;
   h += `<p class="small muted">${esc(TTS.voices.length ? t('me_voice_found', { n: TTS.voices.length }) : t('me_voice_none'))}</p>`;
   h += `<div class="small ${best >= 2 ? 'muted' : 'ex'}">${t('me_voice_help')}</div>`;
-  h += `<details class="small" style="margin-top:10px"><summary>${esc(t('me_voices_all'))}</summary><div class="voice-list">${TTS.voices.length ? TTS.voices.map(v => `<div class="${v === vf || v === vm ? 'on' : ''}">${esc(v.name)} · ${esc(v.lang)} · ${esc(TTS.qualityLabel(v))}${TTS.gender(v) ? ' · ' + (TTS.gender(v) === 'f' ? '♀' : '♂') : ''}<br><span class="muted">${esc(v.voiceURI || '')}</span></div>`).join('') : esc(t('me_voice_none'))}</div><button class="btn sm alt" id="s-vreload" style="margin-top:8px">${esc(t('me_voices_reload'))}</button></details></div>`;
+  h += `<details class="small" style="margin-top:10px"><summary>${esc(t('me_voices_all'))}</summary><p class="muted">${esc(t('me_voices_help'))}</p><div class="voice-list">${TTS.voices.length ? TTS.voices.map((v, i) => `<div class="${v === vf || v === vm ? 'on' : ''}"><button class="spk mini" data-vi="${i}">▶</button> ${esc(TTS.label(v))}${TTS.gender(v) ? ' · ' + (TTS.gender(v) === 'f' ? '♀' : '♂') : ''}<br><span class="muted">${esc(v.voiceURI || '')}</span></div>`).join('') : esc(t('me_voice_none'))}</div><button class="btn sm alt" id="s-vreload" style="margin-top:8px">${esc(t('me_voices_reload'))}</button></details></div>`;
   h += `<h3>${esc(t('me_lt'))}</h3><div class="card"><div class="setting"><span>${esc(t('me_lt'))}</span><input type="checkbox" id="s-lt" ${S.set.lt !== false ? 'checked' : ''}></div><p class="small muted">${esc(t('me_lt_help'))}</p></div>`;
   h += `<h3>${esc(t('me_ai'))}</h3><div class="card"><p class="small muted" style="margin-top:0">${esc(t('me_ai_help'))}</p>`;
   h += `<div class="setting"><span>${esc(t('me_ai_key'))}</span><span class="small ${AI.key() ? '' : 'muted'}" id="s-ai-state">${esc(AI.key() ? t('me_ai_on') : t('me_ai_off'))}</span></div>`;
@@ -1565,6 +1577,13 @@ function Me() {
     });
   };
   const vr = $('#s-vreload'); if (vr) vr.onclick = () => { TTS.load(); Me(); const d = $('#main details'); if (d) d.open = true; };
+  $$('[data-vi]').forEach(b => b.onclick = () => {
+    const v = TTS.voices[+b.dataset.vi]; if (!v) return;
+    TTS.stop();
+    const u = new SpeechSynthesisUtterance('Goedemiddag. Ik ben ' + v.name + '. Hoe gaat het met u?');
+    u.voice = v; u.lang = v.lang; u.rate = S.set.rate;
+    speechSynthesis.speak(u);
+  });
   const del = $('#s-del'); if (del) del.onclick = () => {
     if (!confirm(t('me_delete_q', { name: profName() }))) return;
     const gone = PROFILE;
