@@ -50,7 +50,10 @@ const STR = {
     w_fields_empty: '{n} alan boş', w_fields_ok: 'Tüm alanlar dolu', w_sentence: '{f} tam cümle mi, büyük harfle başlayıp noktayla bitiyor mu',
     w_len: 'Uzunluk {n} kelime, en az {m}', w_model: 'Örnek cevap', w_basic_note: 'Bu temel kontrol. de/het, fiil çekimi, büyük harf gibi bilinen hataları düzeltir. Tam düzeltme için Profil\'den Claude API anahtarı ekle.',
     w_ai_note: 'Claude tarafından düzeltildi', w_score: 'Puan {n}/5', w_empty: 'Önce bir şey yaz 🙂',
-    sp_rec_start: 'Kayda başla', sp_ready: 'Kaydın hazır', sp_transcript: 'Söylediğin metin', sp_transcript_ph: 'Kayıttan sonra burada çıkar. Çıkmazsa klavyedeki 🎤 ile Hollandaca dikte et ya da yaz.',
+    sp_rec_start: 'Kayda başla', sp_ready: 'Kaydın hazır', sp_transcript: 'Söylediğin metin', sp_transcript_ph: 'Konuştuğun metin burada görünür. İstersen kendin de yazabilirsin.',
+    sp_sr: 'Konuş, yazıya dökülsün', sp_sr_s: 'Söylediğin Hollandaca metne çevrilir', sp_sr_stop: 'Bitir', sp_listening: 'Dinliyorum, Hollandaca konuş...', sp_rec: 'Sesimi kaydet', sp_rec_s: 'Sonra kendini dinle', sp_rec_stop: 'Kaydı bitir', sp_busy: 'Önce diğer kaydı bitir',
+    sp_sr_none: 'Bu cihazda ses tanıma yok. Klavyedeki 🎤 ile dikte et.', sp_sr_denied: 'Ses tanımaya izin verilmedi. Ayarlar › Safari › Mikrofon ve Konuşma Tanıma izinlerini aç ya da klavyedeki 🎤 ile dikte et.', sp_sr_nospeech: 'Ses duyulmadı, tekrar dene', sp_sr_err: 'Ses tanıma durdu, {e}. Klavyedeki 🎤 ile dikte edebilirsin.', sp_rec_empty: 'Kayıt boş geldi. Mikrofon iznini kontrol et.',
+    sp_dict_q: 'Ses tanıma çalışmıyorsa ne yapayım?', sp_dict_a: 'Metin kutusuna dokun, klavyede 🌐 ile Nederlands klavyeye geç, sonra 🎤 tuşuna basıp konuş. iPhone söylediğini yazıya döker. Nederlands klavye yoksa Ayarlar › Genel › Klavye › Klavyeler › Yeni Klavye Ekle › Nederlands.',
     sp_model_show: 'Örnek cevabı göster', sp_model_hide: 'Örnek cevabı gizle', sp_check: 'Cevabımı kontrol et', sp_need_text: 'Kontrol için söylediğin metin lazım. Kayıt yap ya da yaz.',
     sp_nomic: 'Mikrofon izni lazım. Ayarlar, Safari, Mikrofon', sp_norec: 'Bu tarayıcı ses kaydını desteklemiyor',
     sp_eval: 'Değerlendirme', sp_answers: 'Soruya cevap veriyor', sp_len: 'Uzunluk {n} kelime, hedef en az {m}', sp_sent: '{n} cümle', sp_conn: 'omdat veya want ile gerekçe', sp_keywords: 'Konuyla ilgili kelimeler', sp_better: 'Daha iyi bir A2 cevabı',
@@ -116,7 +119,10 @@ const STR = {
     w_fields_empty: '{n} fields empty', w_fields_ok: 'All fields filled', w_sentence: '{f} is a full sentence with a capital and a full stop',
     w_len: 'Length {n} words, at least {m}', w_model: 'Model answer', w_basic_note: 'This is the basic check. It fixes known errors like de/het, verb agreement and capitals. For a full correction add a Claude API key in Profile.',
     w_ai_note: 'Corrected by Claude', w_score: 'Score {n}/5', w_empty: 'Write something first 🙂',
-    sp_rec_start: 'Start recording', sp_ready: 'Recording ready', sp_transcript: 'What you said', sp_transcript_ph: 'Appears here after recording. If not, use the 🎤 on your keyboard to dictate in Dutch, or type.',
+    sp_rec_start: 'Start recording', sp_ready: 'Recording ready', sp_transcript: 'What you said', sp_transcript_ph: 'What you say appears here. You can also type.',
+    sp_sr: 'Speak, turn it into text', sp_sr_s: 'What you say is written out in Dutch', sp_sr_stop: 'Stop', sp_listening: 'Listening, speak Dutch...', sp_rec: 'Record my voice', sp_rec_s: 'Then listen to yourself', sp_rec_stop: 'Stop recording', sp_busy: 'Finish the other recording first',
+    sp_sr_none: 'Speech recognition is not available. Use the 🎤 on your keyboard to dictate.', sp_sr_denied: 'Speech recognition was not allowed. Turn on Microphone and Speech Recognition in Settings › Safari, or use the 🎤 on your keyboard to dictate.', sp_sr_nospeech: 'No speech heard, try again', sp_sr_err: 'Speech recognition stopped, {e}. You can dictate with the 🎤 on your keyboard.', sp_rec_empty: 'The recording was empty. Check the microphone permission.',
+    sp_dict_q: 'What if speech recognition does not work?', sp_dict_a: 'Tap the text box, switch to the Dutch keyboard with 🌐, then tap 🎤 and speak. Your iPhone writes out what you say. No Dutch keyboard yet? Settings › General › Keyboard › Keyboards › Add New Keyboard › Dutch.',
     sp_model_show: 'Show model answer', sp_model_hide: 'Hide model answer', sp_check: 'Check my answer', sp_need_text: 'Your spoken text is needed. Record or type it.',
     sp_nomic: 'Microphone permission needed. Settings, Safari, Microphone', sp_norec: 'This browser cannot record audio',
     sp_eval: 'Evaluation', sp_answers: 'Answers the question', sp_len: 'Length {n} words, target at least {m}', sp_sent: '{n} sentences', sp_conn: 'Reason with omdat or want', sp_keywords: 'Words related to the topic', sp_better: 'A better A2 answer',
@@ -279,7 +285,7 @@ const TTS = {
   },
   score(v, g) {
     let s = this.quality(v) * 10;
-    if (/nl[-_]NL/i.test(v.lang)) s += 5;
+    if (/nl[-_]NL/i.test(v.lang)) s += 12;
     if (this.gender(v) === g) s += 4; else if (this.gender(v)) s -= 2;
     if (v.localService) s += 1;
     return s;
@@ -289,7 +295,11 @@ const TTS = {
     const want = g === 'm' ? S.set.voiceM : S.set.voiceF;
     const chosen = this.voices.find(x => x.name === want);
     if (chosen) return chosen;
-    return this.voices.slice().sort((a, b) => this.score(b, g) - this.score(a, g))[0] || null;
+    const best = gg => this.voices.slice().sort((a, b) => this.score(b, gg) - this.score(a, gg))[0] || null;
+    const m = best('m'), f = best('f');
+    /* Kadin ses sadece gercekten kadin, nl-NL ve erkek ses kadar kaliteliyse kullanilir. Yoksa anlasilirlik icin erkek ses */
+    if (g === 'f') return f && this.gender(f) === 'f' && /nl[-_]NL/i.test(f.lang) && this.quality(f) >= (m ? this.quality(m) : 0) ? f : (m || f);
+    return m || f;
   },
   /* Uzun metni cumlelere boler. iOS uzun parcalarda sesi kesebiliyor, kisa parcalar da daha anlasilir */
   chunks(text) { return String(text).replace(/\n+/g, '. ').replace(/\.\s*\./g, '.').split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => /[A-Za-zÀ-ÿ0-9]/.test(s)); },
@@ -312,8 +322,7 @@ const TTS = {
       const v = this.pick(it.g);
       if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'nl-NL';
       u.rate = S.set.rate;
-      const other = this.pick(it.g === 'm' ? 'f' : 'm');
-      u.pitch = v && other === v ? (it.g === 'm' ? 0.85 : 1.12) : 1;
+      u.pitch = 1;
       u.onend = () => setTimeout(next, it.pause || 120);
       u.onerror = () => setTimeout(next, 50);
       speechSynthesis.speak(u);
@@ -517,7 +526,7 @@ function changesHTML(changes) {
 let tab = 'home';
 const stack = [];
 let timers = [];
-function stopTimers() { timers.forEach(clearInterval); timers = []; if (window._stopSeq) { window._stopSeq(); window._stopSeq = null; } stopRecording(); hidePop(); }
+function stopTimers() { timers.forEach(clearInterval); timers = []; if (window._stopSeq) { window._stopSeq(); window._stopSeq = null; } stopRecording(); stopSR(); hidePop(); }
 function open(fn, ...args) { TTS.stop(); stopTimers(); stack.push([fn, args]); fn(...args); $('#main').scrollTop = 0; }
 function back() { TTS.stop(); stopTimers(); stack.pop(); const top = stack[stack.length - 1]; if (top) top[0](...top[1]); else switchTab(tab); $('#main').scrollTop = 0; }
 function switchTab(tb) {
@@ -991,8 +1000,10 @@ function Schrijven(id) {
   };
 }
 
-/* Kayit */
+/* Kayit ve ses tanima */
 let rec = null;
+let srInst = null, srTimer = null;
+function stopSR() { clearTimeout(srTimer); if (srInst) { const r = srInst; srInst = null; r.onend = null; try { r.abort(); } catch (e) { /* yok */ } } }
 function stopRecording() {
   if (!rec) return;
   const r = rec; rec = null;
@@ -1022,22 +1033,30 @@ function Spreken(id) {
   const x = SPREKEN.find(s => s.id === id);
   const idx = SPREKEN.indexOf(x);
   let audioURL = null; let showModel = false; let secs = 0; let transcript = ''; let resultHTML = '';
+  let listening = false;
   const limit = x.part === 3 ? 60 : 30;
+  const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
   const draw = () => {
     const recording = !!(rec && rec.mr && rec.mr.state === 'recording');
     let h = backBtn('Spreken') + `<div class="card"><div class="small muted">Deel ${x.part} · ${esc(t('sp_part' + x.part))}</div><div style="font-weight:800;font-size:19px;margin:6px 0">${tw(x.prompt)}</div>${S.set.showTr ? `<div class="small muted">${esc(L10N.sTr(x))}</div>` : ''}<div class="row" style="margin-top:10px"><button class="spk" id="sp-say">${esc(t('listen'))}</button></div></div>`;
-    h += `<div class="card center"><button class="rec ${recording ? 'on' : ''}" id="sp-rec" aria-label="record">${recording ? '■' : '🎙️'}</button><div style="margin-top:8px;font-weight:700" class="timer" id="sp-timer">${esc(recording ? secs + ' / ' + limit + ' s' : audioURL ? t('sp_ready') : t('sp_rec_start'))}</div>`;
-    if (audioURL) h += `<audio controls src="${audioURL}" style="width:100%;margin-top:10px"></audio>`;
-    h += `<div class="field" style="text-align:left;margin-top:12px"><label>${esc(t('sp_transcript'))}</label><textarea id="sp-text" rows="4" lang="nl" autocapitalize="sentences" placeholder="${esc(t('sp_transcript_ph'))}">${esc(transcript)}</textarea></div>`;
+    h += `<div class="card"><div class="sp-actions">`;
+    if (SRC) h += `<button class="sp-btn ${listening ? 'on' : ''}" id="sp-sr"><span class="e">${listening ? '■' : '🗣️'}</span><b>${esc(listening ? t('sp_sr_stop') : t('sp_sr'))}</b><small>${esc(t('sp_sr_s'))}</small></button>`;
+    h += `<button class="sp-btn rec2 ${recording ? 'on' : ''}" id="sp-rec"><span class="e">${recording ? '■' : '🎙️'}</span><b>${esc(recording ? t('sp_rec_stop') : t('sp_rec'))}</b><small>${esc(recording ? secs + ' / ' + limit + ' s' : t('sp_rec_s'))}</small></button>`;
+    h += `</div>`;
+    if (listening) h += `<div class="sp-live">🎙️ ${esc(t('sp_listening'))}</div>`;
+    if (audioURL) h += `<audio controls playsinline src="${audioURL}" style="width:100%;margin-top:10px"></audio>`;
+    h += `<div class="field" style="margin-top:12px"><label>${esc(t('sp_transcript'))}</label><textarea id="sp-text" rows="4" lang="nl" autocapitalize="sentences" placeholder="${esc(t('sp_transcript_ph'))}">${esc(transcript)}</textarea></div>`;
+    h += `<details class="small muted" style="margin-bottom:10px"><summary>${esc(t('sp_dict_q'))}</summary><p>${esc(t('sp_dict_a'))}</p></details>`;
     h += `<button class="btn block" id="sp-check">${esc(t('sp_check'))}</button>`;
-    if (L10N.sTip(x)) h += `<p class="small muted" style="text-align:left">💡 ${esc(L10N.sTip(x))}</p>`;
+    if (L10N.sTip(x)) h += `<p class="small muted">💡 ${esc(L10N.sTip(x))}</p>`;
     h += `</div><div id="sp-res">${resultHTML}</div>`;
     h += `<button class="btn ${showModel ? 'alt' : ''} block" id="sp-model">${esc(showModel ? t('sp_model_hide') : t('sp_model_show'))}</button>`;
     if (showModel) h += `<div class="card" style="margin-top:10px"><div class="row"><b>${esc(t('w_model'))}</b><button class="spk" id="sp-msay" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
     h += `<div class="row" style="justify-content:center;margin-top:12px"><button class="btn alt" id="sp-back">${esc(t('list_back'))}</button>${SPREKEN[idx + 1] ? `<button class="btn" id="sp-next">${esc(t('next'))}</button>` : ''}</div>`;
     view(h);
     $('#sp-say').onclick = () => TTS.speak(x.prompt, 'm');
-    $('#sp-rec').onclick = toggle;
+    const srb = $('#sp-sr'); if (srb) srb.onclick = toggleSR;
+    $('#sp-rec').onclick = toggleRec;
     $('#sp-text').oninput = e => { transcript = e.target.value; };
     $('#sp-check').onclick = evaluate;
     $('#sp-model').onclick = () => { showModel = !showModel; draw(); };
@@ -1088,41 +1107,62 @@ function Spreken(id) {
     rollDay(); S.day.spreken++; activity(ai ? (ai.score || 3) * 3 : 8); save();
     res.scrollIntoView({ behavior: 'smooth' });
   };
-  const toggle = async () => {
+  /* Konusmayi yaziya doker. Kayit ile ayni anda calismaz, iOS mikrofonu ikisine birden vermiyor */
+  const toggleSR = () => {
+    if (listening) { if (srInst) { try { srInst.stop(); } catch (e) { /* yok */ } } return; }
+    if (rec) return toast(t('sp_busy'));
+    TTS.stop();
+    let sr;
+    try { sr = new SRC(); } catch (e) { toast(t('sp_sr_none'), 4000); return; }
+    sr.lang = 'nl-NL'; sr.interimResults = true; sr.continuous = true; sr.maxAlternatives = 1;
+    const base = transcript.trim() ? transcript.trim() + ' ' : '';
+    let finalText = '';
+    sr.onresult = e => {
+      let interim = '';
+      finalText = '';
+      for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) finalText += r[0].transcript + ' '; else interim += r[0].transcript; }
+      transcript = (base + finalText + interim).replace(/\s+/g, ' ').trim();
+      const ta = $('#sp-text'); if (ta) ta.value = transcript;
+    };
+    sr.onerror = e => {
+      const code = e && e.error;
+      if (code === 'not-allowed' || code === 'service-not-allowed') toast(t('sp_sr_denied'), 5000);
+      else if (code === 'no-speech') toast(t('sp_sr_nospeech'), 3000);
+      else if (code !== 'aborted') toast(t('sp_sr_err', { e: code || '?' }), 4000);
+    };
+    sr.onend = () => { listening = false; srInst = null; clearTimeout(srTimer); if ($('#sp-text')) draw(); };
+    try { sr.start(); } catch (e) { toast(t('sp_sr_denied'), 5000); return; }
+    srInst = sr; listening = true;
+    srTimer = setTimeout(() => { try { sr.stop(); } catch (e) { /* yok */ } }, limit * 1000);
+    draw();
+  };
+  /* Sadece kendini dinlemek icin ses kaydi */
+  const toggleRec = async () => {
     if (rec && rec.mr && rec.mr.state === 'recording') { rec.mr.stop(); return; }
+    if (listening) return toast(t('sp_busy'));
     TTS.stop();
     if (!navigator.mediaDevices || !window.MediaRecorder) { toast(t('sp_norec')); return; }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      const chunks = [];
-      const me = { mr, stream };
-      rec = me;
-      mr.ondataavailable = e => chunks.push(e.data);
-      mr.onstop = () => {
-        stream.getTracks().forEach(tr => tr.stop());
-        if (audioURL) URL.revokeObjectURL(audioURL);
-        audioURL = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || 'audio/mp4' }));
-        if (me.sr) { try { me.sr.stop(); } catch (e) { /* yok */ } }
-        timers.forEach(clearInterval); timers = [];
-        if (rec === me) rec = null;
-        setTimeout(() => { if ($('#sp-rec')) draw(); }, 400);
-      };
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SR) {
-        try {
-          const sr = new SR(); sr.lang = 'nl-NL'; sr.continuous = true; sr.interimResults = true;
-          const base = transcript ? transcript + ' ' : '';
-          sr.onresult = e => { transcript = base + Array.from(e.results).map(r => r[0].transcript).join(' '); const ta = $('#sp-text'); if (ta) ta.value = transcript; };
-          sr.onerror = () => {};
-          sr.start(); me.sr = sr;
-        } catch (e) { /* tanima yok, dikte ile devam */ }
-      }
-      secs = 0;
-      mr.start();
-      draw();
-      timers.push(setInterval(() => { secs++; const el = $('#sp-timer'); if (el) el.textContent = secs + ' / ' + limit + ' s'; if (secs >= limit && rec === me && mr.state === 'recording') mr.stop(); }, 1000));
-    } catch (e) { toast(t('sp_nomic'), 3500); }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { toast(t('sp_nomic'), 4000); return; }
+    const type = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m));
+    let mr;
+    try { mr = type ? new MediaRecorder(stream, { mimeType: type }) : new MediaRecorder(stream); } catch (e) { stream.getTracks().forEach(tr => tr.stop()); toast(t('sp_norec')); return; }
+    const chunks = [];
+    const me = { mr, stream };
+    rec = me;
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => {
+      stream.getTracks().forEach(tr => tr.stop());
+      timers.forEach(clearInterval); timers = [];
+      if (rec === me) rec = null;
+      if (chunks.length) { if (audioURL) URL.revokeObjectURL(audioURL); audioURL = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType || type || 'audio/mp4' })); }
+      else toast(t('sp_rec_empty'), 4000);
+      if ($('#sp-rec')) draw();
+    };
+    secs = 0;
+    mr.start(1000);
+    draw();
+    timers.push(setInterval(() => { secs++; const el = $('#sp-rec small'); if (el) el.textContent = secs + ' / ' + limit + ' s'; if (secs >= limit && rec === me && mr.state === 'recording') mr.stop(); }, 1000));
   };
   draw();
 }

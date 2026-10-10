@@ -215,3 +215,14 @@ b.ins { color: var(--good); background: var(--good-bg); font-weight: 700; border
 .f-spk { position: absolute; top: 10px; right: 10px; }
 .spk.mini { padding: 1px 7px; font-size: 13px; vertical-align: middle; font-style: normal; }
 .rate button { padding: 11px 6px; }
+
+/* spreken v2 */
+.sp-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sp-actions .sp-btn:only-child { grid-column: 1 / -1; }
+.sp-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 14px 8px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); text-align: center; }
+.sp-btn .e { font-size: 28px; line-height: 1.1; }
+.sp-btn b { font-size: 15px; }
+.sp-btn small { font-size: 12px; color: var(--muted); }
+.sp-btn.on { border-color: var(--nl-red); background: var(--bad-bg); animation: pulse 1.2s infinite; }
+.sp-live { margin-top: 10px; text-align: center; color: var(--nl-red); font-weight: 700; }
+details summary { cursor: pointer; }

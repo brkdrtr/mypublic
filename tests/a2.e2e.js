@@ -18,6 +18,15 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource.*(favicon|anthropic|401|ERR_FAILED)/.test(m.text())) errors.push('console ' + m.text()); });
   page.on('dialog', d => d.accept());
   await page.clock.install();
+  await page.addInitScript(() => {
+    window.__srMode = 'ok';
+    class FakeSR {
+      start() { setTimeout(() => { if (window.__srMode === 'deny') { if (this.onerror) this.onerror({ error: 'not-allowed' }); if (this.onend) this.onend(); return; } const res = [[{ transcript: 'Ik woon al drie jaar in Purmerend' }]]; res[0].isFinal = true; if (this.onresult) this.onresult({ results: res }); }, 100); }
+      stop() { setTimeout(() => { if (this.onend) this.onend(); }, 10); }
+      abort() {}
+    }
+    window.webkitSpeechRecognition = FakeSR; window.SpeechRecognition = FakeSR;
+  });
   /* LanguageTool varsayilan olarak erisilemez, ayri testte sahte yanit verilir */
   let ltMode = 'down';
   await page.route('https://api.languagetool.org/**', async route => {
@@ -177,14 +186,40 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   await page.fill('#sp-text', 'ja');
   await page.click('#sp-check'); await page.waitForSelector('#sp-res .score');
   ok(+(await text('#sp-res .score')).match(/(\d)\/5/)[1] <= 2, 'spreken alakasiz kisa cevap dusuk puan aliyor');
+  await page.fill('#sp-text', '');
+  await page.click('#sp-sr');
+  ok((await text('.sp-live')).length > 0, 'ses tanima dinlemeye basliyor');
+  await page.clock.runFor(200); await page.waitForTimeout(50);
+  ok((await page.$eval('#sp-text', e => e.value)) === 'Ik woon al drie jaar in Purmerend', 'ses tanima metni kutuya yaziyor', await page.$eval('#sp-text', e => e.value));
+  await page.click('#sp-sr'); await page.clock.runFor(50); await page.waitForTimeout(50);
+  ok(!(await page.$('.sp-live')) && (await page.$eval('#sp-text', e => e.value)).includes('Purmerend'), 'ses tanima bitince metin korunuyor');
+  await page.evaluate(() => { window.__srMode = 'deny'; });
+  await page.click('#sp-sr'); await page.clock.runFor(200); await page.waitForTimeout(50);
+  ok((await text('#toast')).includes('izin'), 'ses tanima izni yoksa dikteye yonlendiriyor', await text('#toast'));
+  await page.evaluate(() => { window.__srMode = 'ok'; });
+  await page.fill('#sp-text', 'ja');
   await page.click('#sp-rec');
   await page.waitForTimeout(400);
   ok(await page.$eval('#sp-rec', e => e.classList.contains('on')), 'ses kaydi basliyor');
+  ok(!(await page.$eval('#sp-sr', e => e.classList.contains('on'))), 'kayit ve ses tanima ayni anda calismiyor');
   await page.clock.runFor(2000);
   await page.click('#sp-rec');
   await page.waitForTimeout(600); await page.clock.runFor(600); await page.waitForTimeout(100);
   ok(await count('audio') === 1, 'kayit bitince dinleme oynaticisi geliyor');
   ok((await page.$eval('#sp-text', e => e.value)) === 'ja', 'kayit sonrasi yazilan metin korunuyor');
+
+  const voiceTest = await page.evaluate(() => {
+    const saved = TTS.voices;
+    TTS.voices = [{ name: 'Xander', lang: 'nl-NL', voiceURI: 'com.apple.voice.compact.nl-NL.Xander' }, { name: 'Ellen', lang: 'nl-BE', voiceURI: 'com.apple.voice.enhanced.nl-BE.Ellen' }];
+    const a = TTS.pick('f').name + '/' + TTS.pick('m').name;
+    TTS.voices = [{ name: 'Xander', lang: 'nl-NL', voiceURI: 'com.apple.voice.compact.nl-NL.Xander' }, { name: 'Claire', lang: 'nl-NL', voiceURI: 'com.apple.voice.enhanced.nl-NL.Claire' }, { name: 'Xander (Enhanced)', lang: 'nl-NL', voiceURI: 'com.apple.voice.enhanced.nl-NL.Xander' }];
+    const b = TTS.pick('f').name + '/' + TTS.pick('m').name;
+    TTS.voices = [{ name: 'Xander', lang: 'nl-NL', voiceURI: 'com.apple.voice.enhanced.nl-NL.Xander' }, { name: 'Claire', lang: 'nl-NL', voiceURI: 'com.apple.voice.compact.nl-NL.Claire' }];
+    const c = TTS.pick('f').name + '/' + TTS.pick('m').name;
+    TTS.voices = saved;
+    return [a, b, c];
+  });
+  ok(voiceTest[0] === 'Xander/Xander' && voiceTest[1] === 'Claire/Xander (Enhanced)' && voiceTest[2] === 'Xander/Xander', 'zayif veya Belcika kadin sesi yerine erkek ses, iyi nl-NL kadin ses varsa o', voiceTest.join(' | '));
 
   /* ---------- 8. KNM ---------- */
   await tab('practice'); await page.click('[data-go=knm]'); await page.click('#k-mix');
