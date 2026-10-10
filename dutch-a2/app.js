@@ -28,8 +28,9 @@ const STR = {
     words_start: 'Kartlara başla', dehet_title: 'De of het', dehet_sub: '60 saniyelik hız oyunu', type_title: 'Yazarak', type_sub: 'Anlamdan Hollandacaya yaz', themes: 'Temalar',
     theme_learn: 'Bu temayı çalış', theme_type: 'Yazarak test',
     m_new: 'yeni', m_perm: 'kalıcı', m_good: 'iyi', m_learning: 'öğreniliyor',
-    f_new: '🆕 yeni kelime', f_rev: '🔁 tekrar', f_left: '{n} kaldı', f_tap: 'Cevap için dokun', f_show: 'Göster', f_word: '🔊 kelime', f_sent: '🔊 cümle',
-    r_again: 'Tekrar', r_hard: 'Zor', r_good: 'İyi', r_easy: 'Kolay', min1: '1 dk', d_n: '{n} gün',
+    f_new: '🆕 Yeni kelime', f_rev: '🔁 Tekrar zamanı gelen kelime', f_left: 'Kart {i} / {n}', f_tap: 'Anlamını hatırlıyor musun? Önce düşün, sonra kartı çevir.', f_tap_rev: 'Bunun Hollandacası ne? Önce düşün, sonra kartı çevir.', f_show: 'Kartı çevir 👆', f_word: '🔊 kelime', f_sent: '🔊 cümle',
+    f_q: 'Bu kelimeyi biliyor muydun?', f_help: 'Dürüst seç. Bilmediğin kelimeler sık, bildiklerin seyrek karşına çıkar. Böylece günde birkaç dakikayla kelimeler kalıcı olur.', f_ex_hint: 'Cümledeki kelimelere dokun, tek tek anlamını gör.',
+    r_again: '❌ Bilmiyordum', r_hard: '😓 Zor hatırladım', r_good: '🙂 Bildim', r_easy: '😎 Çok kolaydı', min1: 'Birazdan tekrar sorulur', d_1: 'Yarın tekrar sorulur', d_n: '{n} gün sonra tekrar sorulur',
     f_done: 'Bugünlük bu kadar', f_done_s: '{n} kart çalıştın. Yarın tekrar gel, streak devam etsin.', f_more: 'Yeni kelime ekle', f_dh: 'De of het oyna',
     dh_intro: '60 saniyede olabildiğince çok ismin artikelini bil. Yanlışta doğrusu gösterilir.', dh_best: 'Rekor {n}', dh_score: '{s} doğru / {t}', dh_again: 'Tekrar oyna',
     dh_tip: '<b>Tip</b><br>-je, -tje, -pje ile biten küçültmeler hep het. Kişiler ve çoğullar hep de. -heid, -ing, -tie ile bitenler de. Kabaca üç kelimeden ikisi de-woord.',
@@ -93,8 +94,9 @@ const STR = {
     words_start: 'Start cards', dehet_title: 'De or het', dehet_sub: '60 second speed game', type_title: 'Typing', type_sub: 'Type the Dutch word', themes: 'Themes',
     theme_learn: 'Study this theme', theme_type: 'Typing test',
     m_new: 'new', m_perm: 'mastered', m_good: 'good', m_learning: 'learning',
-    f_new: '🆕 new word', f_rev: '🔁 review', f_left: '{n} left', f_tap: 'Tap to reveal', f_show: 'Show', f_word: '🔊 word', f_sent: '🔊 sentence',
-    r_again: 'Again', r_hard: 'Hard', r_good: 'Good', r_easy: 'Easy', min1: '1 min', d_n: '{n} d',
+    f_new: '🆕 New word', f_rev: '🔁 Word due for review', f_left: 'Card {i} / {n}', f_tap: 'Do you remember what it means? Think first, then flip the card.', f_tap_rev: 'What is this in Dutch? Think first, then flip the card.', f_show: 'Flip the card 👆', f_word: '🔊 word', f_sent: '🔊 sentence',
+    f_q: 'Did you know this word?', f_help: 'Be honest. Words you don\'t know come back often, words you know come back rarely. A few minutes a day makes them stick.', f_ex_hint: 'Tap the words in the sentence to see their meaning.',
+    r_again: '❌ I didn\'t know', r_hard: '😓 Hard to recall', r_good: '🙂 I knew it', r_easy: '😎 Very easy', min1: 'Asked again in a minute', d_1: 'Asked again tomorrow', d_n: 'Asked again in {n} days',
     f_done: 'All done for today', f_done_s: 'You studied {n} cards. Come back tomorrow to keep your streak.', f_more: 'Add new words', f_dh: 'Play de or het',
     dh_intro: 'Get as many articles right as you can in 60 seconds. Mistakes show the right answer.', dh_best: 'Best {n}', dh_score: '{s} right / {t}', dh_again: 'Play again',
     dh_tip: '<b>Tip</b><br>Diminutives ending in -je, -tje, -pje are always het. People and plurals are always de. Words ending in -heid, -ing, -tie are de. Roughly two out of three nouns are de-words.',
@@ -665,24 +667,33 @@ function Flash(themes, reverse) {
   const draw = () => {
     const w = cur;
     const isNew = !S.srs[w.key];
+    const total = count + queue.length + 1;
     const nlHTML = `<div class="w">${w.art ? `<span class="art ${w.art}">${w.art}</span> ` : ''}${esc(w.bare)}</div>`;
     const front = reverse ? `<div class="tr" style="margin:0">${esc(L10N.word(w))}</div>` : nlHTML;
     const backSide = reverse ? `<div style="margin-top:12px">${nlHTML}</div>` : `<div class="tr">${esc(L10N.word(w))}</div>`;
-    let h = backBtn() + `<div class="qhead"><span>${esc(isNew ? t('f_new') : t('f_rev'))}</span><span>${esc(t('f_left', { n: queue.length + 1 }))}</span></div>`;
-    h += `<div class="card flash" id="f-card">${front}${shown ? backSide + (w.ex ? `<div class="ex">${tw(w.ex)}</div>` : '') : `<div class="muted small" style="margin-top:18px">${esc(t('f_tap'))}</div>`}</div>`;
-    h += `<div class="row" style="justify-content:center;margin-bottom:12px"><button class="spk" id="f-say">${esc(t('f_word'))}</button>${w.ex ? `<button class="spk" id="f-ex">${esc(t('f_sent'))}</button>` : ''}</div>`;
+    const exTr = w.ex && typeof VOCAB_EX !== 'undefined' && VOCAB_EX[w.ex] ? VOCAB_EX[w.ex][lang()] : '';
+    let h = backBtn() + `<div class="qhead"><span>${esc(isNew ? t('f_new') : t('f_rev'))}</span><span>${esc(t('f_left', { i: count + 1, n: total }))}</span></div><div class="bar" style="margin:-2px 0 12px"><div style="width:${count / total * 100}%"></div></div>`;
+    h += `<div class="card flash ${shown ? 'open' : ''}" id="f-card"><div class="f-spk"><button class="spk" id="f-say" aria-label="speak">🔊</button></div>${front}`;
+    if (shown) {
+      h += backSide;
+      if (w.ex) h += `<div class="ex-box"><div class="ex-nl">${tw(w.ex)} <button class="spk mini" id="f-ex" aria-label="speak">🔊</button></div>${exTr ? `<div class="ex-tr">${esc(exTr)}</div>` : ''}</div><div class="small muted" style="margin-top:6px">${esc(t('f_ex_hint'))}</div>`;
+    } else h += `<div class="muted" style="margin-top:18px;max-width:280px">${esc(reverse ? t('f_tap_rev') : t('f_tap'))}</div>`;
+    h += '</div>';
     if (shown) {
       const c = S.srs[w.key];
-      const iv = q => (q === 0 ? t('min1') : t('d_n', { n: nextIv(c, q) }));
-      h += `<div class="rate"><button class="r0" data-q="0">${esc(t('r_again'))}<small>${iv(0)}</small></button><button class="r1" data-q="1">${esc(t('r_hard'))}<small>${iv(1)}</small></button><button class="r2" data-q="2">${esc(t('r_good'))}<small>${iv(2)}</small></button><button class="r3" data-q="3">${esc(t('r_easy'))}<small>${iv(3)}</small></button></div>`;
+      const when = q => { if (q === 0) return t('min1'); const n = nextIv(c, q); return n === 1 ? t('d_1') : t('d_n', { n }); };
+      h += `<div class="rate-q">${esc(t('f_q'))}</div><div class="rate">`;
+      [['r0', 'r_again'], ['r1', 'r_hard'], ['r2', 'r_good'], ['r3', 'r_easy']].forEach(([cls, key], q) => { h += `<button class="${cls}" data-q="${q}"><b>${esc(t(key))}</b><small>${esc(when(q))}</small></button>`; });
+      h += `</div>`;
+      if (Object.keys(S.srs).length < 40) h += `<p class="small muted center" style="margin-top:12px">${esc(t('f_help'))}</p>`;
     } else h += `<button class="btn block" id="f-show">${esc(t('f_show'))}</button>`;
     view(h);
     if (!reverse && !shown) TTS.speak(w.nl);
     const reveal = () => { if (shown) return; shown = true; draw(); if (reverse) TTS.speak(w.nl); };
-    $('#f-card').onclick = e => { if (!e.target.closest('.wd')) reveal(); };
+    $('#f-card').onclick = e => { if (!e.target.closest('.wd') && !e.target.closest('.spk')) reveal(); };
     const fs = $('#f-show'); if (fs) fs.onclick = reveal;
-    $('#f-say').onclick = () => TTS.speak(w.nl);
-    const fe = $('#f-ex'); if (fe) fe.onclick = () => TTS.speak(w.ex);
+    $('#f-say').onclick = e => { e.stopPropagation(); TTS.speak(w.nl); };
+    const fe = $('#f-ex'); if (fe) fe.onclick = e => { e.stopPropagation(); TTS.speak(w.ex); };
     $$('.rate button').forEach(b => b.onclick = () => {
       const q = +b.dataset.q;
       if (!S.srs[w.key]) S.day.newCards++;

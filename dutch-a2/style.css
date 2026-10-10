@@ -194,3 +194,24 @@ b.ins { color: var(--good); background: var(--good-bg); font-weight: 700; border
 .seg.mini { margin: 0; }
 .seg.mini button { padding: 6px 10px; font-size: 13px; }
 .play:disabled { opacity: .4; }
+
+/* kart ekrani v2 */
+.rate-q { text-align: center; font-weight: 800; font-size: 17px; margin: 4px 0 10px; }
+.rate { grid-template-columns: 1fr 1fr; gap: 10px; }
+.rate button { padding: 14px 8px; border-radius: 14px; border-width: 1.5px; text-align: center; }
+.rate button b { display: block; font-size: 16px; }
+.rate button small { display: block; margin-top: 4px; font-size: 12px; }
+.rate .r0 { border-color: #f3c4c4; } .rate .r1 { border-color: #f2d7ae; } .rate .r2 { border-color: #bfe3c9; } .rate .r3 { border-color: #c3d0ea; }
+.rate .r0 b { color: var(--bad); } .rate .r1 b { color: var(--warn); } .rate .r2 b { color: var(--good); } .rate .r3 b { color: var(--nl-blue); }
+@media (prefers-color-scheme: dark) { .rate .r3 b { color: #7aa2ff; } .rate button { border-color: var(--line); } }
+.ex-box { margin-top: 14px; background: var(--card2); border-radius: 12px; padding: 10px 14px; text-align: center; }
+.ex-nl { font-style: italic; font-size: 17px; }
+.ex-tr { margin-top: 4px; color: var(--muted); font-size: 14px; }
+
+.flash { position: relative; }
+.flash.open { min-height: 0; padding: 22px 14px 16px; }
+.flash.open .w { font-size: 28px; }
+.flash.open .tr { margin-top: 4px; font-size: 20px; }
+.f-spk { position: absolute; top: 10px; right: 10px; }
+.spk.mini { padding: 1px 7px; font-size: 13px; vertical-align: middle; font-style: normal; }
+.rate button { padding: 11px 6px; }
