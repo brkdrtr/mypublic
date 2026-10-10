@@ -451,6 +451,11 @@ class Shell {
   expandDollar(s, i) {
     // s[i] === '$'
     const nx = s[i + 1];
+    if (nx === '(' && s[i + 2] === '(') {
+      const j = s.indexOf('))', i + 3);
+      if (j < 0) return ['$', i + 1];
+      return [String(this.arith(s.slice(i + 3, j))), j + 2];
+    }
     if (nx === '(') {
       let depth = 1; let j = i + 2; let q = null;
       for (; j < s.length; j++) {
@@ -472,7 +477,7 @@ class Shell {
     if (nx === '{') {
       const j = s.indexOf('}', i);
       if (j < 0) return ['$', i + 1];
-      return [this.getVar(s.slice(i + 2, j)), j + 1];
+      return [this.paramExpand(s.slice(i + 2, j)), j + 1];
     }
     if (nx === '?') return [String(this.lastCode), i + 2];
     if (nx === '$') return ['733', i + 2];
@@ -482,6 +487,38 @@ class Shell {
     const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(s.slice(i + 1));
     if (!m) return ['$', i + 1];
     return [this.getVar(m[0]), i + 1 + m[0].length];
+  }
+
+  /* ${#x} ${x:-d} ${x:=d} ${x:+a} ${x#p} ${x##p} ${x%s} ${x%%s} ${x/a/b} ${x^^} ${x,,} ${x:off:len} */
+  paramExpand(expr) {
+    let m;
+    if ((m = /^#(\w+)$/.exec(expr))) return String(this.getVar(m[1]).length);
+    if ((m = /^(\w+):([-=+?])(.*)$/.exec(expr))) {
+      const v = this.getVar(m[1]);
+      if (m[2] === '-') return v !== '' ? v : m[3];
+      if (m[2] === '=') { if (v === '') this.env[m[1]] = m[3]; return this.getVar(m[1]); }
+      if (m[2] === '+') return v !== '' ? m[3] : '';
+      if (v === '') throw new Error(m[1] + ': ' + (m[3] || 'parameter null or not set'));
+      return v;
+    }
+    if ((m = /^(\w+):(\d+)(?::(\d+))?$/.exec(expr))) { const v = this.getVar(m[1]); return m[3] !== undefined ? v.substr(+m[2], +m[3]) : v.slice(+m[2]); }
+    if ((m = /^(\w+)(##|#)(.*)$/.exec(expr))) { const v = this.getVar(m[1]); const re = new RegExp('^' + globToRe(m[3]).source.slice(1, -1).replace(/\[\^\/\]\*/g, m[2] === '##' ? '.*' : '.*?')); return v.replace(re, ''); }
+    if ((m = /^(\w+)(%%|%)(.*)$/.exec(expr))) { const v = this.getVar(m[1]); const re = new RegExp(globToRe(m[3]).source.slice(1, -1).replace(/\[\^\/\]\*/g, m[2] === '%%' ? '.*' : '.*?') + '$'); return v.replace(re, ''); }
+    if ((m = /^(\w+)\/(\/?)([^/]*)\/(.*)$/.exec(expr))) { const v = this.getVar(m[1]); const re = new RegExp(globToRe(m[3]).source.slice(1, -1), m[2] ? 'g' : ''); return v.replace(re, m[4]); }
+    if ((m = /^(\w+)\^\^$/.exec(expr))) return this.getVar(m[1]).toUpperCase();
+    if ((m = /^(\w+),,$/.exec(expr))) return this.getVar(m[1]).toLowerCase();
+    if ((m = /^(\w+)\^$/.exec(expr))) { const v = this.getVar(m[1]); return v.charAt(0).toUpperCase() + v.slice(1); }
+    return this.getVar(expr);
+  }
+
+  /* Tamsayi aritmetigi, $(( )) ve (( )) icin. Degiskenler once acilir, sonra sadece sayi ve operator kalir */
+  arith(expr) {
+    let e = expr.replace(/\$?\b([A-Za-z_]\w*)\b/g, (m, v) => { const val = this.getVar(v); return /^-?\d+$/.test(val) ? val : '0'; });
+    e = e.replace(/\$\{?(\w+)\}?/g, (m, v) => this.getVar(v) || '0');
+    if (!/^[\d\s+\-*/%()<>=!&|^~?:]+$/.test(e)) throw new Error('arithmetic: syntax error in expression: ' + expr);
+    e = e.replace(/\*\*/g, '**');
+    try { const r = Function('"use strict"; return (' + e + ');')(); return typeof r === 'boolean' ? (r ? 1 : 0) : Math.trunc(Number(r) || 0); }
+    catch (err) { throw new Error('arithmetic: syntax error in expression: ' + expr); }
   }
 
   getVar(name) {
@@ -512,6 +549,14 @@ class Shell {
         i++; has = true;
         while (i < s.length && s[i] !== '"') {
           if (s[i] === '\\' && i + 1 < s.length && '"$\\`'.includes(s[i + 1])) { cur += s[i + 1]; i += 2; continue; }
+          /* "$@" icinde her arguman ayri kelime olur */
+          if (s[i] === '$' && s[i + 1] === '@') {
+            const pos = this.positional;
+            if (!pos.length) { has = cur !== '' ; i += 2; continue; }
+            cur += pos[0];
+            for (let k = 1; k < pos.length; k++) { words.push({ w: cur, glob: false }); cur = pos[k]; }
+            i += 2; continue;
+          }
           if (s[i] === '$') { const [v, ni] = this.expandDollar(s, i); cur += v; i = ni; continue; }
           cur += s[i]; i++;
         }
@@ -588,6 +633,7 @@ class Shell {
   }
 
   execList(line, write) {
+    if (needsScript(line)) return this.runScriptText(line, write, null);
     const segs = splitTop(line, ['&&', '||', ';']);
     let code = this.lastCode;
     for (const s of segs) {
@@ -600,11 +646,18 @@ class Shell {
     return code;
   }
 
-  execPipeline(text, write) {
+  execPipeline(text, write, stdin0) {
     const parts = splitTop(text, ['|']).map(p => p.text);
-    let stdin = null; let code = 0; let rich = null;
+    let stdin = stdin0 == null ? null : stdin0; let code = 0; let rich = null;
     for (let k = 0; k < parts.length; k++) {
       const isLast = k === parts.length - 1;
+      if (SCRIPT_KW.test(parts[k].trim())) {
+        const buf = []; const errs = [];
+        code = this.runScriptText(parts[k].trim(), (t, cls) => (cls === 'err' ? errs : buf).push(t), stdin);
+        if (errs.length) write(errs.join(''), 'err');
+        stdin = buf.join(''); rich = null;
+        continue;
+      }
       let { argv, redirs, assigns } = this.parseCmd(parts[k]);
       if (argv.length && this.aliases[argv[0]] && this.depth < 4) {
         const ex = this.parseCmd(this.aliases[argv[0]]);
@@ -656,7 +709,8 @@ class Shell {
     try {
       const name = argv[0];
       const args = argv.slice(1);
-      if (name.includes('/')) return this.runScript(name, args, true);
+      if (name.includes('/')) return this.runScript(name, args, true, stdin);
+      if (this.funcs[name]) return this.callFunc(name, args, stdin);
       const fn = COMMANDS[name] || LAB_EXT.commands[name];
       if (!fn) {
         const hint = SUGGEST[name] ? `\n💡 ${SUGGEST[name]}` : '';
@@ -668,7 +722,7 @@ class Shell {
     }
   }
 
-  runScript(path, args, needExec) {
+  runScript(path, args, needExec, stdin) {
     const abs = this.resolve(path);
     const n = this.node(abs);
     if (!n) return fail(`bash: ${path}: No such file or directory`, 127);
@@ -681,14 +735,273 @@ class Shell {
     this.positional = args;
     this.depth++;
     let code = 0;
-    for (const raw of lines(n.d)) {
-      const l = raw.trim();
-      if (!l || l.startsWith('#')) continue;
-      code = this.execList(l, (t, cls) => (cls === 'err' ? err : out).push(t));
-      if (/^exit\b/.test(l)) break;
+    try {
+      code = this.runScriptText(n.d, (t, cls) => (cls === 'err' ? err : out).push(t), stdin == null ? null : stdin, path);
+    } finally {
+      this.depth--;
+      this.positional = savedPos;
     }
-    this.depth--;
-    this.positional = savedPos;
+    return { out: out.join(''), err: err.join(''), code };
+  }
+
+  /* ---------- script motoru, blok yapili bash ---------- */
+
+  /* Metni ifadelere boler. Satirlar ve ust seviye ; ayirir, ;; case icin ayri token olur */
+  tokenizeScript(text) {
+    const toks = [];
+    const CASE_END = '\x00CASEEND\x00';
+    const protectParens = line => {
+      /* (( )) icindeki ; ayirici degildir */
+      let out = ''; let depth = 0;
+      for (let i = 0; i < line.length; i++) {
+        if (line.startsWith('((', i)) { depth++; out += '(('; i++; continue; }
+        if (line.startsWith('))', i) && depth > 0) { depth--; out += '))'; i++; continue; }
+        out += depth > 0 && line[i] === ';' ? '\x01' : line[i];
+      }
+      return out;
+    };
+    const push = t => {
+      t = t.replace(/\x01/g, ';').trim();
+      if (!t) return;
+      let m;
+      /* then / do / else ayni parcada basa gelebilir, ornegi "then echo x" */
+      if ((m = /^(then|do|else)\s+(.+)$/.exec(t))) { toks.push(m[1]); push(m[2]); return; }
+      /* done < dosya ve done | komut */
+      if ((m = /^done\s*(?:<\s*(\S+))?\s*(?:\|\s*(.+))?$/.exec(t)) && t !== 'done') { toks.push({ kw: 'done', redir: m[1] || null, pipe: m[2] || null }); return; }
+      /* name() { ... } ayni satirda */
+      if ((m = /^((?:function\s+\w+|\w+\s*\(\s*\)))\s*\{\s*(.*)$/.exec(t))) { toks.push(m[1]); toks.push('{'); push(m[2]); return; }
+      if ((m = /^\{\s+(.+)$/.exec(t))) { toks.push('{'); push(m[1]); return; }
+      if (t !== '}' && (m = /^(.*\S)\s*\}$/.exec(t)) && !/\$\{[^}]*$/.test(m[1]) && !/\$\{[^}]*\}$/.test(t)) { push(m[1]); toks.push('}'); return; }
+      /* komut | while ... , komut | for ... : dongu stdin'i bir komuttan gelir */
+      const pipeSegs = splitTop(t, ['|']);
+      if (pipeSegs.length > 1) {
+        const idx = pipeSegs.findIndex((sg, i) => i > 0 && /^\s*(while|until|for)\b/.test(sg.text));
+        if (idx > 0) { toks.push({ kw: 'pipe', cmd: pipeSegs.slice(0, idx).map(x => x.text).join('|').trim() }); push(pipeSegs.slice(idx).map(x => x.text).join('|')); return; }
+      }
+      /* case X in pat) komut ayni satirda */
+      if ((m = /^(case\s+.+?\s+in)\s+(.+)$/.exec(t))) { toks.push(m[1]); push(m[2]); return; }
+      /* case kalibi: pat) komut */
+      if ((m = /^(\(?[^\s()]+(?:\|[^\s()]+)*\))\s*(.*)$/.exec(t)) && !/^\w+\s*\(\s*\)$/.test(t)) { toks.push(m[1]); push(m[2]); return; }
+      toks.push(t);
+    };
+    for (const raw of String(text).split('\n')) {
+      let line = raw.trim();
+      if (!line || line.startsWith('#')) continue;
+      line = line.replace(/\s+#[^'"]*$/, '');
+      line = protectParens(line).replace(/;;/g, ';' + CASE_END + ';');
+      for (const seg of splitTop(line, [';'])) {
+        const t = seg.text.trim();
+        if (t === CASE_END) { toks.push(';;'); continue; }
+        push(t);
+      }
+    }
+    return toks;
+  }
+
+  parseScript(text) {
+    const toks = this.tokenizeScript(text);
+    let i = 0;
+    const peek = () => toks[i];
+    const take = () => toks[i++];
+    const expect = (kw) => { const t = take(); if (t !== kw) throw new Error(`syntax error near unexpected token '${t === undefined ? 'end of file' : t}', expected '${kw}'`); };
+    const isDone = t => t === 'done' || (t && typeof t === 'object' && t.kw === 'done');
+    const isEnd = t => t === undefined || isDone(t) || ['fi', 'else', 'elif', 'esac', ';;', '}', 'then', 'do'].includes(t);
+    const block = () => { const nodes = []; while (!isEnd(peek())) nodes.push(stmt()); return nodes; };
+    const takeDone = () => { const t = take(); if (!isDone(t)) throw new Error(`syntax error near unexpected token '${typeof t === 'object' ? t.kw : t === undefined ? 'end of file' : t}', expected 'done'`); return typeof t === 'object' ? t : { redir: null, pipe: null }; };
+    const stmt = () => {
+      const t = take();
+      let m;
+      if (t && typeof t === 'object') {
+        if (t.kw === 'pipe') { const loop = stmt(); loop.stdinCmd = t.cmd; return loop; }
+        throw new Error(`syntax error near unexpected token '${t.kw}'`);
+      }
+      if (t === 'if' || t.startsWith('if ')) {
+        const cond = t === 'if' ? [] : [{ type: 'cmd', text: t.slice(3) }];
+        cond.push(...block()); expect('then');
+        const branches = [{ cond, body: block() }];
+        let els = null;
+        while (peek() && (peek() === 'elif' || peek().startsWith('elif '))) { const c = take(); const cc = c === 'elif' ? [] : [{ type: 'cmd', text: c.slice(5) }]; cc.push(...block()); expect('then'); branches.push({ cond: cc, body: block() }); }
+        if (peek() === 'else') { take(); els = block(); }
+        expect('fi');
+        return { type: 'if', branches, els };
+      }
+      if ((m = /^for\s*\(\((.*)\)\)$/.exec(t))) {
+        const parts = m[1].split(';').map(x => x.trim());
+        expect('do'); const body = block(); const d = takeDone();
+        return { type: 'cfor', init: parts[0], cond: parts[1], step: parts[2], body, pipe: d.pipe };
+      }
+      if ((m = /^for\s+(\w+)(?:\s+in\s+(.*))?$/.exec(t))) {
+        expect('do'); const body = block(); const d = takeDone();
+        return { type: 'for', v: m[1], list: m[2] === undefined ? '"$@"' : m[2], body, redir: d.redir, pipe: d.pipe };
+      }
+      if ((m = /^(while|until)(?:\s+(.*))?$/.exec(t))) {
+        const cond = m[2] ? [{ type: 'cmd', text: m[2] }] : [];
+        cond.push(...block()); expect('do'); const body = block(); const d = takeDone();
+        return { type: 'while', until: m[1] === 'until', cond, body, redir: d.redir, pipe: d.pipe };
+      }
+      if ((m = /^case\s+(.+?)\s+in$/.exec(t))) {
+        const items = [];
+        while (peek() && peek() !== 'esac') {
+          const pat = take();
+          const pm = /^\(?(.+?)\)$/.exec(pat);
+          if (!pm) throw new Error(`syntax error near unexpected token '${pat}'`);
+          const body = [];
+          while (peek() && peek() !== ';;' && peek() !== 'esac') body.push(stmt());
+          if (peek() === ';;') take();
+          items.push({ pats: pm[1].split('|').map(x => x.trim()), body });
+        }
+        expect('esac');
+        return { type: 'case', word: m[1], items };
+      }
+      if ((m = /^function\s+(\w+)(?:\s*\(\s*\))?$/.exec(t)) || (m = /^(\w+)\s*\(\s*\)$/.exec(t))) {
+        expect('{'); const body = block(); expect('}');
+        return { type: 'func', name: m[1], body };
+      }
+      if (t === '{') { const body = block(); expect('}'); return { type: 'group', body }; }
+      if (['then', 'do', 'fi', 'done', 'esac', 'else', 'elif', '}', ';;'].includes(t)) throw new Error(`syntax error near unexpected token '${t}'`);
+      return { type: 'cmd', text: t };
+    };
+    const nodes = [];
+    while (i < toks.length) nodes.push(stmt());
+    return nodes;
+  }
+
+  runScriptText(text, write, stdin, name) {
+    let nodes;
+    try { nodes = this.parseScript(text); }
+    catch (e) { write(`${name || 'bash'}: ${e.message}\n`, 'err'); return 2; }
+    const io = { lines: stdin == null ? null : lines(stdin) };
+    try { return this.runNodes(nodes, write, io); }
+    catch (e) {
+      if (e && e.flow === 'exit') return e.code;
+      if (e && e.flow) { write(`bash: ${e.flow}: only meaningful in a loop or function\n`, 'err'); return 1; }
+      throw e;
+    }
+  }
+
+  runNodes(nodes, write, io) {
+    let code = 0;
+    for (const n of nodes) code = this.runNode(n, write, io);
+    return code;
+  }
+
+  runNode(n, write, io) {
+    let code = 0;
+    const savedIo = this.io; this.io = io;
+    /* Dongu girdisi: done < dosya, komut | while, ve dongu ciktisini | komut'a verme */
+    if ((n.type === 'for' || n.type === 'while' || n.type === 'cfor') && (n.redir || n.stdinCmd || n.pipe)) {
+      let loopIo = io;
+      if (n.redir) { const r = this.readFile(n.redir, 'bash'); if (r.err) { write(r.err + '\n', 'err'); this.io = savedIo; return 1; } loopIo = { lines: lines(r.data) }; }
+      else if (n.stdinCmd) { const buf = []; const errs = []; this.execPipeline(n.stdinCmd, (t, cls) => (cls === 'err' ? errs : buf).push(t)); if (errs.length) write(errs.join(''), 'err'); loopIo = { lines: lines(buf.join('')) }; }
+      const plain = Object.assign({}, n, { redir: null, stdinCmd: null, pipe: null });
+      if (!n.pipe) { const c = this.runNode(plain, write, loopIo); this.io = savedIo; return c; }
+      const buf = [];
+      this.runNode(plain, (t, cls) => (cls === 'err' ? write(t, cls) : buf.push(t)), loopIo);
+      const c = this.execPipeline(n.pipe, write, buf.join(''));
+      this.io = savedIo; this.lastCode = c;
+      return c;
+    }
+    try {
+      switch (n.type) {
+        case 'cmd': {
+          const t = n.text;
+          let m;
+          if ((m = /^\(\((.*)\)\)$/.exec(t))) { const r = this.arith(this.assignArith(m[1])); code = r ? 0 : 1; break; }
+          if ((m = /^(break|continue)(?:\s+(\d+))?$/.exec(t))) { const e = new Error(m[1]); e.flow = m[1]; e.n = +(m[2] || 1); throw e; }
+          if ((m = /^return(?:\s+(\d+))?$/.exec(t))) { const e = new Error('return'); e.flow = 'return'; e.code = +(m[1] || this.lastCode || 0); throw e; }
+          if ((m = /^exit(?:\s+(\d+))?$/.exec(t))) { const e = new Error('exit'); e.flow = 'exit'; e.code = +(m[1] || 0); throw e; }
+          const segs = splitTop(t, ['&&', '||']);
+          code = this.lastCode;
+          for (const sgm of segs) {
+            if (!sgm.text.trim()) continue;
+            if (sgm.prevOp === '&&' && code !== 0) continue;
+            if (sgm.prevOp === '||' && code === 0) continue;
+            code = this.execPipeline(sgm.text.trim(), write);
+            this.lastCode = code;
+          }
+          break;
+        }
+        case 'if': {
+          let done = false;
+          for (const b of n.branches) {
+            const c = this.runNodes(b.cond, write, io);
+            if (c === 0) { code = this.runNodes(b.body, write, io); done = true; break; }
+          }
+          if (!done && n.els) code = this.runNodes(n.els, write, io);
+          break;
+        }
+        case 'for': {
+          const { argv } = this.parseCmd('x ' + n.list);
+          const items = argv.slice(1);
+          for (const it of items) {
+            this.env[n.v] = it;
+            try { code = this.runNodes(n.body, write, io); }
+            catch (e) { if (e.flow === 'break') { if (--e.n > 0) throw e; break; } if (e.flow === 'continue') { if (--e.n > 0) throw e; continue; } throw e; }
+          }
+          break;
+        }
+        case 'cfor': {
+          if (n.init) this.arith(this.assignArith(n.init));
+          let guard = 0;
+          while (!n.cond || this.arith(n.cond)) {
+            if (++guard > 10000) throw new Error('loop limit reached, lab 10000 iterasyonda durur');
+            try { code = this.runNodes(n.body, write, io); }
+            catch (e) { if (e.flow === 'break') { if (--e.n > 0) throw e; break; } if (e.flow === 'continue') { if (--e.n > 0) throw e; } else throw e; }
+            if (n.step) this.arith(this.assignArith(n.step));
+          }
+          break;
+        }
+        case 'while': {
+          const loopIo = io;
+          let guard = 0;
+          while (true) {
+            if (++guard > 10000) throw new Error('loop limit reached, lab 10000 iterasyonda durur');
+            const c = this.runNodes(n.cond, write, loopIo);
+            if (n.until ? c === 0 : c !== 0) break;
+            try { code = this.runNodes(n.body, write, loopIo); }
+            catch (e) { if (e.flow === 'break') { if (--e.n > 0) throw e; break; } if (e.flow === 'continue') { if (--e.n > 0) throw e; continue; } throw e; }
+          }
+          break;
+        }
+        case 'case': {
+          const { argv } = this.parseCmd('x ' + n.word);
+          const w = argv.slice(1).join(' ');
+          for (const it of n.items) {
+            if (it.pats.some(p => globToRe(this.parseCmd('x ' + p).argv.slice(1).join(' ')).test(w))) { code = this.runNodes(it.body, write, io); break; }
+          }
+          break;
+        }
+        case 'func': this.funcs[n.name] = n.body; break;
+        case 'group': code = this.runNodes(n.body, write, io); break;
+        default: break;
+      }
+    } finally { this.io = savedIo; }
+    this.lastCode = code;
+    return code;
+  }
+
+  /* i++ , i+=2 , i=i+1 bicimlerini aritmetik ifadeye cevirip degiskeni gunceller */
+  assignArith(expr) {
+    let m;
+    const e = expr.trim();
+    if ((m = /^(\w+)\+\+$/.exec(e)) || (m = /^\+\+(\w+)$/.exec(e))) { this.env[m[1]] = String(this.arith(m[1] + '+1')); return this.env[m[1]]; }
+    if ((m = /^(\w+)--$/.exec(e)) || (m = /^--(\w+)$/.exec(e))) { this.env[m[1]] = String(this.arith(m[1] + '-1')); return this.env[m[1]]; }
+    if ((m = /^(\w+)\s*([-+*/%]?)=(?!=)\s*(.+)$/.exec(e))) { this.env[m[1]] = String(this.arith(m[2] ? m[1] + m[2] + '(' + m[3] + ')' : m[3])); return this.env[m[1]]; }
+    return e;
+  }
+
+  callFunc(name, args, stdin) {
+    if (this.depth > 20) return fail('bash: ' + name + ': maximum function nesting level exceeded');
+    const out = []; const err = [];
+    const savedPos = this.positional; const savedEnv = {}; const locals = this.localScope = [];
+    this.positional = args; this.depth++;
+    let code = 0;
+    const io = { lines: stdin == null ? null : lines(stdin) };
+    try { code = this.runNodes(this.funcs[name], (t, cls) => (cls === 'err' ? err : out).push(t), io); }
+    catch (e) { if (e && e.flow === 'return') code = e.code; else { this.depth--; this.positional = savedPos; throw e; } }
+    this.depth--; this.positional = savedPos;
+    for (const k of locals) { if (savedEnv[k] === undefined) delete this.env[k]; }
+    this.localScope = null;
     return { out: out.join(''), err: err.join(''), code };
   }
 
@@ -727,6 +1040,59 @@ class Shell {
 }
 
 /* ---------- komutlar ---------- */
+
+/* Satir bu kelimelerle basliyorsa script motoru calisir */
+const SCRIPT_KW = /^\s*(?:(?:if|for|while|until|case)\b|function\s+\w+\b|\w+\s*\(\s*\)|\{\s)/;
+function needsScript(line) {
+  if (SCRIPT_KW.test(line)) return true;
+  return splitTop(line, [';', '|']).some(seg => SCRIPT_KW.test(seg.text.trim()));
+}
+
+/* test ve [ ] degerlendirmesi */
+function evalTest(sh, args) {
+  const fileNode = p => sh.node(sh.resolve(p));
+  const un = (op, a) => {
+    const n = fileNode(a);
+    switch (op) {
+      case '-e': return !!n; case '-f': return !!n && n.t === 'f'; case '-d': return !!n && n.t === 'd';
+      case '-s': return !!n && n.t === 'f' && n.d.length > 0; case '-r': return !!n && sh.canRead(n); case '-w': return !!n && sh.canWrite(n); case '-x': return !!n && sh.canExec(n);
+      case '-z': return a === ''; case '-n': return a !== ''; case '-L': case '-h': return false;
+      default: return null;
+    }
+  };
+  const bin = (a, op, b) => {
+    const na = parseInt(a, 10), nb = parseInt(b, 10);
+    switch (op) {
+      case '=': case '==': return a === b; case '!=': return a !== b;
+      case '<': return a < b; case '>': return a > b;
+      case '-eq': return na === nb; case '-ne': return na !== nb; case '-lt': return na < nb; case '-le': return na <= nb; case '-gt': return na > nb; case '-ge': return na >= nb;
+      case '-nt': { const x = fileNode(a), y = fileNode(b); return !!x && (!y || x.ts > y.ts); }
+      case '-ot': { const x = fileNode(a), y = fileNode(b); return !!y && (!x || x.ts < y.ts); }
+      default: return null;
+    }
+  };
+  const expr = (toks) => {
+    const orParts = []; let cur = [];
+    for (const t of toks) { if (t === '-o' || t === '||') { orParts.push(cur); cur = []; } else cur.push(t); }
+    orParts.push(cur);
+    return orParts.some(part => {
+      const andParts = []; let c = [];
+      for (const t of part) { if (t === '-a' || t === '&&') { andParts.push(c); c = []; } else c.push(t); }
+      andParts.push(c);
+      return andParts.every(term);
+    });
+  };
+  const term = (toks) => {
+    if (!toks.length) return false;
+    if (toks[0] === '!') return !term(toks.slice(1));
+    if (toks[0] === '(' && toks[toks.length - 1] === ')') return expr(toks.slice(1, -1));
+    if (toks.length === 1) return toks[0] !== '';
+    if (toks.length === 2) { const r = un(toks[0], toks[1]); if (r === null) throw new Error(`${toks[0]}: unary operator expected`); return r; }
+    if (toks.length === 3) { const r = bin(toks[0], toks[1], toks[2]); if (r === null) throw new Error(`${toks[1]}: binary operator expected`); return r; }
+    throw new Error('too many arguments');
+  };
+  return expr(args);
+}
 
 const SUGGEST = {
   dir: "Linux'ta ls kullanılır",
@@ -1472,6 +1838,73 @@ const COMMANDS = {
   },
   type(args) { return ok(join(args.map(a => (this.aliases[a] ? `${a} is aliased to '${this.aliases[a]}'` : COMMANDS[a] ? `${a} is /usr/bin/${a}` : `bash: type: ${a}: not found`)))); },
   true() { return ok(); },
+  ':'() { return ok(); },
+  test(args) { try { return { out: '', err: '', code: evalTest(this, args) ? 0 : 1 }; } catch (e) { return fail('test: ' + e.message, 2); } },
+  '['(args) {
+    if (args[args.length - 1] !== ']') return fail("[: missing ']'", 2);
+    try { return { out: '', err: '', code: evalTest(this, args.slice(0, -1)) ? 0 : 1 }; } catch (e) { return fail('[: ' + e.message, 2); }
+  },
+  '[['(args) {
+    if (args[args.length - 1] !== ']]') return fail("bash: [[: missing ']]'", 2);
+    const a = args.slice(0, -1);
+    try {
+      /* [[ x == glob ]] ve [[ x =~ regex ]] ek destegi */
+      if (a.length === 3 && (a[1] === '==' || a[1] === '=')) return { out: '', err: '', code: globToRe(a[2]).test(a[0]) ? 0 : 1 };
+      if (a.length === 3 && a[1] === '=~') return { out: '', err: '', code: new RegExp(a[2]).test(a[0]) ? 0 : 1 };
+      return { out: '', err: '', code: evalTest(this, a) ? 0 : 1 };
+    } catch (e) { return fail('bash: [[: ' + e.message, 2); }
+  },
+  read(args, stdin) {
+    const { flags, vals, rest } = parseOpts(args, 'pd');
+    const io = this.io;
+    let line;
+    if (io && io.lines) { if (!io.lines.length) return { out: '', err: '', code: 1 }; line = io.lines.shift(); }
+    else if (stdin != null) { const ls = lines(stdin); if (!ls.length) return { out: '', err: '', code: 1 }; line = ls[0]; }
+    else return fail('read: bu lab\'da klavyeden okuma yok. Dosyadan oku, ornek while read l; do ...; done < dosya', 1);
+    void flags; void vals;
+    const names = rest.length ? rest : ['REPLY'];
+    const parts = line.trim().split(/\s+/);
+    names.forEach((n, i) => { this.env[n] = i === names.length - 1 ? parts.slice(i).join(' ') : (parts[i] || ''); });
+    return ok();
+  },
+  local(args) {
+    for (const a of args) { const k = a.indexOf('='); const name = k > 0 ? a.slice(0, k) : a; if (this.localScope) this.localScope.push(name); this.env[name] = k > 0 ? a.slice(k + 1) : ''; }
+    return ok();
+  },
+  declare(args) { return COMMANDS.local.call(this, args.filter(a => !a.startsWith('-'))); },
+  shift(args) { const n = +(args[0] || 1); if (this.positional.length < n) return { out: '', err: '', code: 1 }; this.positional = this.positional.slice(n); return ok(); },
+  let(args) { let r = 0; try { for (const a of args) r = this.arith(this.assignArith(a)); } catch (e) { return fail('bash: let: ' + e.message); } return { out: '', err: '', code: r ? 0 : 1 }; },
+  expr(args) { try { return ok(String(this.arith(args.join(' '))) + '\n'); } catch (e) { return fail('expr: syntax error', 2); } },
+  basename(args) { if (!args[0]) return fail('basename: missing operand'); let b = args[0].replace(/\/+$/, '').split('/').pop(); if (args[1] && b.endsWith(args[1])) b = b.slice(0, -args[1].length); return ok(b + '\n'); },
+  dirname(args) { if (!args[0]) return fail('dirname: missing operand'); const p = args[0].replace(/\/+$/, ''); const i = p.lastIndexOf('/'); return ok((i < 0 ? '.' : i === 0 ? '/' : p.slice(0, i)) + '\n'); },
+  crontab(args, stdin) {
+    const { flags, rest } = parseOpts(args);
+    if (flags.has('l')) return this.crontab ? ok(this.crontab.endsWith('\n') ? this.crontab : this.crontab + '\n') : fail('no crontab for ' + this.user);
+    if (flags.has('r')) { this.crontab = ''; return ok(); }
+    if (flags.has('e')) { this.ui.editor = { path: '__crontab__', display: 'crontab', content: this.crontab || '# m h dom mon dow command\n', root: false }; return ok(); }
+    if (rest[0] === '-') { this.crontab = stdin || ''; return ok(); }
+    if (rest[0]) { const r = this.readFile(rest[0], 'crontab'); if (r.err) return fail(r.err); this.crontab = r.data; return ok(); }
+    return fail('usage: crontab -l | -e | -r | dosya');
+  },
+  /* Lab'da zaman akmaz. Bu komut bir cron dakikasini simule eder, crontab'daki her satir bir kez calisir */
+  'cron-tick'(args) {
+    const entries = lines(this.crontab).filter(l => l.trim() && !l.trim().startsWith('#'));
+    if (!entries.length) return fail('cron-tick: crontab bos, once crontab -e ile bir satir ekle');
+    const out = [];
+    const ts = new Date().toTimeString().slice(0, 8);
+    for (const e of entries) {
+      const parts = e.trim().split(/\s+/);
+      if (parts.length < 6) { out.push(`cron-tick: gecersiz satir, 5 zaman alani ve komut bekleniyor: ${e}`); continue; }
+      const cmd = parts.slice(5).join(' ');
+      const buf = []; const errs = [];
+      const code = this.runScriptText(cmd, (t, cls) => (cls === 'err' ? errs : buf).push(t), null, 'cron');
+      const logLine = `${new Date().toDateString().slice(4, 10)} ${ts} linuxlab CRON[${1000 + Math.floor(Math.random() * 8000)}]: (${this.user}) CMD (${cmd})`;
+      const sys = this.node('/var/log/syslog'); if (sys) sys.d += logLine + '\n';
+      this.cronLog.push({ cmd, code, out: buf.join(''), err: errs.join('') });
+      out.push(`▶ ${cmd}  →  exit ${code}` + (buf.length ? '\n' + buf.join('').replace(/\n$/, '') : '') + (errs.length ? '\n' + errs.join('').replace(/\n$/, '') : ''));
+    }
+    return ok(out.join('\n') + '\n');
+  },
   false() { return { out: '', err: '', code: 1 }; },
   sleep() { return ok(); },
   exit() { return ok('logout\n[Bu bir lab, kaçış yok 😄 Görev ekranına dönmek için alttaki sekmeleri kullan]\n'); },
@@ -1493,8 +1926,8 @@ const COMMANDS = {
     const cmd = args.length ? args : ['echo'];
     return this.execSimple(cmd.concat(items), null, {});
   },
-  bash(args) { if (!args.length) return ok("Zaten bash shell'inin içindesin 🙂\n"); return this.runScript(args[0], args.slice(1), false); },
-  sh(args) { return COMMANDS.bash.call(this, args); },
+  bash(args, stdin) { if (!args.length) return ok("Zaten bash shell'inin içindesin 🙂\n"); if (args[0] === '-c') return this.runScriptText(args.slice(1).join(' '), null, stdin) === undefined ? ok() : (() => { const buf = []; const errs = []; const c = this.runScriptText(args.slice(1).join(' '), (t, cls) => (cls === 'err' ? errs : buf).push(t), stdin); return { out: buf.join(''), err: errs.join(''), code: c }; })(); return this.runScript(args[0], args.slice(1), false, stdin); },
+  sh(args, stdin) { return COMMANDS.bash.call(this, args, stdin); },
   source(args) { return this.runScript(args[0] || '', args.slice(1), false); },
 
   man(args) {
