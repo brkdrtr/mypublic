@@ -232,3 +232,28 @@ details summary { cursor: pointer; }
 .chip.icon { font-size: 24px; padding: 4px 8px; }
 .voice-list > div { padding: 6px 0; border-bottom: 1px solid var(--line); word-break: break-all; }
 .voice-list > div.on { font-weight: 700; color: var(--brand); }
+
+/* v4, gorsel knm, defter, rapor */
+.knm-svg { background: var(--card2); border-radius: 12px; padding: 8px; margin-bottom: 10px; display: flex; justify-content: center; }
+.knm-svg svg { width: 100%; max-width: 300px; height: auto; }
+.knm-svg.small-svg svg { max-width: 160px; }
+.nb-add { margin-left: 8px; background: var(--brand); color: #fff; border: 0; border-radius: 999px; padding: 3px 10px; font-size: 14px; font-weight: 700; }
+.nb-add.on { background: var(--good); }
+.plan .ck.weak { width: auto; min-width: 44px; border-radius: 999px; padding: 0 6px; font-size: 12px; font-weight: 800; color: var(--bad); border-color: var(--bad-bg); background: var(--bad-bg); }
+.big2 { font-size: 20px; font-weight: 800; }
+
+/* sinav gunu, shadowing */
+.list-item.day { border-color: var(--brand); }
+.plan .ck.ok2 { background: var(--good); border-color: var(--good); color: #fff; }
+.plan .ck.no2 { background: var(--bad); border-color: var(--bad); color: #fff; }
+.sh-ok { color: var(--good); font-weight: 700; }
+.sh-miss { color: var(--bad); font-weight: 700; text-decoration: underline wavy; }
+details.card summary { font-weight: 600; cursor: pointer; }
+
+/* A1 alfabe */
+.alpha { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 12px 0; }
+.letter { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 2px; color: var(--fg); display: flex; flex-direction: column; align-items: center; }
+.letter b { font-size: 20px; }
+.letter span { font-size: 11px; color: var(--muted); }
+.letter.on { border-color: var(--brand); background: rgba(255,107,0,.14); }
+.pill { font-size: 10px; background: var(--brand); color: #fff; border-radius: 6px; padding: 1px 5px; vertical-align: middle; }

@@ -79,6 +79,17 @@ const STR = {
     ai_err_key: 'API anahtarı geçersiz, temel kontrol kullanıldı', ai_err_net: 'Claude\'a ulaşılamadı, temel kontrol kullanıldı', ai_err_refusal: 'Model bu isteği cevaplamadı',
     fix_art: '{n} bir {a}-woord', fix_verb: '{p} ile fiil {f} olur', fix_cap: 'Cümle büyük harfle başlar', fix_space: 'Fazla boşluk', fix_spell: 'Yazım',
     no_tts: 'Bu cihazda konuşma sentezi yok',
+    knm_visual: 'Resimli sorular', nb_title: 'Kelime defterim', nb_n: '{n} kelime', nb_empty: 'Henüz boş. Metinde bir kelimeye dokun, 📓 + ile ekle.', nb_help: 'Metinlerde dokunup eklediğin kelimeler. Flashcard olarak çalışılır.', nb_added: '📓 Deftere eklendi', nb_removed: 'Defterden çıkarıldı',
+    weak_title: 'Zayıf noktaların', weak_s: '{n} soruda', weak_go: 'Çalış', weak_none: 'Şu an zayıf nokta yok, %80 üstü gidiyorsun 💪',
+    week_title: 'Bu hafta', week_days: 'çalışılan gün', week_cards: 'kart', week_acc: 'doğruluk',
+    rem_btn: 'Günlük hatırlatma', rem_title: 'Günlük hatırlatma', rem_help: 'Uygulama sunucusuz çalıştığı için kendi bildirim gönderemez. Bunun yerine iPhone Takvim\'e her gün tekrar eden 15 dakikalık bir etkinlik ekler, bildirimi Takvim verir.', rem_time: 'Saat', rem_go: 'Takvime ekle', rem_s1: 'Takvime ekle\'ye dokun, dosya iner.', rem_s2: 'Açılan ekranda Takvim\'e Ekle\'yi seç.', rem_s3: 'Silmek istersen Takvim\'de etkinliği sil, tümü seçeneğiyle.',
+    rec_audio: 'Gerçek ses kayıtları',
+    a1_alpha: 'Alfabe ve heceleme', a1_alpha_s: 'Harf adları, adını hecele', a1_alpha_help: 'Harfe dokun, Hollandaca adını duy. Üstte adını yaz, hecelesin.', a1_spell_me: 'Adını hecele',
+    me_a1: 'A1 başlangıç paketi', me_a1_help: '{n} temel kelime, {l} kolay ders ve alfabe. Sıfırdan başlayan için.', me_a1_on: 'A1 paketi açık, Kelimeler ve Grammatica listesine eklendi', me_a1_off: 'A1 paketi kapalı',
+    ex_day: 'Sınav günü, 5 bölüm', ex_day_s: 'Lezen, Luisteren, Schrijven, Spreken, KNM · yaklaşık 2 saat 15 dakika', ex_day_intro: 'Gerçek sınav gibi beş bölüm arka arkaya, her biri kendi süresiyle. Bölümler arasında mola var. Telefonu sessize al, 2 saatini ayır.', ex_day_note: 'Schrijven ve Spreken Claude anahtarı varsa Claude ile, yoksa temel kurallarla puanlanır. Sonuç tahminidir, resmi puanlamayı DUO yapar.',
+    ex_break: 'Mola', ex_break_s: '{n}/{t} bölüm bitti. Hazır olunca devam et.', ex_continue: 'Devam', ex_day_done: 'Sınav günü bitti', ex_day_pass: 'Beş bölümde de geçme çizgisinin üstündesin 🎓', ex_day_fail: 'Kırmızı bölümlere yüklen, sonra tekrar dene.',
+    ex_schrijven: 'Schrijven deneme', ex_spreken: 'Spreken deneme',
+    sh_title: 'Shadowing', sh_sub: 'Dinle, tekrar et, telaffuzunu ölç', sh_step1: '1. Cümleyi dinle', sh_step2: '2. Aynısını söyle', sh_listen: 'Dinle', sh_slow: 'Yavaş', sh_say: 'Söyle', sh_check: 'Karşılaştır', sh_repeat: 'Tekrar et', sh_great: 'Çok iyi, neredeyse birebir', sh_ok: 'İyi, kırmızı kelimeleri tekrar dinle', sh_again: 'Yavaş modda dinleyip tekrar dene',
     w_lt_note: 'LanguageTool ile ücretsiz düzeltildi. Yazım ve dilbilgisi hatalarını yakalar ama puan ve geri bildirim vermez. Daha detaylı düzeltme için Profil\'den Claude API anahtarı ekleyebilirsin.', w_lt_fail: 'LanguageTool\'a ulaşılamadı, offline temel kontrol kullanıldı',
     me_lt: 'Ücretsiz LanguageTool düzeltmesi', me_lt_help: 'Anahtar gerekmez. Schrijven ve Spreken metnin languagetool.org\'a gönderilir ve Hollandaca yazım ve dilbilgisi hataları düzeltilir. Claude anahtarı varsa Claude kullanılır.',
   },
@@ -149,6 +160,17 @@ const STR = {
     ai_err_key: 'Invalid API key, basic check used', ai_err_net: 'Could not reach Claude, basic check used', ai_err_refusal: 'The model declined this request',
     fix_art: '{n} is a {a}-word', fix_verb: 'with {p} the verb is {f}', fix_cap: 'A sentence starts with a capital', fix_space: 'Extra space', fix_spell: 'Spelling',
     no_tts: 'Speech synthesis is not available on this device',
+    knm_visual: 'Picture questions', nb_title: 'My word notebook', nb_n: '{n} words', nb_empty: 'Empty for now. Tap a word in a text and add it with 📓 +.', nb_help: 'Words you added from texts. They are studied as flashcards.', nb_added: '📓 Added to notebook', nb_removed: 'Removed from notebook',
+    weak_title: 'Your weak spots', weak_s: 'over {n} questions', weak_go: 'Practise', weak_none: 'No weak spots right now, you are above 80% 💪',
+    week_title: 'This week', week_days: 'days studied', week_cards: 'cards', week_acc: 'accuracy',
+    rem_btn: 'Daily reminder', rem_title: 'Daily reminder', rem_help: 'The app has no server, so it cannot send its own notifications. Instead it adds a daily 15 minute event to your iPhone Calendar, and Calendar gives the alert.', rem_time: 'Time', rem_go: 'Add to Calendar', rem_s1: 'Tap Add to Calendar, a file downloads.', rem_s2: 'On the next screen choose Add to Calendar.', rem_s3: 'To remove it later, delete the event in Calendar, choosing all events.',
+    rec_audio: 'Real voice recordings',
+    a1_alpha: 'Alphabet and spelling', a1_alpha_s: 'Letter names, spell your name', a1_alpha_help: 'Tap a letter to hear its Dutch name. Type your name above and let it spell it.', a1_spell_me: 'Spell your name',
+    me_a1: 'A1 starter pack', me_a1_help: '{n} basic words, {l} easy lessons and the alphabet. For a complete beginner.', me_a1_on: 'A1 pack on, added to Words and Grammatica', me_a1_off: 'A1 pack off',
+    ex_day: 'Exam day, 5 parts', ex_day_s: 'Lezen, Luisteren, Schrijven, Spreken, KNM · about 2 hours 15 minutes', ex_day_intro: 'Five parts back to back like the real exam, each with its own time limit. There is a break between parts. Silence your phone and set aside 2 hours.', ex_day_note: 'Schrijven and Spreken are scored by Claude when an API key is set, otherwise by the basic rules. The result is an estimate, DUO does the official scoring.',
+    ex_break: 'Break', ex_break_s: '{n}/{t} parts done. Continue when ready.', ex_continue: 'Continue', ex_day_done: 'Exam day finished', ex_day_pass: 'Above the pass line in all five parts 🎓', ex_day_fail: 'Work on the red parts, then try again.',
+    ex_schrijven: 'Writing exam', ex_spreken: 'Speaking exam',
+    sh_title: 'Shadowing', sh_sub: 'Listen, repeat, measure your pronunciation', sh_step1: '1. Listen to the sentence', sh_step2: '2. Say the same', sh_listen: 'Listen', sh_slow: 'Slow', sh_say: 'Speak', sh_check: 'Compare', sh_repeat: 'Repeat it', sh_great: 'Very good, almost word for word', sh_ok: 'Good, listen again to the red words', sh_again: 'Listen in slow mode and try again',
     w_lt_note: 'Corrected for free by LanguageTool. It catches spelling and grammar errors but gives no score or feedback. For a detailed correction you can add a Claude API key in Profile.', w_lt_fail: 'Could not reach LanguageTool, offline basic check used',
     me_lt: 'Free LanguageTool correction', me_lt_help: 'No key needed. Your Writing and Speaking text is sent to languagetool.org and Dutch spelling and grammar errors are fixed. If a Claude key is set, Claude is used instead.',
   },
@@ -166,11 +188,33 @@ VOCAB_THEMES.forEach(th => {
   });
 });
 const NOUNS = WORDS.filter(w => w.art);
+/* A1 baslangic paketi, profil ayarindan acilir. Satir bicimi nl|tr|en|ornek|ornek tr|ornek en */
+const A1_WORDS = [];
+const A1_TH = typeof A1_THEMES !== 'undefined' ? A1_THEMES : [];
+const A1_LS = typeof A1_LESSONS !== 'undefined' ? A1_LESSONS : [];
+A1_TH.forEach(th => {
+  th.words.trim().split('\n').forEach(line => {
+    const [nl, tr, en, ex, exTr, exEn] = line.split('|').map(x => (x || '').trim());
+    if (!nl) return;
+    const m = /^(de|het)\s+(.+)$/.exec(nl);
+    A1_WORDS.push({ key: th.id + '|' + nl, nl, tr, en, ex, exTr, exEn, theme: th.id, art: m ? m[1] : null, bare: m ? m[2] : nl, a1: true });
+  });
+});
+function a1On() { return !!(S && S.set.a1); }
+function vocabThemes() { return a1On() ? A1_TH.concat(VOCAB_THEMES) : VOCAB_THEMES; }
+function gramList() { return a1On() ? A1_LS.concat(GRAMMAR) : GRAMMAR; }
+/* Gorsel KNM sorulari ayni havuza girer, svg alani olanlar resimli gosterilir */
+const KNM_VIS = (typeof KNM_VISUAL !== 'undefined' ? KNM_VISUAL : []).map(v => Object.assign({}, v));
+const KNM_ALL = KNM.concat(KNM_VIS);
+/* Kelime defteri, kullanicinin sozlukten ekledigi kelimeler flashcard havuzuna girer */
+function notebookWords() { return ((S && S.notebook) || []).map(n => ({ key: 'nb|' + n.nl, nl: n.nl, tr: n.tr, en: n.en || n.tr, ex: n.ex || '', theme: 'notebook', art: (/^(de|het)\s/.exec(n.nl) || [])[1] || null, bare: n.nl.replace(/^(de|het)\s+/, '') })); }
+function allWords() { return (a1On() ? A1_WORDS.concat(WORDS) : WORDS).concat(notebookWords()); }
 const NOUN_ART = new Map();
 NOUNS.forEach(w => { const k = w.bare.toLowerCase(); if (!k.includes(' ') && !NOUN_ART.has(k)) NOUN_ART.set(k, w.art); });
 
 const DICT = new Map();
-WORDS.forEach(w => { const k = w.bare.toLowerCase(); if (!DICT.has(k)) DICT.set(k, { nl: w.nl, w }); });
+WORDS.concat(A1_WORDS).forEach(w => { const k = w.bare.toLowerCase(); if (!DICT.has(k)) DICT.set(k, { nl: w.nl, w }); });
+A1_WORDS.forEach(w => { if (w.art) { const k = w.bare.toLowerCase(); if (!k.includes(' ') && !NOUN_ART.has(k)) NOUN_ART.set(k, w.art); } });
 VERBS.forEach(v => {
   [v.inf, v.ik, v.jij, v.hij, v.wij, v.pv, v.perf].forEach(f => {
     if (!f) return;
@@ -194,7 +238,7 @@ const DEF = {
   srs: {}, xp: 0, streak: 0, lastDay: null,
   stats: { lezen: [0, 0], luisteren: [0, 0], knm: [0, 0], grammatica: [0, 0], woorden: [0, 0] },
   done: { lezen: [], luisteren: [], schrijven: [], spreken: [], grammar: [] },
-  knmWrong: [], exams: [],
+  knmWrong: [], exams: [], notebook: [], skill: {}, week: {},
   day: { date: null, cards: 0, newCards: 0, lezen: 0, luisteren: 0, knm: 0, spreken: 0, schrijven: 0 },
   set: { examDate: '', newPerDay: 10, goal: 30, rate: 0.9, voiceF: '', voiceM: '', showTr: true, lang: 'tr', lt: true },
 };
@@ -229,15 +273,15 @@ function t(k, vars) {
 /* Icerik cevirileri, Ingilizce yoksa Turkceye duser */
 const enOf = (sec, id) => (lang() === 'en' && EN[sec] && EN[sec][id]) || null;
 const L10N = {
-  word: w => (lang() === 'en' && EN.vocab && EN.vocab[w.nl]) || w.tr,
+  word: w => ((w.theme === 'notebook' || w.a1) ? (lang() === 'en' ? w.en : w.tr) : (lang() === 'en' && EN.vocab && EN.vocab[w.nl])) || w.tr,
   verb: v => (lang() === 'en' && EN.verbs && EN.verbs[v.inf]) || v.tr,
-  theme: th => (lang() === 'en' && EN.themes && EN.themes[th.id]) || th.title,
-  knmQ: q => (lang() === 'en' ? (enOf('knm', q.id) || {}).q : q.tr) || '',
-  knmEx: q => (enOf('knm', q.id) || {}).ex || q.ex || '',
+  theme: th => (lang() === 'en' && ((EN.themes && EN.themes[th.id]) || th.titleEn)) || th.title,
+  knmQ: q => (lang() === 'en' ? ((enOf('knm', q.id) || {}).q || q.en) : q.tr) || '',
+  knmEx: q => (lang() === 'en' ? ((enOf('knm', q.id) || {}).ex || q.exEn) : q.ex) || q.ex || '',
   knmTheme: k => (lang() === 'en' ? (EN.knmThemes && EN.knmThemes[k]) : (typeof KNM_THEMES_TR !== 'undefined' && KNM_THEMES_TR[k])) || '',
-  gTitle: g => (enOf('grammar', g.id) || {}).title || g.title,
-  gBody: g => (enOf('grammar', g.id) || {}).body || g.body,
-  gEx: (g, i) => ((enOf('grammar', g.id) || {}).ex || [])[i] || (g.drills[i] && g.drills[i].ex) || '',
+  gTitle: g => (enOf('grammar', g.id) || {}).title || (lang() === 'en' && g.titleEn) || g.title,
+  gBody: g => (enOf('grammar', g.id) || {}).body || (lang() === 'en' && g.bodyEn) || g.body,
+  gEx: (g, i) => ((enOf('grammar', g.id) || {}).ex || [])[i] || (g.drills[i] && ((lang() === 'en' && g.drills[i].exEn) || g.drills[i].ex)) || '',
   wTr: x => (enOf('schrijven', x.id) || {}).tr || x.tr,
   wPoint: (x, i) => ((enOf('schrijven', x.id) || {}).points || [])[i] || (x.points[i] && x.points[i].tr) || '',
   sTr: x => (enOf('spreken', x.id) || {}).tr || x.tr,
@@ -256,8 +300,35 @@ function activity(xp = 0) {
     S.lastDay = td;
   }
   S.xp += xp;
+  const w = S.week[td] || (S.week[td] = { xp: 0, q: 0, ok: 0, cards: 0 });
+  w.xp += xp;
+  const keys = Object.keys(S.week).sort();
+  while (keys.length > 21) delete S.week[keys.shift()];
 }
-function stat(k, ok) { S.stats[k] = S.stats[k] || [0, 0]; S.stats[k][1]++; if (ok) S.stats[k][0]++; }
+function stat(k, ok) {
+  S.stats[k] = S.stats[k] || [0, 0]; S.stats[k][1]++; if (ok) S.stats[k][0]++;
+  rollDay();
+  const w = S.week[dstr()] || (S.week[dstr()] = { xp: 0, q: 0, ok: 0, cards: 0 });
+  w.q++; if (ok) w.ok++; if (k === 'woorden') w.cards++;
+}
+/* Konu bazli basari, zayif nokta listesi icin. key ornegi gram:dehet, knm:wonen, vocab:huis */
+function skillStat(key, ok) { const sk = S.skill[key] || (S.skill[key] = [0, 0]); sk[1]++; if (ok) sk[0]++; }
+function weakSpots(n = 3) {
+  return Object.entries(S.skill).filter(([, v]) => v[1] >= 5).map(([k, v]) => ({ k, acc: v[0] / v[1], n: v[1] })).filter(x => x.acc < 0.8).sort((a, b) => a.acc - b.acc).slice(0, n);
+}
+function skillLabel(k) {
+  const [kind, id] = k.split(':');
+  if (kind === 'gram') { if (id === 'verbs') return t('gram_verbs'); const g = gramList().find(x => x.id === id); return g ? L10N.gTitle(g) : id; }
+  if (kind === 'knm') return (KNM_THEMES[id] || id) + (L10N.knmTheme(id) ? ' · ' + L10N.knmTheme(id) : '');
+  if (kind === 'vocab') { const th = vocabThemes().find(x => x.id === id); return th ? th.icon + ' ' + L10N.theme(th) : id; }
+  return k;
+}
+function skillGo(k) {
+  const [kind, id] = k.split(':');
+  if (kind === 'gram') return id === 'verbs' ? open(VerbDrill) : open(GramDrill, id);
+  if (kind === 'knm') return open(KnmQuiz, id, 10);
+  if (kind === 'vocab') return open(Flash, [id]);
+}
 
 function renderTop() {
   if (!S) return;
@@ -357,6 +428,27 @@ const TTS = {
   stop() { this._token = null; if ('speechSynthesis' in window) speechSynthesis.cancel(); },
 };
 if ('speechSynthesis' in window) { TTS.load(); speechSynthesis.onvoiceschanged = () => TTS.load(); document.addEventListener('visibilitychange', () => { if (!document.hidden) TTS.load(); }); }
+
+/* Gercek ses dosyasi varsa onu calar, yoksa cihaz sesi. audio/index.js dosyasi AUDIO_INDEX = { u1: satirSayisi } verir, dosyalar audio/u1/0.m4a ... */
+function hasAudio(id) { return typeof AUDIO_INDEX !== 'undefined' && AUDIO_INDEX[id] > 0; }
+function playDialog(x, onLine, onDone) {
+  if (!hasAudio(x.id) || S.set.realAudio === false) return TTS.seq(x.lines, onLine, onDone);
+  TTS.stop();
+  let i = 0; let stopped = false; let cur = null;
+  const next = () => {
+    if (stopped) return;
+    if (i >= x.lines.length) { if (onDone) onDone(); return; }
+    if (onLine) onLine(i);
+    cur = new Audio('audio/' + x.id + '/' + i + '.m4a');
+    cur.playbackRate = Math.max(0.7, Math.min(1.1, S.set.rate));
+    i++;
+    cur.onended = () => setTimeout(next, 350);
+    cur.onerror = () => { stopped = true; TTS.seq(x.lines.slice(i - 1), li => onLine && onLine(li + i - 1), onDone); };
+    cur.play().catch(() => { cur.onerror(); });
+  };
+  next();
+  return () => { stopped = true; if (cur) { cur.pause(); cur.src = ''; } };
+}
 
 /* ---------- Claude ile duzeltme ---------- */
 
@@ -546,9 +638,9 @@ const stack = [];
 let timers = [];
 function stopTimers() { timers.forEach(clearInterval); timers = []; if (window._stopSeq) { window._stopSeq(); window._stopSeq = null; } stopRecording(); stopSR(); hidePop(); }
 function open(fn, ...args) { TTS.stop(); stopTimers(); stack.push([fn, args]); fn(...args); $('#main').scrollTop = 0; }
-function back() { TTS.stop(); stopTimers(); stack.pop(); const top = stack[stack.length - 1]; if (top) top[0](...top[1]); else switchTab(tab); $('#main').scrollTop = 0; }
+function back() { TTS.stop(); stopTimers(); examHook = null; stack.pop(); const top = stack[stack.length - 1]; if (top) top[0](...top[1]); else switchTab(tab); $('#main').scrollTop = 0; }
 function switchTab(tb) {
-  tab = tb; stack.length = 0; TTS.stop(); stopTimers();
+  tab = tb; stack.length = 0; TTS.stop(); stopTimers(); examHook = null;
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tb));
   ({ home: Home, words: Words, practice: Practice, exam: Exam, me: Me })[tb]();
   $('#main').scrollTop = 0;
@@ -558,8 +650,8 @@ const backBtn = label => `<button class="back">‹ ${esc(label || t('back'))}</b
 
 /* ---------- SRS ---------- */
 
-function dueWords() { const now = Date.now(); return WORDS.filter(w => S.srs[w.key] && S.srs[w.key].due <= now); }
-function newWords(themes) { return WORDS.filter(w => !S.srs[w.key] && (!themes || themes.includes(w.theme))); }
+function dueWords() { const now = Date.now(); return allWords().filter(w => S.srs[w.key] && S.srs[w.key].due <= now); }
+function newWords(themes) { return allWords().filter(w => !S.srs[w.key] && (!themes || themes.includes(w.theme))); }
 function nextIv(c, q) {
   if (q === 0) return 0;
   const reps = c ? c.reps : 0;
@@ -660,9 +752,48 @@ function Home() {
   });
   h += `<div class="tile"><div class="t">✍️ Schrijven</div><div class="s">${esc(t('tasks_n', { d: S.done.schrijven.length, t: SCHRIJVEN.length }))}</div><div class="bar"><div style="width:${S.done.schrijven.length / SCHRIJVEN.length * 100}%"></div></div></div>`;
   h += `<div class="tile"><div class="t">🗣️ Spreken</div><div class="s">${esc(t('q_n', { d: S.done.spreken.length, t: SPREKEN.length }))}</div><div class="bar"><div style="width:${S.done.spreken.length / SPREKEN.length * 100}%"></div></div></div></div>`;
+  const weak = weakSpots(3);
+  if (weak.length) {
+    h += `<h3>${esc(t('weak_title'))}</h3><div class="card">`;
+    weak.forEach((w, i) => { h += `<div class="plan"><span class="ck weak">${Math.round(w.acc * 100)}%</span><div><div style="font-weight:600">${esc(skillLabel(w.k))}</div><div class="small muted">${esc(t('weak_s', { n: w.n }))}</div></div><button class="btn sm go" data-w="${i}">${esc(t('weak_go'))}</button></div>`; });
+    h += `</div>`;
+  } else if (Object.keys(S.skill).length) h += `<h3>${esc(t('weak_title'))}</h3><p class="small muted">${esc(t('weak_none'))}</p>`;
+  h += weekReportHTML();
   h += `<p class="small muted" style="margin-top:16px">${esc(t('home_note'))}</p>`;
   view(h);
-  $$('.plan .go').forEach(b => b.onclick = () => plan[+b.dataset.i].go());
+  $$('.plan .go[data-i]').forEach(b => b.onclick = () => plan[+b.dataset.i].go());
+  $$('[data-w]').forEach(b => b.onclick = () => skillGo(weak[+b.dataset.w].k));
+  const rb = $('#wk-remind'); if (rb) rb.onclick = () => open(Reminder);
+}
+
+/* Haftalik rapor, son 7 gun ile onceki 7 gun */
+function weekSum(offset) {
+  const sum = { xp: 0, q: 0, ok: 0, cards: 0, days: 0 };
+  for (let i = 0; i < 7; i++) { const d = dstr(new Date(Date.now() - (i + offset * 7) * DAY)); const w = S.week[d]; if (w) { sum.xp += w.xp; sum.q += w.q; sum.ok += w.ok; sum.cards += w.cards; if (w.xp > 0) sum.days++; } }
+  return sum;
+}
+function weekReportHTML() {
+  const a = weekSum(0), b = weekSum(1);
+  const arrow = (x, y) => (x > y ? '↑' : x < y ? '↓' : '·');
+  return `<h3>${esc(t('week_title'))}</h3><div class="card"><div class="grid2" style="gap:8px"><div><div class="big2">${a.days}/7</div><div class="small muted">${esc(t('week_days'))}</div></div><div><div class="big2">${a.cards} <span class="small muted">${arrow(a.cards, b.cards)} ${b.cards}</span></div><div class="small muted">${esc(t('week_cards'))}</div></div><div><div class="big2">${a.q ? Math.round(a.ok / a.q * 100) + '%' : '-'} <span class="small muted">${b.q ? arrow(a.ok / a.q, b.ok / b.q) + ' ' + Math.round(b.ok / b.q * 100) + '%' : ''}</span></div><div class="small muted">${esc(t('week_acc'))}</div></div><div><div class="big2">${a.xp} <span class="small muted">${arrow(a.xp, b.xp)} ${b.xp}</span></div><div class="small muted">XP</div></div></div><div class="row" style="margin-top:10px"><button class="btn sm alt" id="wk-remind">⏰ ${esc(t('rem_btn'))}</button></div></div>`;
+}
+
+/* iPhone Takvim'e gunluk hatirlatma. Sunucu olmadan push bildirim yok, .ics dosyasi takvime eklenir ve bildirimi Takvim verir */
+function Reminder() {
+  let hhmm = lsGet('a2.remind.' + PROFILE) || '19:30';
+  view(backBtn() + `<h2>⏰ ${esc(t('rem_title'))}</h2><div class="card"><p class="small muted" style="margin-top:0">${esc(t('rem_help'))}</p><div class="setting"><span>${esc(t('rem_time'))}</span><input type="time" id="rm-time" value="${esc(hhmm)}"></div><button class="btn block" id="rm-go" style="margin-top:10px">${esc(t('rem_go'))}</button><ol class="small muted" style="padding-left:18px"><li>${esc(t('rem_s1'))}</li><li>${esc(t('rem_s2'))}</li><li>${esc(t('rem_s3'))}</li></ol></div>`);
+  $('#rm-time').onchange = e => { hhmm = e.target.value || '19:30'; lsSet('a2.remind.' + PROFILE, hhmm); };
+  $('#rm-go').onclick = () => {
+    const [hh, mm] = hhmm.split(':').map(Number);
+    const start = new Date(); start.setHours(hh, mm, 0, 0); if (start < Date.now()) start.setDate(start.getDate() + 1);
+    const fmt = d => d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + 'T' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0') + '00';
+    const end = new Date(start.getTime() + 15 * 60000);
+    const title = lang() === 'en' ? 'Dutch A2, 15 minutes' : 'Hollandaca A2, 15 dakika';
+    const desc = lang() === 'en' ? 'Open the A2 Nederlands app and do today\'s plan.' : 'A2 Nederlands uygulamasını aç, bugünkü planı yap.';
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//A2 Nederlands//TR', 'BEGIN:VEVENT', 'UID:a2-daily-' + PROFILE + '@a2nederlands', 'DTSTAMP:' + fmt(new Date()), 'DTSTART:' + fmt(start), 'DTEND:' + fmt(end), 'RRULE:FREQ=DAILY', 'SUMMARY:' + title, 'DESCRIPTION:' + desc, 'URL:' + location.href.split('#')[0], 'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:' + title, 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'a2-nederlands-hatirlatma.ics'; document.body.appendChild(a); a.click(); a.remove();
+  };
 }
 
 function PickNext(kind) {
@@ -680,8 +811,11 @@ function Words() {
   const nw = Math.min(newWords().length, Math.max(0, S.set.newPerDay - S.day.newCards));
   let h = `<h2>${esc(t('words_title'))}</h2><div class="card"><div style="font-weight:800;font-size:20px">${esc(t('words_due', { d: due, n: nw }))}</div><div class="small muted">${esc(t('words_srs'))}</div><div class="row" style="margin-top:12px"><button class="btn" id="w-start">${esc(t('words_start'))}</button><button class="btn alt" id="w-rev">${lang() === 'en' ? 'EN' : 'TR'} → NL</button></div></div>`;
   h += `<div class="grid2"><button class="tile" id="w-dehet"><div class="e">⚡</div><div class="t">${esc(t('dehet_title'))}</div><div class="s">${esc(t('dehet_sub'))}</div></button><button class="tile" id="w-type"><div class="e">⌨️</div><div class="t">${esc(t('type_title'))}</div><div class="s">${esc(t('type_sub'))}</div></button></div><h3>${esc(t('themes'))}</h3>`;
-  VOCAB_THEMES.forEach(th => {
-    const ws = WORDS.filter(w => w.theme === th.id);
+  const nb = notebookWords();
+  h += `<button class="list-item" data-th="notebook"><span class="ic">📓</span><span style="flex:1;min-width:0"><span class="t">${esc(t('nb_title'))}</span><div class="small muted">${esc(nb.length ? t('nb_n', { n: nb.length }) : t('nb_empty'))}</div></span><span class="r">${nb.filter(w => S.srs[w.key]).length}/${nb.length}</span></button>`;
+  if (a1On()) h += `<button class="list-item" data-th="alphabet"><span class="ic">🔤</span><span style="flex:1;min-width:0"><span class="t">${esc(t('a1_alpha'))}</span><div class="small muted">${esc(t('a1_alpha_s'))}</div></span></button>`;
+  vocabThemes().forEach(th => {
+    const ws = allWords().filter(w => w.theme === th.id);
     const seen = ws.filter(w => S.srs[w.key]).length;
     h += `<button class="list-item" data-th="${th.id}"><span class="ic">${th.icon}</span><span style="flex:1;min-width:0"><span class="t">${esc(L10N.theme(th))}</span><div class="bar"><div style="width:${seen / ws.length * 100}%"></div></div></span><span class="r">${seen}/${ws.length}</span></button>`;
   });
@@ -690,24 +824,27 @@ function Words() {
   $('#w-rev').onclick = () => open(Flash, null, true);
   $('#w-dehet').onclick = () => open(DeHet);
   $('#w-type').onclick = () => open(TypeQuiz, null);
-  $$('[data-th]').forEach(b => b.onclick = () => open(Theme, b.dataset.th));
+  $$('[data-th]').forEach(b => b.onclick = () => (b.dataset.th === 'alphabet' ? open(Alphabet) : open(Theme, b.dataset.th)));
 }
 
 function Theme(id) {
-  const th = VOCAB_THEMES.find(x => x.id === id);
-  const ws = WORDS.filter(w => w.theme === id);
-  let h = backBtn(t('tab_words')) + `<h2>${th.icon} ${esc(L10N.theme(th))}</h2><div class="row"><button class="btn" id="t-learn">${esc(t('theme_learn'))}</button><button class="btn alt" id="t-type">${esc(t('theme_type'))}</button></div><div class="card" style="margin-top:12px">`;
-  ws.forEach((w, i) => { h += `<div class="wordrow"><button class="spk" data-i="${i}" aria-label="speak">🔊</button><div><div class="nl">${esc(w.nl)}</div><div class="small muted">${esc(L10N.word(w))}</div></div><span class="lvl">${esc(maturity(w))}</span></div>`; });
+  const isNb = id === 'notebook';
+  const th = isNb ? { icon: '📓', title: t('nb_title') } : vocabThemes().find(x => x.id === id);
+  const ws = isNb ? notebookWords() : allWords().filter(w => w.theme === id);
+  let h = backBtn(t('tab_words')) + `<h2>${th.icon} ${esc(isNb ? th.title : L10N.theme(th))}</h2>${isNb ? `<p class="small muted">${esc(t('nb_help'))}</p>` : ''}<div class="row"><button class="btn" id="t-learn" ${ws.length ? '' : 'disabled'}>${esc(t('theme_learn'))}</button><button class="btn alt" id="t-type" ${ws.length ? '' : 'disabled'}>${esc(t('theme_type'))}</button></div><div class="card" style="margin-top:12px">`;
+  ws.forEach((w, i) => { h += `<div class="wordrow"><button class="spk" data-i="${i}" aria-label="speak">🔊</button><div style="min-width:0"><div class="nl">${esc(w.nl)}</div><div class="small muted">${esc(L10N.word(w))}</div></div><span class="lvl">${esc(maturity(w))}</span>${isNb ? `<button class="spk" data-rm="${i}" aria-label="remove">🗑</button>` : ''}</div>`; });
+  if (isNb && !ws.length) h += `<p class="muted">${esc(t('nb_empty'))}</p>`;
   h += '</div>';
   view(h);
-  $$('.wordrow .spk').forEach(b => b.onclick = () => { const w = ws[+b.dataset.i]; TTS.speak(w.nl + '. ' + (w.ex || '')); });
+  $$('[data-rm]').forEach(b => b.onclick = () => { const w = ws[+b.dataset.rm]; S.notebook = S.notebook.filter(n => n.nl !== w.nl); delete S.srs[w.key]; save(); Theme(id); });
+  $$('.wordrow .spk[data-i]').forEach(b => b.onclick = () => { const w = ws[+b.dataset.i]; TTS.speak(w.nl + '. ' + (w.ex || '')); });
   $('#t-learn').onclick = () => open(Flash, [id]);
   $('#t-type').onclick = () => open(TypeQuiz, [id]);
 }
 
 function buildQueue(themes) {
   const now = Date.now();
-  const due = WORDS.filter(w => S.srs[w.key] && S.srs[w.key].due <= now && (!themes || themes.includes(w.theme)));
+  const due = allWords().filter(w => S.srs[w.key] && S.srs[w.key].due <= now && (!themes || themes.includes(w.theme)));
   const room = themes ? 15 : Math.max(0, S.set.newPerDay - S.day.newCards);
   return shuffle(due).concat(newWords(themes).slice(0, room));
 }
@@ -733,7 +870,7 @@ function Flash(themes, reverse) {
     const nlHTML = `<div class="w">${w.art ? `<span class="art ${w.art}">${w.art}</span> ` : ''}${esc(w.bare)}</div>`;
     const front = reverse ? `<div class="tr" style="margin:0">${esc(L10N.word(w))}</div>` : nlHTML;
     const backSide = reverse ? `<div style="margin-top:12px">${nlHTML}</div>` : `<div class="tr">${esc(L10N.word(w))}</div>`;
-    const exTr = w.ex && typeof VOCAB_EX !== 'undefined' && VOCAB_EX[w.ex] ? VOCAB_EX[w.ex][lang()] : '';
+    const exTr = w.a1 ? (lang() === 'en' ? w.exEn : w.exTr) : (w.ex && typeof VOCAB_EX !== 'undefined' && VOCAB_EX[w.ex] ? VOCAB_EX[w.ex][lang()] : '');
     let h = backBtn() + `<div class="qhead"><span>${esc(isNew ? t('f_new') : t('f_rev'))}</span><span>${esc(t('f_left', { i: count + 1, n: total }))}</span></div><div class="bar" style="margin:-2px 0 12px"><div style="width:${count / total * 100}%"></div></div>`;
     h += `<div class="card flash ${shown ? 'open' : ''}" id="f-card"><div class="f-spk"><button class="spk" id="f-say" aria-label="speak">🔊</button></div>${front}`;
     if (shown) {
@@ -760,7 +897,7 @@ function Flash(themes, reverse) {
       const q = +b.dataset.q;
       if (!S.srs[w.key]) S.day.newCards++;
       grade(w, q);
-      stat('woorden', q > 0);
+      stat('woorden', q > 0); skillStat('vocab:' + w.theme, q > 0);
       S.day.cards++; count++;
       activity(q > 0 ? 2 : 1);
       if (q === 0) queue.splice(Math.min(3, queue.length), 0, w);
@@ -862,10 +999,11 @@ function Practice() {
   h += `<button class="tile" data-go="schrijven"><div class="e">✍️</div><div class="t">Schrijven</div><div class="s">${esc(t('s_schrijven'))} · ${prog('schrijven', SCHRIJVEN)}</div></button>`;
   h += `<button class="tile" data-go="spreken"><div class="e">🗣️</div><div class="t">Spreken</div><div class="s">${esc(t('s_spreken'))} · ${prog('spreken', SPREKEN)}</div></button>`;
   h += `<button class="tile" data-go="knm"><div class="e">🏛️</div><div class="t">KNM</div><div class="s">${esc(t('s_knm', { n: KNM.length }))}</div></button>`;
-  h += `<button class="tile" data-go="gram"><div class="e">🔧</div><div class="t">Grammatica</div><div class="s">${esc(t('s_gram', { n: GRAMMAR.length }))}</div></button>`;
+  h += `<button class="tile" data-go="gram"><div class="e">🔧</div><div class="t">Grammatica</div><div class="s">${esc(t('s_gram', { n: gramList().length }))}</div></button>`;
+  h += `<button class="tile" data-go="shadow"><div class="e">🎧</div><div class="t">${esc(t('sh_title'))}</div><div class="s">${esc(t('sh_sub'))}</div></button>`;
   h += `</div><p class="small muted" style="margin-top:14px">${esc(t('practice_tip'))}</p>`;
   view(h);
-  $$('[data-go]').forEach(b => b.onclick = () => { const k = b.dataset.go; if (k === 'knm') open(KnmHome); else if (k === 'gram') open(GramHome); else open(SkillList, k); });
+  $$('[data-go]').forEach(b => b.onclick = () => { const k = b.dataset.go; if (k === 'knm') open(KnmHome); else if (k === 'gram') open(GramHome); else if (k === 'shadow') open(ShadowRandom); else open(SkillList, k); });
 }
 
 const SKILL = {
@@ -968,7 +1106,7 @@ function Luisteren(id) {
     $('#lu-play').onclick = () => {
       if (playing) { if (window._stopSeq) window._stopSeq(); window._stopSeq = null; playing = false; drawHead(); return; }
       plays++; playing = true; drawHead();
-      window._stopSeq = TTS.seq(x.lines, li => { $$('#lu-tr .line').forEach((el, j) => el.classList.toggle('now', li === j)); }, () => { playing = false; if ($('#lu-head')) drawHead(); });
+      window._stopSeq = playDialog(x, li => { $$('#lu-tr .line').forEach((el, j) => el.classList.toggle('now', li === j)); }, () => { playing = false; if ($('#lu-head')) drawHead(); });
     };
   };
   drawHead();
@@ -977,9 +1115,10 @@ function Luisteren(id) {
     if (!S.done.luisteren.includes(x.id)) S.done.luisteren.push(x.id);
     rollDay(); S.day.luisteren++; activity(r * 5); save();
     let h = `<h3>${esc(t('text'))}</h3>`;
-    x.lines.forEach((l, i) => { h += `<div class="line ${l.g}" data-i="${i}"><div class="who">${esc(l.s)}</div>${tw(l.t)}</div>`; });
+    x.lines.forEach((l, i) => { h += `<div class="line ${l.g}" data-i="${i}"><div class="who">${esc(l.s)} <button class="spk mini" data-sh="${i}" title="shadowing">🎤</button></div>${tw(l.t)}</div>`; });
     $('#lu-tr').innerHTML = h;
-    $$('#lu-tr .line').forEach(el => el.onclick = e => { if (e.target.closest('.wd')) return; const l = x.lines[+el.dataset.i]; TTS.speak(l.t, l.g); });
+    $$('#lu-tr .line').forEach(el => el.onclick = e => { if (e.target.closest('.wd') || e.target.closest('[data-sh]')) return; const l = x.lines[+el.dataset.i]; TTS.speak(l.t, l.g); });
+    $$('#lu-tr [data-sh]').forEach(b => b.onclick = e => { e.stopPropagation(); const l = x.lines[+b.dataset.sh]; open(Shadow, l.t, l.g); });
     afterNav($('#lu-after'), r, total, LUISTEREN[idx + 1] && (() => { stack.pop(); open(Luisteren, LUISTEREN[idx + 1].id); }));
   } });
 }
@@ -1104,7 +1243,7 @@ function Spreken(id) {
     if (L10N.sTip(x)) h += `<p class="small muted">💡 ${esc(L10N.sTip(x))}</p>`;
     h += `</div><div id="sp-res">${resultHTML}</div>`;
     h += `<button class="btn ${showModel ? 'alt' : ''} block" id="sp-model">${esc(showModel ? t('sp_model_hide') : t('sp_model_show'))}</button>`;
-    if (showModel) h += `<div class="card" style="margin-top:10px"><div class="row"><b>${esc(t('w_model'))}</b><button class="spk" id="sp-msay" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
+    if (showModel) h += `<div class="card" style="margin-top:10px"><div class="row"><b>${esc(t('w_model'))}</b><button class="spk" id="sp-msay" style="margin-left:auto">🔊</button><button class="spk" id="sp-shadow">🎤 ${esc(t('sh_repeat'))}</button></div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
     h += `<div class="row" style="justify-content:center;margin-top:12px"><button class="btn alt" id="sp-back">${esc(t('list_back'))}</button>${SPREKEN[idx + 1] ? `<button class="btn" id="sp-next">${esc(t('next'))}</button>` : ''}</div>`;
     view(h);
     $('#sp-say').onclick = () => TTS.speak(x.prompt, 'm');
@@ -1114,6 +1253,7 @@ function Spreken(id) {
     $('#sp-check').onclick = evaluate;
     $('#sp-model').onclick = () => { showModel = !showModel; draw(); };
     const ms = $('#sp-msay'); if (ms) ms.onclick = () => TTS.speak(x.model, 'f');
+    const sb = $('#sp-shadow'); if (sb) sb.onclick = () => { const sents = x.model.split(/(?<=[.!?])\s+/).filter(z => wc(z) >= 3); let k = 0; const go = () => { if (k >= sents.length) { back(); return; } const sn = sents[k++]; stack.pop(); open(Shadow, sn, 'f', go); }; open(Shadow, sents[k++], 'f', go); };
     bindResult();
     $('#sp-back').onclick = back;
     const nx = $('#sp-next'); if (nx) nx.onclick = () => { stack.pop(); open(Spreken, SPREKEN[idx + 1].id); };
@@ -1229,18 +1369,19 @@ function Spreken(id) {
 
 function KnmHome() {
   let h = backBtn(t('tab_practice')) + `<h2>${esc(t('knm_title'))}</h2><p class="small muted">${esc(t('knm_info'))}</p>`;
-  h += `<div class="grid2"><button class="tile" id="k-mix"><div class="e">🎲</div><div class="t">${esc(t('knm_mix'))}</div><div class="s">${esc(t('knm_mix_s'))}</div></button><button class="tile" id="k-wrong"><div class="e">🔁</div><div class="t">${esc(t('knm_wrong'))}</div><div class="s">${esc(t('knm_n', { n: S.knmWrong.length }))}</div></button></div><h3>${esc(t('themes'))}</h3>`;
+  h += `<div class="grid2"><button class="tile" id="k-mix"><div class="e">🎲</div><div class="t">${esc(t('knm_mix'))}</div><div class="s">${esc(t('knm_mix_s'))}</div></button><button class="tile" id="k-wrong"><div class="e">🔁</div><div class="t">${esc(t('knm_wrong'))}</div><div class="s">${esc(t('knm_n', { n: S.knmWrong.length }))}</div></button><button class="tile" id="k-vis"><div class="e">🪧</div><div class="t">${esc(t('knm_visual'))}</div><div class="s">${esc(t('knm_n', { n: KNM_VIS.length }))}</div></button></div><h3>${esc(t('themes'))}</h3>`;
   Object.entries(KNM_THEMES).forEach(([k, name]) => {
-    h += `<button class="list-item" data-k="${k}"><span style="min-width:0"><div class="t">${esc(name)}</div><div class="s">${esc(L10N.knmTheme(k))}</div></span><span class="r">${esc(t('knm_n', { n: KNM.filter(q => q.theme === k).length }))}</span></button>`;
+    h += `<button class="list-item" data-k="${k}"><span style="min-width:0"><div class="t">${esc(name)}</div><div class="s">${esc(L10N.knmTheme(k))}</div></span><span class="r">${esc(t('knm_n', { n: KNM_ALL.filter(q => q.theme === k).length }))}</span></button>`;
   });
   view(h);
   $('#k-mix').onclick = () => open(KnmQuiz, null, 10);
+  $('#k-vis').onclick = () => open(KnmQuiz, 'visual', 10);
   $('#k-wrong').onclick = () => { if (!S.knmWrong.length) { toast(t('knm_nowrong')); return; } open(KnmQuiz, 'wrong', Math.min(10, S.knmWrong.length)); };
   $$('[data-k]').forEach(b => b.onclick = () => open(KnmQuiz, b.dataset.k, 10));
 }
 
 function KnmQuiz(theme, n) {
-  const pool = theme === 'wrong' ? KNM.filter(q => S.knmWrong.includes(q.id)) : theme ? KNM.filter(q => q.theme === theme) : KNM;
+  const pool = theme === 'wrong' ? KNM_ALL.filter(q => S.knmWrong.includes(q.id)) : theme === 'visual' ? KNM_VIS : theme ? KNM_ALL.filter(q => q.theme === theme) : KNM_ALL;
   const qs = pick(pool, n);
   let i = 0, right = 0;
   if (!qs.length) { view(backBtn() + `<div class="card">${esc(t('no_q'))}</div>`); return; }
@@ -1248,7 +1389,7 @@ function KnmQuiz(theme, n) {
     const q = qs[i];
     const order = shuffle(q.a.map((_, j) => j));
     let answered = false;
-    let h = backBtn() + `<div class="qhead"><span>${i + 1}/${qs.length} · ${esc(KNM_THEMES[q.theme] || '')}</span><span>✓ ${right}</span></div><div class="card"><div class="q">${tw(q.q)}</div>${S.set.showTr && L10N.knmQ(q) ? `<div class="qtr">${esc(L10N.knmQ(q))}</div>` : ''}`;
+    let h = backBtn() + `<div class="qhead"><span>${i + 1}/${qs.length} · ${esc(KNM_THEMES[q.theme] || '')}</span><span>✓ ${right}</span></div><div class="card">${q.svg ? `<div class="knm-svg">${q.svg}</div>` : ''}<div class="q">${tw(q.q)}</div>${S.set.showTr && L10N.knmQ(q) ? `<div class="qtr">${esc(L10N.knmQ(q))}</div>` : ''}`;
     order.forEach(j => { h += `<button class="opt" data-j="${j}">${tw(q.a[j])}</button>`; });
     h += '<div id="kq-ex"></div></div><div id="kq-next"></div>';
     view(h);
@@ -1258,7 +1399,7 @@ function KnmQuiz(theme, n) {
       $$('.opt').forEach(o => { if (+o.dataset.j === 0) o.classList.add('right'); });
       if (!ok) { b.classList.add('wrong'); vib([30, 30, 30]); if (!S.knmWrong.includes(q.id)) S.knmWrong.push(q.id); }
       else { right++; vib(10); if (theme === 'wrong') S.knmWrong = S.knmWrong.filter(x => x !== q.id); }
-      stat('knm', ok); rollDay(); S.day.knm++; activity(ok ? 3 : 1); save();
+      stat('knm', ok); skillStat('knm:' + q.theme, ok); rollDay(); S.day.knm++; activity(ok ? 3 : 1); save();
       const ex = L10N.knmEx(q);
       $('#kq-ex').innerHTML = ex ? `<div class="ex">💡 ${esc(ex)}</div>` : '';
       $('#kq-next').innerHTML = `<button class="btn block">${esc(i === qs.length - 1 ? t('result') : t('next'))}</button>`;
@@ -1277,7 +1418,7 @@ function KnmQuiz(theme, n) {
 function GramHome() {
   let h = backBtn(t('tab_practice')) + `<h2>${esc(t('gram_title'))}</h2>`;
   h += `<div class="grid2"><button class="tile" id="g-verbs"><div class="e">🔁</div><div class="t">${esc(t('gram_verbs'))}</div><div class="s">${esc(t('gram_verbs_s', { n: VERBS.length }))}</div></button><button class="tile" id="g-mix"><div class="e">🎲</div><div class="t">${esc(t('gram_mix'))}</div><div class="s">${esc(t('gram_mix_s'))}</div></button></div><h3>${esc(t('lessons'))}</h3>`;
-  GRAMMAR.forEach(g => { const d = S.done.grammar.includes(g.id); h += `<button class="list-item ${d ? 'done' : ''}" data-g="${g.id}"><span class="ic">${g.icon || '📘'}</span><span class="t">${esc(L10N.gTitle(g))}</span><span class="r">${g.drills.length}</span></button>`; });
+  gramList().forEach(g => { const d = S.done.grammar.includes(g.id); h += `<button class="list-item ${d ? 'done' : ''}" data-g="${g.id}"><span class="ic">${g.icon || '📘'}</span><span class="t">${esc(L10N.gTitle(g))}${g.id.startsWith('a1_') ? ' <span class="pill">A1</span>' : ''}</span><span class="r">${g.drills.length}</span></button>`; });
   view(h);
   $('#g-verbs').onclick = () => open(VerbDrill);
   $('#g-mix').onclick = () => open(GramDrill, null);
@@ -1285,14 +1426,14 @@ function GramHome() {
 }
 
 function GramLesson(id) {
-  const g = GRAMMAR.find(x => x.id === id);
+  const g = gramList().find(x => x.id === id);
   view(backBtn('Grammatica') + `<h2>${g.icon || '📘'} ${esc(L10N.gTitle(g))}</h2><div class="card lesson">${L10N.gBody(g)}</div><button class="btn block" id="gl-go">${esc(t('gram_go', { n: g.drills.length }))}</button>`);
   $('#gl-go').onclick = () => open(GramDrill, id);
 }
 
 function GramDrill(id) {
-  const g = id ? GRAMMAR.find(x => x.id === id) : null;
-  const all = g ? g.drills.map((d, i) => ({ d, g, i })) : GRAMMAR.flatMap(gg => gg.drills.map((d, i) => ({ d, g: gg, i })));
+  const g = id ? gramList().find(x => x.id === id) : null;
+  const all = g ? g.drills.map((d, i) => ({ d, g, i })) : gramList().flatMap(gg => gg.drills.map((d, i) => ({ d, g: gg, i })));
   const items = g ? shuffle(all) : pick(all, 12);
   let k = 0, right = 0;
   const draw = () => {
@@ -1308,7 +1449,7 @@ function GramDrill(id) {
       const ok = +b.dataset.j === 0;
       $$('.opt').forEach(o => { if (+o.dataset.j === 0) o.classList.add('right'); });
       if (!ok) { b.classList.add('wrong'); vib([30, 30, 30]); } else { right++; vib(10); }
-      stat('grammatica', ok); activity(ok ? 2 : 1); save();
+      stat('grammatica', ok); skillStat('gram:' + gg.id, ok); activity(ok ? 2 : 1); save();
       const full = d.q.replace(/_{2,}/, d.a[0]);
       TTS.speak(full);
       const ex = L10N.gEx(gg, di);
@@ -1364,7 +1505,7 @@ function VerbDrill() {
       $$('.opt').forEach(o => { if (o.dataset.o === correct) o.classList.add('right'); });
       if (!ok) b.classList.add('wrong'); else right++;
       vib(ok ? 10 : [30, 30, 30]);
-      stat('grammatica', ok); activity(ok ? 2 : 1); save();
+      stat('grammatica', ok); skillStat('gram:verbs', ok); activity(ok ? 2 : 1); save();
       TTS.speak(p + ' ' + correct);
       $('#vd-next').innerHTML = `<button class="btn block">${esc(i === total - 1 ? t('result') : t('next'))}</button>`;
       $('#vd-next button').onclick = () => {
@@ -1382,19 +1523,21 @@ function VerbDrill() {
 
 function Exam() {
   let h = `<h2>${esc(t('exam_title'))}</h2><p class="small muted">${esc(t('exam_info'))}</p>`;
+  h += `<button class="list-item day" data-x="day"><span class="ic">🎓</span><span><div class="t">${esc(t('ex_day'))}</div><div class="s">${esc(t('ex_day_s'))}</div></span></button>`;
   [['knm', '🏛️', 'ex_knm40'], ['knm20', '🏛️', 'ex_knm20'], ['lezen', '📖', 'ex_lezen'], ['luisteren', '🎧', 'ex_lu']].forEach(([k, ic, key]) => {
     h += `<button class="list-item" data-x="${k}"><span class="ic">${ic}</span><span><div class="t">${esc(t(key))}</div><div class="s">${esc(t(key + '_s'))}</div></span></button>`;
   });
   if (S.exams.length) {
     h += `<h3>${esc(t('ex_hist'))}</h3><div class="card">`;
-    S.exams.slice(-12).reverse().forEach(e => { const pct = Math.round(e.r / e.t * 100); h += `<div class="wordrow"><div><div class="nl">${esc(e.key ? t(e.key) : e.name)}</div><div class="small muted">${esc(e.date)}</div></div><span class="lvl" style="color:${pct >= 70 ? 'var(--good)' : 'var(--bad)'};font-weight:700">${e.r}/${e.t} · ${pct}%</span></div>`; });
+    S.exams.slice(-12).reverse().forEach(e => { const pct = Math.round(e.r / e.t * 100); h += `<div class="wordrow"><div><div class="nl">${esc(e.key ? t(e.key) : e.name)}</div><div class="small muted">${esc(e.date)}${e.parts ? ' · ' + e.parts.map(p => p.name + ' ' + p.pct + '%').join(' · ') : ''}</div></div><span class="lvl" style="color:${pct >= 70 ? 'var(--good)' : 'var(--bad)'};font-weight:700">${e.parts ? pct + '%' : e.r + '/' + e.t + ' · ' + pct + '%'}</span></div>`; });
     h += '</div>';
   }
   view(h);
   $$('[data-x]').forEach(b => b.onclick = () => {
     const k = b.dataset.x;
-    if (k === 'knm') open(ExamMC, 'ex_knm40', pick(KNM, 40), 45 * 60);
-    if (k === 'knm20') open(ExamMC, 'ex_knm20', pick(KNM, 20), 22 * 60);
+    if (k === 'day') open(ExamDay);
+    if (k === 'knm') open(ExamMC, 'ex_knm40', shuffle(pick(KNM, 34).concat(pick(KNM_VIS, 6))), 45 * 60);
+    if (k === 'knm20') open(ExamMC, 'ex_knm20', shuffle(pick(KNM, 17).concat(pick(KNM_VIS, 3))), 22 * 60);
     if (k === 'lezen') open(ExamLezen);
     if (k === 'luisteren') open(ExamLuisteren);
   });
@@ -1408,8 +1551,10 @@ function startClock(sec, onTick, onEnd) {
 }
 const mmss = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
+let examHook = null;
 function finishExam(key, r, total, review) {
   stopTimers();
+  if (examHook) { const h = examHook; examHook = null; h({ key, r, total, review }); return; }
   S.exams.push({ key, r, t: total, date: new Date().toLocaleDateString(lang() === 'en' ? 'en-GB' : 'tr-TR') });
   activity(r * 3); save();
   const pct = Math.round(r / total * 100);
@@ -1418,7 +1563,7 @@ function finishExam(key, r, total, review) {
 }
 function wrongCard(q, given) {
   const ex = q.ex ? L10N.knmEx(q) : '';
-  return `<div class="card"><div class="q">${tw(q.q)}</div><div class="small" style="color:var(--good)">✓ ${tw(q.a[0])}</div>${given != null ? `<div class="small" style="color:var(--bad)">✕ ${tw(q.a[given])}</div>` : `<div class="small muted">${esc(t('ex_empty'))}</div>`}${ex ? `<div class="ex">${esc(ex)}</div>` : ''}</div>`;
+  return `<div class="card">${q.svg ? `<div class="knm-svg small-svg">${q.svg}</div>` : ''}<div class="q">${tw(q.q)}</div><div class="small" style="color:var(--good)">✓ ${tw(q.a[0])}</div>${given != null ? `<div class="small" style="color:var(--bad)">✕ ${tw(q.a[given])}</div>` : `<div class="small muted">${esc(t('ex_empty'))}</div>`}${ex ? `<div class="ex">${esc(ex)}</div>` : ''}</div>`;
 }
 
 function ExamMC(key, qs, sec) {
@@ -1430,7 +1575,7 @@ function ExamMC(key, qs, sec) {
     let r = 0; let rev = `<h3>${esc(t('ex_wrong'))}</h3>`;
     qs.forEach((q, k) => {
       const ok = answers[k] === 0;
-      stat('knm', ok);
+      stat('knm', ok); skillStat('knm:' + q.theme, ok);
       if (ok) r++;
       else { if (!S.knmWrong.includes(q.id)) S.knmWrong.push(q.id); rev += wrongCard(q, answers[k]); }
     });
@@ -1438,7 +1583,7 @@ function ExamMC(key, qs, sec) {
   };
   const draw = () => {
     const q = qs[i];
-    let h = backBtn(t('tab_exam')) + `<div class="qhead"><span>${i + 1}/${qs.length}</span><span class="timer" id="ex-clock">${clock}</span></div><div class="card"><div class="q">${tw(q.q)}</div>`;
+    let h = backBtn(t('tab_exam')) + `<div class="qhead"><span>${i + 1}/${qs.length}</span><span class="timer" id="ex-clock">${clock}</span></div><div class="card">${q.svg ? `<div class="knm-svg">${q.svg}</div>` : ''}<div class="q">${tw(q.q)}</div>`;
     orders[i].forEach(j => { h += `<button class="opt ${answers[i] === j ? 'sel' : ''}" data-j="${j}">${tw(q.a[j])}</button>`; });
     h += `</div><div class="row" style="justify-content:space-between"><button class="btn alt" id="ex-prev" ${i === 0 ? 'disabled' : ''}>${esc(t('ex_prev'))}</button><span class="small muted">${esc(t('ex_answered', { n: answers.filter(a => a !== null).length }))}</span>${i < qs.length - 1 ? `<button class="btn" id="ex-next">${esc(t('next'))}</button>` : `<button class="btn" id="ex-end">${esc(t('finish'))}</button>`}</div>`;
     view(h);
@@ -1492,7 +1637,7 @@ function ExamLuisteren() {
         if (playing) { if (window._stopSeq) window._stopSeq(); window._stopSeq = null; playing = false; draw(); return; }
         if (plays >= 2) { toast(t('lu_nomore')); return; }
         plays++; playing = true; draw();
-        window._stopSeq = TTS.seq(x.lines, null, () => { playing = false; if ($('#el-play')) draw(); });
+        window._stopSeq = playDialog(x, null, () => { playing = false; if ($('#el-play')) draw(); });
       };
       $$('.opt').forEach(b => b.onclick = () => { qs[+b.dataset.qi].ans = +b.dataset.j; $$(`.opt[data-qi="${b.dataset.qi}"]`).forEach(o => o.classList.toggle('sel', o === b)); });
       $('#el-next').onclick = () => {
@@ -1510,6 +1655,273 @@ function ExamLuisteren() {
   run();
 }
 
+/* ---------- SINAV GUNU, bes bolum tek oturumda ---------- */
+
+const DAY_PARTS = [
+  { id: 'lezen', name: 'Lezen', icon: '📖', min: 25 },
+  { id: 'luisteren', name: 'Luisteren', icon: '🎧', min: 20 },
+  { id: 'schrijven', name: 'Schrijven', icon: '✍️', min: 30 },
+  { id: 'spreken', name: 'Spreken', icon: '🗣️', min: 15 },
+  { id: 'knm', name: 'KNM', icon: '🏛️', min: 45 },
+];
+
+function ExamDay() {
+  const results = [];
+  let idx = 0;
+  const intro = () => {
+    let h = backBtn(t('tab_exam')) + `<h2>🎓 ${esc(t('ex_day'))}</h2><div class="card"><p style="margin-top:0">${esc(t('ex_day_intro'))}</p>`;
+    DAY_PARTS.forEach(p => { h += `<div class="plan"><span class="ck">${p.icon}</span><div><div style="font-weight:600">${p.name}</div><div class="small muted">${p.min} min</div></div></div>`; });
+    h += `<p class="small muted">${esc(t('ex_day_note'))}</p><button class="btn block" id="ed-start">${esc(t('start'))}</button></div>`;
+    view(h);
+    $('#ed-start').onclick = () => runPart();
+  };
+  const breakScreen = () => {
+    const nextP = DAY_PARTS[idx];
+    view(backBtn(t('tab_exam')) + `<div class="card center" style="padding:24px"><div style="font-size:40px">☕</div><h2>${esc(t('ex_break'))}</h2><p class="muted">${esc(t('ex_break_s', { n: idx, t: DAY_PARTS.length }))}</p><p>${nextP.icon} <b>${nextP.name}</b> · ${nextP.min} min</p><button class="btn" id="ed-next">${esc(t('ex_continue'))}</button></div>`);
+    $('#ed-next').onclick = () => runPart();
+  };
+  const onPart = res => {
+    results.push(res);
+    idx++;
+    if (idx >= DAY_PARTS.length) return finish();
+    breakScreen();
+  };
+  const runPart = () => {
+    const p = DAY_PARTS[idx];
+    examHook = r => onPart({ id: p.id, name: p.name, pct: Math.round(r.r / r.total * 100), r: r.r, t: r.total, review: r.review });
+    if (p.id === 'lezen') ExamLezen();
+    else if (p.id === 'luisteren') ExamLuisteren();
+    else if (p.id === 'knm') ExamMC('ex_knm40', shuffle(pick(KNM, 34).concat(pick(KNM_VIS, 6))), 45 * 60);
+    else if (p.id === 'schrijven') ExamSchrijven();
+    else if (p.id === 'spreken') ExamSpreken();
+  };
+  const finish = () => {
+    const overall = Math.round(results.reduce((a, r) => a + r.pct, 0) / results.length);
+    S.exams.push({ key: 'ex_day', r: overall, t: 100, date: new Date().toLocaleDateString(lang() === 'en' ? 'en-GB' : 'tr-TR'), parts: results.map(r => ({ id: r.id, name: r.name, pct: r.pct })) });
+    activity(overall); save();
+    let h = backBtn(t('tab_exam')) + `<div class="card center" style="padding:20px"><div style="font-size:44px">${results.every(r => r.pct >= 70) ? '🎓' : '📚'}</div><h2>${esc(t('ex_day_done'))}</h2><p class="muted">${esc(results.every(r => r.pct >= 70) ? t('ex_day_pass') : t('ex_day_fail'))}</p></div><div class="card">`;
+    results.forEach(r => { h += `<div class="plan"><span class="ck ${r.pct >= 70 ? 'ok2' : 'no2'}">${r.pct >= 70 ? '✓' : '✕'}</span><div><div style="font-weight:600">${DAY_PARTS.find(p => p.id === r.id).icon} ${r.name}</div><div class="small muted">${r.t > 10 ? r.r + '/' + r.t : ''}</div></div><span class="lvl" style="font-weight:800;color:${r.pct >= 70 ? 'var(--good)' : 'var(--bad)'}">${r.pct}%</span></div>`; });
+    h += `</div>`;
+    results.forEach(r => { if (r.review) h += `<details class="card"><summary><b>${r.name}</b> · ${esc(t('ex_wrong'))}</summary>${r.review}</details>`; });
+    stack.length = Math.max(0, stack.length - 1);
+    view(h);
+  };
+  intro();
+}
+
+/* Schrijven sinav bolumu, bir formulier ve bir bericht, 30 dakika */
+function ExamSchrijven() {
+  const tasks = [pick(SCHRIJVEN.filter(x => x.kind === 'formulier'), 1)[0], pick(SCHRIJVEN.filter(x => x.kind !== 'formulier'), 1)[0]].filter(Boolean);
+  let finished = false;
+  let h = `<div class="qhead"><span>✍️ Schrijven</span><span class="timer" id="ex-clock"></span></div>`;
+  tasks.forEach((x, k) => {
+    h += `<div class="card"><div class="small muted">${k + 1}. ${esc(x.kind === 'formulier' ? t('w_form') : t('w_msg'))}</div><div style="font-weight:800">${tw(x.title)}</div><p>${tw(x.prompt)}</p>`;
+    if (x.fields && x.fields.length) x.fields.forEach((f, i) => { h += `<div class="field"><label>${tw(f.label)}</label>${f.long ? `<textarea rows="3" data-t="${k}" data-f="${i}"></textarea>` : `<input data-t="${k}" data-f="${i}">`}</div>`; });
+    else h += `<textarea class="answer" data-t="${k}" data-main="1" placeholder="${esc(t('w_placeholder'))}"></textarea>`;
+    h += '</div>';
+  });
+  h += `<button class="btn block" id="exs-end">${esc(t('ex_score'))}</button>`;
+  view(h);
+  const finish = async () => {
+    if (finished) return; finished = true;
+    stopTimers();
+    $('#exs-end').disabled = true;
+    $('#exs-end').textContent = '⏳ ' + t('w_checking');
+    let scoreSum = 0; let rev = '';
+    for (let k = 0; k < tasks.length; k++) {
+      const x = tasks[k];
+      const fieldsEls = $$(`[data-t="${k}"][data-f]`);
+      const text = fieldsEls.length ? fieldsEls.map(el => el.value).join('\n') : ($(`[data-t="${k}"][data-main]`) || {}).value || '';
+      let score = 1;
+      if (text.trim()) {
+        let ai = null;
+        if (AI.key()) { try { ai = await AI.writing(x, fieldsEls.length ? x.fields.map((f, i) => f.label + ' = ' + fieldsEls[i].value).join('\n') : text); } catch (e) { ai = null; } }
+        if (ai) score = Math.max(1, Math.min(5, ai.score || 1));
+        else {
+          const fx = await smartFix(text);
+          const pts = x.points || [];
+          const covered = pts.filter(p => { try { return new RegExp(p.re, 'i').test(fx.fixed); } catch (e) { return false; } }).length;
+          const cov = pts.length ? covered / pts.length : (fieldsEls.length ? fieldsEls.filter(el => el.value.trim()).length / fieldsEls.length : 1);
+          const lenOk = !x.min || wc(text) >= x.min;
+          score = Math.round(1 + cov * 2.5 + (lenOk ? 0.8 : 0) + (fx.changes.length <= 2 ? 0.7 : fx.changes.length <= 5 ? 0.3 : 0));
+          score = Math.max(1, Math.min(5, score));
+        }
+      }
+      scoreSum += score;
+      rev += `<div class="card"><div style="font-weight:800">${k + 1}. ${tw(x.title)} · ${scoreBadge(score)}</div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
+    }
+    const pct = Math.round(scoreSum / (tasks.length * 5) * 100);
+    finishExam('ex_schrijven', Math.round(pct / 10), 10, rev);
+  };
+  $('#exs-end').onclick = () => { if (confirm(t('ex_confirm'))) finish(); };
+  startClock(30 * 60, left => { const c = $('#ex-clock'); if (c) c.textContent = '⏱ ' + mmss(left); }, () => { toast(t('ex_time')); finish(); });
+}
+
+/* Spreken sinav bolumu, 6 soru, her biri icin ses tanima ya da yazi */
+function ExamSpreken() {
+  const items = [1, 2, 3].flatMap(part => pick(SPREKEN.filter(x => x.part === part), 2));
+  const answers = new Array(items.length).fill('');
+  let i = 0; let finished = false; let listening = false;
+  const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const draw = () => {
+    const x = items[i];
+    let h = `<div class="qhead"><span>🗣️ Spreken ${i + 1}/${items.length}</span><span class="timer" id="ex-clock"></span></div><div class="card"><div class="small muted">Deel ${x.part}</div><div style="font-weight:800;font-size:19px;margin:6px 0">${tw(x.prompt)}</div><div class="row"><button class="spk" id="exp-say">${esc(t('listen'))}</button></div></div>`;
+    h += `<div class="card"><div class="sp-actions">${SRC ? `<button class="sp-btn ${listening ? 'on' : ''}" id="exp-sr"><span class="e">${listening ? '■' : '🗣️'}</span><b>${esc(listening ? t('sp_sr_stop') : t('sp_sr'))}</b></button>` : ''}</div><div class="field" style="margin-top:10px"><label>${esc(t('sp_transcript'))}</label><textarea id="exp-text" rows="4" lang="nl">${esc(answers[i])}</textarea></div></div>`;
+    h += `<div class="row" style="justify-content:space-between"><button class="btn alt" id="exp-prev" ${i === 0 ? 'disabled' : ''}>${esc(t('ex_prev'))}</button>${i < items.length - 1 ? `<button class="btn" id="exp-next">${esc(t('next'))}</button>` : `<button class="btn" id="exp-end">${esc(t('finish'))}</button>`}</div>`;
+    const keep = $('#ex-clock') ? $('#ex-clock').textContent : '';
+    view(h);
+    $('#ex-clock').textContent = keep;
+    $('#exp-say').onclick = () => TTS.speak(x.prompt, 'm');
+    $('#exp-text').oninput = e => { answers[i] = e.target.value; };
+    const srb = $('#exp-sr'); if (srb) srb.onclick = () => {
+      if (listening) { stopSR(); listening = false; draw(); return; }
+      const sr = startSR(txt => { answers[i] = txt; const ta = $('#exp-text'); if (ta) ta.value = txt; }, () => { listening = false; if ($('#exp-sr')) draw(); }, answers[i]);
+      if (sr) { listening = true; draw(); }
+    };
+    $('#exp-prev').onclick = () => { stopSR(); listening = false; if (i > 0) { i--; draw(); } };
+    const n = $('#exp-next'); if (n) n.onclick = () => { stopSR(); listening = false; i++; draw(); };
+    const e = $('#exp-end'); if (e) e.onclick = () => { if (confirm(t('ex_confirm'))) finish(); };
+  };
+  const finish = async () => {
+    if (finished) return; finished = true;
+    stopSR(); stopTimers();
+    view(`<div class="card center muted">⏳ ${esc(t('w_checking'))}</div>`);
+    let sum = 0; let rev = '';
+    for (let k = 0; k < items.length; k++) {
+      const x = items[k]; const text = (answers[k] || '').trim();
+      let score = 1;
+      if (text) {
+        let ai = null;
+        if (AI.key()) { try { ai = await AI.speaking(x, text); } catch (e) { ai = null; } }
+        if (ai) score = Math.max(1, Math.min(5, ai.score || 1));
+        else { const sfx = await smartFix(text); score = basicSpeakEval(x, text, sfx).score; }
+      }
+      sum += score;
+      rev += `<div class="card"><div style="font-weight:800">${k + 1}. ${tw(x.prompt)} · ${scoreBadge(score)}</div>${text ? `<div class="small" style="margin-top:6px">${esc(text)}</div>` : `<div class="small muted">${esc(t('ex_empty'))}</div>`}<div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
+    }
+    const pct = Math.round(sum / (items.length * 5) * 100);
+    finishExam('ex_spreken', Math.round(pct / 10), 10, rev);
+  };
+  draw();
+  startClock(15 * 60, left => { const c = $('#ex-clock'); if (c) c.textContent = '⏱ ' + mmss(left); }, () => { toast(t('ex_time')); finish(); });
+}
+
+/* Ortak ses tanima baslatici, Spreken sinavi ve shadowing kullanir */
+function startSR(onText, onEnd, base) {
+  const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SRC) { toast(t('sp_sr_none'), 4000); return null; }
+  let sr;
+  try { sr = new SRC(); } catch (e) { toast(t('sp_sr_none'), 4000); return null; }
+  sr.lang = 'nl-NL'; sr.interimResults = true; sr.continuous = true; sr.maxAlternatives = 1;
+  const prefix = base && base.trim() ? base.trim() + ' ' : '';
+  let quiet = null;
+  const autoStop = ms => { clearTimeout(quiet); quiet = setTimeout(() => { try { sr.stop(); } catch (e) { /* yok */ } }, ms); };
+  autoStop(8000);
+  sr.onresult = e => {
+    autoStop(2500);
+    let fin = '', interim = '';
+    for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += r[0].transcript + ' '; else interim += r[0].transcript; }
+    onText((prefix + fin + interim).replace(/\s+/g, ' ').trim());
+  };
+  sr.onerror = e => { const code = e && e.error; if (code === 'not-allowed' || code === 'service-not-allowed') toast(t('sp_sr_denied'), 5000); else if (code === 'no-speech') toast(t('sp_sr_nospeech'), 3000); else if (code !== 'aborted') toast(t('sp_sr_err', { e: code || '?' }), 4000); };
+  sr.onend = () => { clearTimeout(quiet); if (srInst === sr) srInst = null; onEnd(); };
+  try { sr.start(); } catch (e) { toast(t('sp_sr_denied'), 5000); return null; }
+  srInst = sr;
+  srTimer = setTimeout(() => { try { sr.stop(); } catch (e) { /* yok */ } }, 60000);
+  return sr;
+}
+
+/* ---------- SHADOWING, dinle, tekrar et, kelime kelime karsilastir ---------- */
+
+function normWords(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean); }
+/* LCS hizalama, hedef cumledeki her kelime icin soylendi mi */
+function alignWords(target, said) {
+  const A = normWords(target), B = normWords(said);
+  const n = A.length, m = B.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const hit = new Array(n).fill(false);
+  let i = 0, j = 0;
+  while (i < n && j < m) { if (A[i] === B[j]) { hit[i] = true; i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++; }
+  return { words: A, hit, score: n ? Math.round(hit.filter(Boolean).length / n * 100) : 0 };
+}
+
+function shadowPool() {
+  const out = [];
+  WORDS.forEach(w => { if (w.ex && wc(w.ex) >= 4) out.push({ t: w.ex, g: 'f', src: w.nl }); });
+  LUISTEREN.forEach(x => x.lines.forEach(l => { if (wc(l.t) >= 5 && wc(l.t) <= 14) out.push({ t: l.t, g: l.g, src: x.title }); }));
+  SPREKEN.forEach(x => x.model.split(/(?<=[.!?])\s+/).forEach(sn => { if (wc(sn) >= 4) out.push({ t: sn, g: 'f', src: 'Spreken' }); }));
+  return out;
+}
+
+function Shadow(sentence, g, next) {
+  let said = ''; let listening = false; let result = null;
+  const draw = () => {
+    let h = backBtn() + `<h2>🎧 ${esc(t('sh_title'))}</h2><div class="card"><div class="small muted">${esc(t('sh_step1'))}</div><div class="model" style="margin-top:8px;font-size:18px">${result ? result.words.map((w, i) => `<span class="${result.hit[i] ? 'sh-ok' : 'sh-miss'}">${esc(w)}</span>`).join(' ') : tw(sentence)}</div><div class="row" style="margin-top:10px"><button class="spk" id="sh-play">🔊 ${esc(t('sh_listen'))}</button><button class="spk" id="sh-slow">🐢 ${esc(t('sh_slow'))}</button></div></div>`;
+    h += `<div class="card"><div class="small muted">${esc(t('sh_step2'))}</div><div class="sp-actions" style="margin-top:8px"><button class="sp-btn ${listening ? 'on' : ''}" id="sh-sr"><span class="e">${listening ? '■' : '🗣️'}</span><b>${esc(listening ? t('sp_sr_stop') : t('sh_say'))}</b><small>${esc(t('sp_autostop'))}</small></button></div>`;
+    h += `<div class="field" style="margin-top:10px"><label>${esc(t('sp_transcript'))}</label><textarea id="sh-text" rows="2" lang="nl">${esc(said)}</textarea></div><button class="btn block" id="sh-check">${esc(t('sh_check'))}</button>`;
+    if (result) h += `<div class="ex" style="margin-top:10px"><b>${result.score}%</b> · ${esc(result.score >= 90 ? t('sh_great') : result.score >= 60 ? t('sh_ok') : t('sh_again'))}</div>`;
+    h += `</div><div class="row" style="justify-content:center"><button class="btn alt" id="sh-retry">${esc(t('again'))}</button>${next ? `<button class="btn" id="sh-next">${esc(t('next'))}</button>` : ''}</div>`;
+    view(h);
+    $('#sh-play').onclick = () => TTS.speak(sentence, g || 'f');
+    $('#sh-slow').onclick = () => { const r = S.set.rate; S.set.rate = 0.6; TTS.speak(sentence, g || 'f', () => { S.set.rate = r; }); setTimeout(() => { S.set.rate = r; }, 8000); };
+    $('#sh-text').oninput = e => { said = e.target.value; };
+    $('#sh-sr').onclick = () => {
+      if (listening) { stopSR(); listening = false; draw(); return; }
+      TTS.stop();
+      const sr = startSR(txt => { said = txt; const ta = $('#sh-text'); if (ta) ta.value = txt; }, () => { listening = false; if ($('#sh-sr')) { if (said.trim()) check(); else draw(); } }, '');
+      if (sr) { listening = true; draw(); }
+    };
+    $('#sh-check').onclick = check;
+    $('#sh-retry').onclick = () => { said = ''; result = null; draw(); };
+    const nb = $('#sh-next'); if (nb) nb.onclick = next;
+  };
+  const check = () => {
+    said = ($('#sh-text') ? $('#sh-text').value : said).trim();
+    if (!said) { toast(t('sp_need_text')); return; }
+    result = alignWords(sentence, said);
+    stat('spreken_sh', result.score >= 70); activity(result.score >= 70 ? 3 : 1); save();
+    draw();
+    TTS.speak(sentence, g || 'f');
+  };
+  draw();
+}
+
+function ShadowRandom() {
+  const pool = shadowPool();
+  const go = () => { const it = pool[Math.floor(Math.random() * pool.length)]; stack.pop(); open(Shadow, it.t, it.g, go); };
+  const it = pool[Math.floor(Math.random() * pool.length)];
+  Shadow(it.t, it.g, go);
+}
+
+/* ---------- A1 ALFABE, harf adlari ve isim heceleme ---------- */
+
+function Alphabet() {
+  const AL = typeof A1_ALPHABET !== 'undefined' ? A1_ALPHABET : [];
+  let h = backBtn(t('tab_words')) + `<h2>🔤 ${esc(t('a1_alpha'))}</h2><p class="small muted">${esc(t('a1_alpha_help'))}</p>`;
+  h += `<div class="card"><div class="field"><label>${esc(t('a1_spell_me'))}</label><div class="row"><input id="al-name" placeholder="Burak" autocapitalize="none" style="flex:1"><button class="btn sm" id="al-say">🔊</button></div></div><div id="al-out" class="small muted"></div></div>`;
+  h += '<div class="alpha">';
+  AL.forEach((l, i) => { h += `<button class="letter" data-i="${i}"><b>${esc(l.letter)}</b><span>${esc(l.say)}</span></button>`; });
+  h += '</div><div id="al-info" class="card hidden"></div>';
+  view(h);
+  const spell = name => {
+    const out = [];
+    const chars = name.toLowerCase().replace(/[^a-zç ]/g, '').split('');
+    chars.forEach(c => { if (c === ' ') return; const l = AL.find(x => x.letter === c); out.push(l ? l.say : c); });
+    return out;
+  };
+  $('#al-say').onclick = () => { const n = $('#al-name').value.trim(); if (!n) return; const seq = spell(n); $('#al-out').textContent = seq.join(' · '); TTS.speak(seq.join(', '), 'f'); };
+  $$('.letter').forEach(b => b.onclick = () => {
+    const l = AL[+b.dataset.i];
+    $$('.letter').forEach(x => x.classList.remove('on')); b.classList.add('on');
+    const info = $('#al-info'); info.classList.remove('hidden');
+    info.innerHTML = `<div style="font-size:30px;font-weight:800">${esc(l.letter)} <span class="muted" style="font-size:18px">${esc(l.say)}</span></div><div>${esc(lang() === 'en' ? l.en : l.tr)}</div><div class="row" style="margin-top:8px"><button class="spk" id="al-l">🔊 ${esc(l.say)}</button><button class="spk" id="al-w">🔊 ${esc(l.word)}</button></div>`;
+    TTS.speak(l.say, 'f');
+    $('#al-l').onclick = () => TTS.speak(l.say, 'f');
+    $('#al-w').onclick = () => TTS.speak(l.word, 'f');
+  });
+}
+
 /* ---------- PROFIL ---------- */
 
 function Me() {
@@ -1524,7 +1936,10 @@ function Me() {
   h += `<div class="setting"><span>${esc(t('me_exam_date'))}</span><input type="date" id="s-date" value="${esc(S.set.examDate)}"></div>`;
   h += `<div class="setting"><span>${esc(t('me_new'))}</span><select id="s-new">${[5, 10, 15, 20, 30].map(n => `<option ${n === S.set.newPerDay ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
   h += `<div class="setting"><span>${esc(t('me_goal'))}</span><select id="s-goal">${[15, 30, 50, 80].map(n => `<option ${n === S.set.goal ? 'selected' : ''}>${n}</option>`).join('')}</select></div>`;
-  h += `<div class="setting"><span>${esc(t('me_tr'))}</span><input type="checkbox" id="s-tr" ${S.set.showTr ? 'checked' : ''}></div></div>`;
+  h += `<div class="setting"><span>${esc(t('me_tr'))}</span><input type="checkbox" id="s-tr" ${S.set.showTr ? 'checked' : ''}></div>`;
+  h += `<div class="setting"><span>${esc(t('me_a1'))}<div class="small muted">${esc(t('me_a1_help', { n: A1_WORDS.length, l: A1_LS.length }))}</div></span><input type="checkbox" id="s-a1" ${S.set.a1 ? 'checked' : ''}></div>`;
+  if (typeof AUDIO_INDEX !== 'undefined' && Object.keys(AUDIO_INDEX).length) h += `<div class="setting"><span>${esc(t('rec_audio'))}</span><input type="checkbox" id="s-audio" ${S.set.realAudio !== false ? 'checked' : ''}></div>`;
+  h += `</div>`;
   h += `<h3>${esc(t('me_voice'))}</h3><div class="card">`;
   h += `<div class="setting"><span>${esc(t('me_voice_q'))}</span><span class="small" id="s-vq" style="text-align:right">♀ ${esc(vf ? vf.name + ' · ' + TTS.qualityLabel(vf) : '-')}<br>♂ ${esc(vm ? vm.name + ' · ' + TTS.qualityLabel(vm) : '-')}</span></div>`;
   h += `<div class="setting"><span>${esc(t('me_rate'))}</span><select id="s-rate">${[0.7, 0.8, 0.9, 1, 1.1].map(n => `<option ${n === S.set.rate ? 'selected' : ''} value="${n}">${n}x</option>`).join('')}</select></div>`;
@@ -1550,6 +1965,8 @@ function Me() {
   $('#s-goal').onchange = e => { S.set.goal = +e.target.value; save(); };
   $('#s-tr').onchange = e => { S.set.showTr = e.target.checked; save(); };
   $('#s-lt').onchange = e => { S.set.lt = e.target.checked; save(); };
+  $('#s-a1').onchange = e => { S.set.a1 = e.target.checked; save(); toast(e.target.checked ? t('me_a1_on') : t('me_a1_off')); };
+  const sa = $('#s-audio'); if (sa) sa.onchange = e => { S.set.realAudio = e.target.checked; save(); };
   $('#s-rate').onchange = e => { S.set.rate = +e.target.value; save(); };
   $('#s-vf').onchange = e => { S.set.voiceF = e.target.value; save(); Me(); };
   $('#s-vm').onchange = e => { S.set.voiceM = e.target.value; save(); Me(); };
@@ -1600,8 +2017,19 @@ function Me() {
 
 function showWord(el) {
   const d = lookup(el.dataset.w);
-  showPop(d ? `<b>${esc(el.textContent)}</b> · ${esc(d.tr)}` : `<b>${esc(el.textContent)}</b> · ${esc(t('not_in_dict'))}`);
+  const already = d && S.notebook.some(n => n.nl === d.nl);
+  const inVocab = d && WORDS.some(w => w.nl === d.nl);
+  showPop(d ? `<b>${esc(el.textContent)}</b> · ${esc(d.tr)}${inVocab ? '' : `<button class="nb-add ${already ? 'on' : ''}" data-nl="${esc(d.nl)}" data-tr="${esc(d.tr)}">${already ? '📓 ✓' : '📓 +'}</button>`}` : `<b>${esc(el.textContent)}</b> · ${esc(t('not_in_dict'))}`);
   TTS.speak(el.textContent);
+  const ab = $('#pop .nb-add');
+  if (ab) ab.onclick = e => {
+    e.stopPropagation();
+    const nl = ab.dataset.nl, tr = ab.dataset.tr;
+    if (S.notebook.some(n => n.nl === nl)) { S.notebook = S.notebook.filter(n => n.nl !== nl); delete S.srs['nb|' + nl]; ab.classList.remove('on'); ab.textContent = '📓 +'; toast(t('nb_removed')); }
+    else { const trG = LEX.tr.get(nl.replace(/^(de|het)\s+/, '').toLowerCase()) || tr; const enG = LEX.en.get(nl.replace(/^(de|het)\s+/, '').toLowerCase()) || tr; S.notebook.push({ nl, tr: trG, en: enG, ex: '' }); ab.classList.add('on'); ab.textContent = '📓 ✓'; toast(t('nb_added')); }
+    save();
+    clearTimeout(showPop.tm); showPop.tm = setTimeout(hidePop, 2500);
+  };
 }
 let pressTimer = null, pressFired = false, pressX = 0, pressY = 0;
 document.addEventListener('pointerdown', e => {

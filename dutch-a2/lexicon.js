@@ -1297,5 +1297,172 @@ apothekersassistente|eczane asistanı · de apothekersassistente
 omroepster|anons yapan kadın, spiker · de omroepster
 verkoopster|kadın satış elemanı · de verkoopster
 weerman|hava durumu sunucusu · de weerman
+verkeersbord|trafik levhası · het verkeersbord
+inrijden|içine sürmek, girmek · inrijden
+voorrang|geçiş önceliği · de voorrang
+pijl|ok · de pijl
+eenrichtingsweg|tek yönlü yol · de eenrichtingsweg
+richting|yön · de richting
+afslaan|sapmak, dönmek · afslaan
+fietsers|bisikletliler · de fietser
+voetgangers|yayalar · de voetganger
+gebied|bölge, alan · het gebied
+stapvoets|adım hızında, çok yavaş
+maximaal|en fazla, azami
+kilometer|kilometre · de kilometer
+toeteren|korna çalmak · toeteren
+zodat|böylece, ki
+kant|taraf, kenar · de kant
+zone|bölge · de zone
+voorrangsweg|öncelikli yol · de voorrangsweg
+zijwegen|yan yollar · de zijweg
+driehoeken|üçgenler · de driehoek
+kruisende|kesişen · kruisen
+afstappen|inmek, bisikletten inmek · afstappen
+doorrijden|sürmeye devam etmek · doorrijden
+gooi|at · gooien
+plastic|plastik · het plastic
+blikjes|teneke kutular · het blikje
+kranten|gazeteler · de krant
+dozen|kutular · de doos
+etensresten|yemek artıkları · de etensrest
+verpakkingen|ambalajlar · de verpakking
+blik|teneke, metal · het blik
+drinkpakken|içecek kutuları · het drinkpak
+kleding|giysi, kıyafet · de kleding
+batterijen|piller · de batterij
+verschillende|farklı, çeşitli
+openingen|açıklıklar, delikler · de opening
+scheidt|ayırır · scheiden
+kleur|renk · de kleur
+bruin|kahverengi
+opening|açıklık, açılış · de opening
+waarvoor|ne için, hangisi için
+inlogscherm|giriş ekranı · het inlogscherm
+loggen|giriş yapmak · inloggen
+paal|direk · de paal
+ingang|giriş · de ingang
+gebouw|bina · het gebouw
+sigaretten|sigaralar · de sigaret
+hond|köpek · de hond
+lijn|tasma, ip, çizgi · de lijn
+loslaten|serbest bırakmak · loslaten
+verlaten|terk etmek · verlaten
+honden|köpekler · de hond
+aed|otomatik kalp şok cihazı · de aed
+apparaat|cihaz · het apparaat
+hartstilstand|kalp durması · de hartstilstand
+brandblusser|yangın söndürücü · de brandblusser
+volgens|göre
+bordje|küçük levha · het bordje
+binnenlopen|içeri girmek · binnenlopen
+tijdens|sırasında
+parkeert|park eder · parkeren
+voorwerp|nesne, eşya · het voorwerp
+aankomsttijd|varış saati · de aankomsttijd
+legt|koyar · leggen
+voorruit|ön cam · de voorruit
+parkeerautomaat|park ödeme makinesi · de parkeerautomaat
+spiegel|ayna · de spiegel
+bewijs|kanıt, belge · het bewijs
+pakketbezorger|kargo kuryesi · de pakketbezorger
+pakket|paket, koli · het pakket
+depot|depo, dağıtım noktası · het depot
+stoep|kaldırım · de stoep
+stempas|oy pusulası kartı · de stempas
+ov-kaart|toplu taşıma kartı · de ov-kaart
+spel|hecele · spellen
+bee|b harfinin adı
+uu|u harfinin adı
+aa|a harfinin adı
+kaa|k harfinin adı
+oe|oe sesi, Türkçe u gibi
+ee|e harfinin adı
+em|m harfinin adı
+haa|h harfinin adı
+tee|t harfinin adı
+ie|i harfinin adı, Türkçe i gibi
+ai|ai sesi
+cee|c harfinin adı
+letter|harf · de letter
+w|w harfi
+wee|w harfinin adı
+vee|v harfinin adı
+dubbel|çift
+g|g harfi
+gee|g harfinin adı
+zjee|yanlış harf adı, seçenek
+j|j harfi
+jee|j harfinin adı
+jay|yanlış harf adı, seçenek
+ij|ij harfi, uzun ey sesi
+i|i harfi
+joe|yanlış harf adı, seçenek
+q|q harfi
+ku|q harfinin adı
+kwee|yanlış harf adı, seçenek
+zee|z harfinin adı
+es|s harfinin adı
+klank|ses · de klank
+drieëntwintig|yirmi üç
+tweeëntwintig|yirmi iki
+zevenenveertig|kırk yedi
+honderdvijf|yüz beş
+vijfentwintig|yirmi beş
+zesendertig|otuz altı
+honderdtien|yüz on
+vierentachtig|seksen dört
+vijfenzestig|altmış beş
+zesenvijftig|elli altı
+vijfenzeventig|yetmiş beş
+tweeduizend|iki bin
+tweehonderd|iki yüz
+twintigduizend|yirmi bin
+ene|bir, diğeri ile birlikte
+tienduizend|on bin
+achtendertig|otuz sekiz
+ochtends|sabahları · 's ochtends
+begrijpt|anlıyor · begrijpen
+vandaan|nereden, waar vandaan
+erlangs|yanından
+help|yardım et · helpen
+tv|televizyon · de tv
+opent|açıyor · openen
+inwoners|sakinler, nüfus · de inwoner
+seconden|saniyeler · de seconde
+favoriete|en sevdiği · favoriet
+ieder|her, her biri
+personen|kişiler · de persoon
+gasten|misafirler · de gast
+lieverd|canım, tatlım · de lieverd
+sinaasappels|portakallar · de sinaasappel
+tomaten|domatesler · de tomaat
+snijd|kesiyorum · snijden
+mayonaise|mayonez · de mayonaise
+bakt|pişiriyor, kızartıyor · bakken
+hou|seviyorum, tutuyorum · houden
+olijfolie|zeytinyağı · de olijfolie
+smakelijk|afiyet olsun, lezzetli
+lucht|hava, gökyüzü · de lucht
+gras|çim · het gras
+ogen|gözler · het oog
+lichte|açık renkli · licht
+voel|hissediyorum · voelen
+oefen|alıştırma yapıyorum · oefenen
+probeer|deniyorum · proberen
+tel|sayıyorum · tellen
+leeft|yaşıyor · leven
+lacht|gülüyor · lachen
+zingt|şarkı söylüyor · zingen
+rent|koşuyor · rennen
+sluit|kapatıyor · sluiten
+kopjes|fincanlar · het kopje
+kies|seçiyorum · kiezen
+bedank|teşekkür ediyorum · bedanken
+jassen|montlar · de jas
+hangen|asmak, asılı olmak
+warme|sıcak · warm
+gordijnen|perdeler · het gordijn
+draait|dönüyor, çeviriyor · draaien
 `;
 if (typeof module !== 'undefined') module.exports = { LEXICON };

@@ -282,6 +282,135 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   await tab('exam');
   ok(await count('.wordrow') === 4, 'gecmis denemeler listeleniyor', String(await count('.wordrow')));
 
+  /* ---------- 10b. sinav gunu, bes bolum tek oturumda ---------- */
+  await tab('exam'); await page.click('[data-x=day]');
+  ok(await count('#ed-start') === 1 && await count('.plan') === 5, 'sinav gunu giris ekrani bes bolum listeliyor');
+  await page.click('#ed-start');
+  for (const el of await page.$$('[id^=exl-] .card')) { const o = await el.$('.opt'); await o.click(); }
+  await page.click('#exl-end');
+  ok(await count('#ed-next') === 1 && (await text('#main')).includes('Luisteren'), 'Lezen bitince mola ekrani, siradaki Luisteren');
+  await page.click('#ed-next');
+  for (let i = 0; i < 6; i++) { for (const el of await page.$$('.card:has(.opt)')) { const o = await el.$('.opt'); await o.click(); } await page.click('#el-next'); }
+  ok(await count('#ed-next') === 1, 'Luisteren bitince mola ekrani');
+  await page.click('#ed-next');
+  ok(await count('#exs-end') === 1 && await count('#ex-clock') === 1, 'Schrijven bolumu iki gorev ve sure ile aciliyor');
+  await page.fill('[data-t="0"][data-f="0"], [data-t="0"][data-main]', 'Ik wil graag een afspraak maken. Ik woon in Purmerend en ik werk in Amsterdam.');
+  await page.click('#exs-end');
+  await page.waitForSelector('#ed-next', { timeout: 5000 });
+  ok(true, 'Schrijven bolumu puanlanip molaya gecti');
+  await page.click('#ed-next');
+  ok(await count('#exp-sr') === 1 && await count('#exp-text') === 1, 'Spreken bolumu ses tanima ve metin kutusu ile aciliyor');
+  await page.fill('#exp-text', 'Ik woon al drie jaar in Purmerend met mijn vrouw en mijn kind.');
+  for (let i = 0; i < 5; i++) await page.click('#exp-next');
+  ok(await count('#exp-end') === 1, 'Spreken altinci soruda bitir butonu');
+  await page.click('#exp-end');
+  await page.waitForSelector('#ed-next', { timeout: 5000 });
+  await page.click('#ed-next');
+  ok(await count('#ex-clock') === 1, 'KNM bolumu suresiyle aciliyor');
+  await page.clock.fastForward(45 * 60 * 1000 + 2000); await page.waitForTimeout(80);
+  ok(await count('.plan .ck') === 5, 'sinav gunu sonucu bes bolum gosteriyor', String(await count('.plan .ck')));
+  const dayRec = await page.evaluate(() => { const e = S.exams[S.exams.length - 1]; return e && e.key === 'ex_day' && e.parts && e.parts.length === 5; });
+  ok(dayRec, 'sinav gunu sonucu bes parcayla kaydedildi');
+  await tab('exam');
+  ok((await text('.wordrow')).includes('Lezen'), 'gecmiste sinav gunu parcalariyla listeleniyor');
+  await tab('exam'); await page.click('[data-x=day]'); await page.click('#ed-start'); await page.click('.back');
+  await tab('exam'); await page.click('[data-x=knm20]');
+  for (let i = 0; i < 20; i++) { await page.click('.opt'); if (i < 19) await page.click('#ex-next'); }
+  await page.click('#ex-end');
+  ok((await text('#main h2')).includes('/20'), 'yarim birakilan sinav gunu sonraki tekil denemeyi etkilemiyor');
+
+  /* ---------- 10c. shadowing ---------- */
+  await tab('practice'); await page.click('[data-go=shadow]');
+  ok(await count('#sh-sr') === 1 && await count('#sh-play') === 1, 'shadowing ekrani');
+  const shSentence = await page.evaluate(() => document.querySelector('.model').textContent.trim());
+  await page.fill('#sh-text', shSentence);
+  await page.click('#sh-check');
+  ok((await text('.ex')).includes('100%') && await count('.sh-miss') === 0, 'birebir tekrar yuzde yuz', await text('.ex'));
+  await page.click('#sh-retry');
+  await page.fill('#sh-text', 'ik');
+  await page.click('#sh-check');
+  ok(await count('.sh-miss') >= 1 && !(await text('.ex')).includes('100%'), 'eksik tekrar kirmizi kelimeler gosteriyor');
+  await page.click('#sh-next');
+  ok(await count('#sh-sr') === 1, 'siradaki cumle geliyor');
+  await page.click('#sh-sr'); await page.clock.runFor(200); await page.waitForTimeout(50);
+  ok((await page.$eval('#sh-text', e => e.value)).includes('Purmerend'), 'shadowing ses tanima metni yaziyor');
+  await page.clock.runFor(2700); await page.waitForTimeout(80);
+  ok(await count('.sh-ok, .sh-miss') > 0, 'sessizlikte durunca otomatik karsilastiriyor');
+  await tab('practice'); await page.click('[data-go=luisteren]'); await page.click(`[data-id="${luIds[0]}"]`);
+  await page.click('#lu-play'); await page.waitForTimeout(20); await page.click('#lu-play');
+  for (let q = 0; q < await count('#lu-q .card'); q++) await page.click(`#lu-q .card:nth-child(${q + 1}) .opt`);
+  await page.click('#mc-check');
+  await page.click('#lu-tr [data-sh="1"]');
+  ok(await count('#sh-sr') === 1, 'luisteren satirindan shadowing aciliyor');
+  await tab('practice'); await page.click('[data-go=spreken]'); await page.click(`[data-id="${spIds[0]}"]`);
+  await page.fill('#sp-text', 'Ik woon in Purmerend.'); await page.click('#sp-check'); await page.waitForSelector('#sp-res .score'); await page.click('#sp-model');
+  await page.click('#sp-shadow');
+  ok(await count('#sh-sr') === 1, 'spreken ornek cevaptan shadowing aciliyor');
+
+  /* ---------- 10d. kelime defteri, zayif noktalar, gorsel KNM, hatirlatma ---------- */
+  await tab('practice'); await page.click('[data-go=lezen]'); await page.click(`[data-id="${lezenIds[0]}"]`);
+  const nbWord = await page.evaluate(() => { const els = [...document.querySelectorAll('.reading .wd')]; const el = els.find(e => document.querySelector('#pop') && !WORDS.some(w => w.bare.toLowerCase() === e.dataset.w)) || els.find(e => !WORDS.some(w => w.bare.toLowerCase() === e.dataset.w)); el.click(); return el.dataset.w; });
+  await page.waitForTimeout(30);
+  ok(await count('#pop .nb-add') === 1, 'sozlukte olmayan kelimede deftere ekle butonu', nbWord);
+  await page.click('#pop .nb-add');
+  ok(await page.evaluate(() => S.notebook.length === 1), 'kelime deftere eklendi');
+  await tab('words');
+  ok((await text('[data-th=notebook]')).includes('1'), 'kelime defteri sayaci 1');
+  await page.click('[data-th=notebook]');
+  ok(await count('.wordrow') === 1 && await count('[data-rm]') === 1, 'defter listesi ve silme butonu');
+  await page.click('#t-learn');
+  ok(await count('#f-card') === 1, 'defter kelimesiyle flashcard aciliyor');
+  await tab('words'); await page.click('[data-th=notebook]'); await page.click('[data-rm="0"]');
+  ok(await page.evaluate(() => S.notebook.length === 0), 'kelime defterden silindi');
+  await page.evaluate(() => { S.skill['gram:dehet'] = [2, 10]; S.skill['knm:wonen'] = [3, 6]; save(); });
+  await tab('home');
+  ok(await count('[data-w]') >= 2, 'zayif noktalar ana ekranda', String(await count('[data-w]')));
+  await page.click('[data-w="0"]');
+  ok(await count('.opt') > 0, 'zayif noktadan alistirmaya gidiliyor');
+  await tab('home');
+  ok(await count('#wk-remind') === 1 && (await text('#main')).includes('/7'), 'haftalik rapor goruntuleniyor');
+  await page.click('#wk-remind');
+  const dlIcs = page.waitForEvent('download', { timeout: 3000 }).catch(() => null);
+  await page.click('#rm-go');
+  const dlRes = await dlIcs;
+  ok(dlRes && dlRes.suggestedFilename().endsWith('.ics'), 'takvim hatirlatma dosyasi iniyor', dlRes ? dlRes.suggestedFilename() : 'yok');
+  await tab('practice'); await page.click('[data-go=knm]'); await page.click('#k-vis');
+  ok(await count('.knm-svg svg') === 1 && await count('.opt') === 3, 'gorsel KNM sorusu resimle geliyor');
+  for (let i = 0; i < 10; i++) { await scan(); ok(await count('.knm-svg svg') === 1, 'gorsel soru ' + i + ' resimli'); await page.click('.opt'); await page.click('#kq-next button'); }
+  ok((await text('#main h2')).match(/\d+\/10/), 'gorsel KNM sonucu');
+
+  /* ---------- 10e. A1 baslangic paketi ---------- */
+  await tab('words');
+  ok(await count('[data-th=alphabet]') === 0, 'A1 kapaliyken alfabe yok');
+  await tab('me'); await page.click('#s-a1');
+  ok(await page.evaluate(() => S.set.a1 === true), 'A1 paketi acildi');
+  await tab('words');
+  ok(await count('[data-th=alphabet]') === 1 && await count('[data-th=a1_basis]') === 1, 'A1 temalari ve alfabe listede');
+  await page.click('[data-th=alphabet]');
+  ok(await count('.letter') >= 26, 'alfabe harfleri');
+  await page.click('.letter[data-i="6"]');
+  ok((await text('#al-info')).includes('gee'), 'harf bilgisi aciliyor');
+  await page.fill('#al-name', 'Burak'); await page.click('#al-say');
+  ok((await text('#al-out')) === 'bee · uu · er · aa · kaa', 'isim heceleme', await text('#al-out'));
+  await tab('words'); await page.click('[data-th=a1_basis]');
+  ok(await count('.wordrow') === 100, 'A1 temel 100 kelime listesi', String(await count('.wordrow')));
+  await page.click('#t-learn'); await page.click('#f-card');
+  ok(await count('#f-card') === 1 && (await text('#f-card')).length > 5, 'A1 flashcard aciliyor ve donuyor');
+  await tab('practice'); await page.click('[data-go=gram]');
+  ok(await count('[data-g^=a1_]') === 5, 'A1 dersleri Grammatica listesinde');
+  await page.click('[data-g=a1_klok]'); await page.click('#gl-go');
+  let a1n = 0;
+  while (await page.$('.opt') && a1n < 20) { await scan(); await page.click('.opt'); await page.click('#gd-next button'); a1n++; }
+  ok(await count('#gd-again') === 1 && a1n === 16, 'A1 saat dersi alistirmasi', String(a1n));
+  await tab('me'); await page.click('[data-l=en]');
+  await tab('practice'); await page.click('[data-go=gram]'); await page.click('[data-g=a1_spellen]');
+  const a1tl = await turkishLeft();
+  ok(a1tl.length === 0 && (await text('.lesson')).length > 200, 'A1 dersi Ingilizce', a1tl.join(' | '));
+  await tab('words'); await page.click('[data-th=a1_basis]');
+  ok(!/[ğışçİ]/.test(await text('.wordrow .small')), 'A1 kelime Ingilizce karsilik');
+  await tab('me'); await page.click('[data-l=tr]'); await page.click('#s-a1');
+  ok(await page.evaluate(() => S.set.a1 === false), 'A1 paketi kapandi');
+
   /* ---------- 11. Claude ile duzeltme, sahte API ---------- */
   let apiCalls = 0; let lastBody = null; let mode = 'ok';
   await page.route('https://api.anthropic.com/**', async route => {
@@ -400,7 +529,9 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
     LUISTEREN.forEach(x => { texts.push(x.title, x.setting); x.lines.forEach(l => texts.push(l.t)); x.questions.forEach(q => texts.push(q.q, ...q.a)); });
     SCHRIJVEN.forEach(x => { texts.push(x.title, x.prompt, x.model); (x.fields || []).forEach(f => texts.push(f.label)); });
     SPREKEN.forEach(x => texts.push(x.prompt, x.model));
-    KNM.forEach(q => texts.push(q.q, ...q.a));
+    KNM_ALL.forEach(q => texts.push(q.q, ...q.a));
+    A1_LESSONS.forEach(g => g.drills.forEach(d => texts.push(d.q.replace(/_+/, d.a[0]), ...d.a)));
+    A1_WORDS.forEach(w => texts.push(w.ex));
     GRAMMAR.forEach(g => g.drills.forEach(d => texts.push(d.q.replace(/_+/, d.a[0]), ...d.a)));
     WORDS.forEach(w => texts.push(w.ex));
     const out = new Set();

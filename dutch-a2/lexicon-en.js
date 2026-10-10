@@ -1297,5 +1297,172 @@ apothekersassistente|pharmacy assistant · de apothekersassistente
 omroepster|female announcer · de omroepster
 verkoopster|saleswoman · de verkoopster
 weerman|weatherman · de weerman
+verkeersbord|traffic sign · het verkeersbord
+inrijden|to drive into, to enter · inrijden
+voorrang|right of way · de voorrang
+pijl|arrow · de pijl
+eenrichtingsweg|one way street · de eenrichtingsweg
+richting|direction · de richting
+afslaan|to turn off · afslaan
+fietsers|cyclists · de fietser
+voetgangers|pedestrians · de voetganger
+gebied|area, zone · het gebied
+stapvoets|at walking pace
+maximaal|at most, maximum
+kilometer|kilometre · de kilometer
+toeteren|to honk · toeteren
+zodat|so that
+kant|side · de kant
+zone|zone · de zone
+voorrangsweg|priority road · de voorrangsweg
+zijwegen|side roads · de zijweg
+driehoeken|triangles · de driehoek
+kruisende|crossing · kruisen
+afstappen|to get off, to dismount · afstappen
+doorrijden|to drive on · doorrijden
+gooi|throw · gooien
+plastic|plastic · het plastic
+blikjes|cans · het blikje
+kranten|newspapers · de krant
+dozen|boxes · de doos
+etensresten|food scraps · de etensrest
+verpakkingen|packaging · de verpakking
+blik|tin, metal · het blik
+drinkpakken|drink cartons · het drinkpak
+kleding|clothing · de kleding
+batterijen|batteries · de batterij
+verschillende|different, various
+openingen|openings, slots · de opening
+scheidt|separates · scheiden
+kleur|colour · de kleur
+bruin|brown
+opening|opening · de opening
+waarvoor|for what, for which
+inlogscherm|login screen · het inlogscherm
+loggen|to log in · inloggen
+paal|post, pole · de paal
+ingang|entrance · de ingang
+gebouw|building · het gebouw
+sigaretten|cigarettes · de sigaret
+hond|dog · de hond
+lijn|leash, line · de lijn
+loslaten|to let loose · loslaten
+verlaten|to leave · verlaten
+honden|dogs · de hond
+aed|automated external defibrillator · de aed
+apparaat|device · het apparaat
+hartstilstand|cardiac arrest · de hartstilstand
+brandblusser|fire extinguisher · de brandblusser
+volgens|according to
+bordje|small sign · het bordje
+binnenlopen|to walk in · binnenlopen
+tijdens|during
+parkeert|parks · parkeren
+voorwerp|object · het voorwerp
+aankomsttijd|arrival time · de aankomsttijd
+legt|puts, lays · leggen
+voorruit|windscreen · de voorruit
+parkeerautomaat|parking meter · de parkeerautomaat
+spiegel|mirror · de spiegel
+bewijs|proof · het bewijs
+pakketbezorger|parcel courier · de pakketbezorger
+pakket|parcel · het pakket
+depot|depot, pickup point · het depot
+stoep|pavement · de stoep
+stempas|voting pass · de stempas
+ov-kaart|public transport card · de ov-kaart
+spel|spell · spellen
+bee|name of the letter b
+uu|name of the letter u
+aa|name of the letter a
+kaa|name of the letter k
+oe|the oe sound, like oo in book
+ee|name of the letter e
+em|name of the letter m
+haa|name of the letter h
+tee|name of the letter t
+ie|name of the letter i, like ee
+ai|the ai sound
+cee|name of the letter c
+letter|letter · de letter
+w|the letter w
+wee|name of the letter w
+vee|name of the letter v
+dubbel|double
+g|the letter g
+gee|name of the letter g
+zjee|wrong letter name, distractor
+j|the letter j
+jee|name of the letter j
+jay|wrong letter name, distractor
+ij|the letter ij, long ey sound
+i|the letter i
+joe|wrong letter name, distractor
+q|the letter q
+ku|name of the letter q
+kwee|wrong letter name, distractor
+zee|name of the letter z
+es|name of the letter s
+klank|sound · de klank
+drieëntwintig|twenty three
+tweeëntwintig|twenty two
+zevenenveertig|forty seven
+honderdvijf|hundred and five
+vijfentwintig|twenty five
+zesendertig|thirty six
+honderdtien|hundred and ten
+vierentachtig|eighty four
+vijfenzestig|sixty five
+zesenvijftig|fifty six
+vijfenzeventig|seventy five
+tweeduizend|two thousand
+tweehonderd|two hundred
+twintigduizend|twenty thousand
+ene|one, as in the one and the other
+tienduizend|ten thousand
+achtendertig|thirty eight
+ochtends|in the morning · 's ochtends
+begrijpt|understands · begrijpen
+vandaan|from where, waar vandaan
+erlangs|past it, alongside
+help|help · helpen
+tv|television · de tv
+opent|opens · openen
+inwoners|inhabitants · de inwoner
+seconden|seconds · de seconde
+favoriete|favourite · favoriet
+ieder|every, each
+personen|persons · de persoon
+gasten|guests · de gast
+lieverd|sweetheart, darling · de lieverd
+sinaasappels|oranges · de sinaasappel
+tomaten|tomatoes · de tomaat
+snijd|I cut · snijden
+mayonaise|mayonnaise · de mayonaise
+bakt|bakes, fries · bakken
+hou|I love, I hold · houden
+olijfolie|olive oil · de olijfolie
+smakelijk|enjoy your meal, tasty
+lucht|air, sky · de lucht
+gras|grass · het gras
+ogen|eyes · het oog
+lichte|light coloured · licht
+voel|I feel · voelen
+oefen|I practise · oefenen
+probeer|I try · proberen
+tel|I count · tellen
+leeft|lives · leven
+lacht|laughs · lachen
+zingt|sings · zingen
+rent|runs · rennen
+sluit|closes · sluiten
+kopjes|cups · het kopje
+kies|I choose · kiezen
+bedank|I thank · bedanken
+jassen|coats · de jas
+hangen|to hang
+warme|warm · warm
+gordijnen|curtains · het gordijn
+draait|turns · draaien
 `;
 if (typeof module !== 'undefined') module.exports = { LEXICON_EN };
