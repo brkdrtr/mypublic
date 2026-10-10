@@ -124,7 +124,7 @@ function renderMission() {
   const m = ALL.find(x => x.id === st.current);
   if (!m) {
     card.className = 'mcard';
-    card.innerHTML = `<div class="mt">🧪 Serbest mod<button class="x" id="mc-x">✕</button></div><div class="story">Burası senin sandbox\'ın. Her şeyi dene, bozarsan Profil sekmesinden sıfırla. <code>help</code> yaz, komut listesini gör.</div>`;
+    card.innerHTML = `<div class="mt">🧪 Serbest mod<button class="x" id="mc-x">✕</button></div><div class="story">Burası senin sandbox\'ın. Ne istersen dene, bir şeyi bozarsan Profil sekmesinden filesystem\'i sıfırla. <code>help</code> yaz, komut listesini gör.</div>`;
     $('#mc-x').onclick = () => card.classList.add('hidden');
     return;
   }
@@ -184,7 +184,7 @@ function renderPrompt() { $('#prompt').innerHTML = promptHTML(); }
 
 function welcome() {
   if (term.childElementCount) return;
-  printSys('Linux Lab v1.0 · Ubuntu 24.04 simülasyonu\nhelp yaz, komutları gör. man komut ile detay öğren.\n\n');
+  printSys('Linux Lab v1.0 · Ubuntu 24.04 simülasyonu\nhelp yaz, komutları gör. Detay için man komut.\n\n');
 }
 
 function execute(line) {
@@ -233,7 +233,7 @@ function evaluate(line, out, submit) {
     setTimeout(() => celebrate(m), 250);
     renderMission();
   } else if (submit != null && /submit/.test(m.solution)) {
-    toast('❌ Yanlış cevap, bir daha bak', 'bad');
+    toast('❌ Yanlış cevap, output\'a bir daha bak', 'bad');
     if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
   } else checkBadges();
 }
@@ -327,7 +327,7 @@ $('#ed-save').onclick = () => {
   const e = sh.writeFile(edState.path, text, false, 'nano');
   sh.isRoot = was;
   $('#editor').classList.add('hidden');
-  if (e) { printSys(`[ ${e} ]\nİpucu: root dosyası için sudo nano dosya\n`); }
+  if (e) { printSys(`[ ${e} ]\n💡 Dosya root'a aitse sudo nano dosya ile aç\n`); }
   else { printSys(`[ ${text.split('\n').length - 1} satır yazıldı ]\n`); }
   edState = null;
   evaluate('nano', '', null);
@@ -415,11 +415,11 @@ function renderMe() {
   h += '<h3>Rozetler</h3><div class="badges">';
   BADGES.forEach(b => { const on = st.badges.includes(b.id); h += `<div class="badge ${on ? '' : 'off'}"><div class="e">${b.icon}</div><div class="t">${esc(b.title)}</div><div class="muted">${esc(b.desc)}</div></div>`; });
   h += '</div><h3>Ayarlar</h3>';
-  h += '<p class="muted">Sanal dosya sistemini bozduysan sadece onu sıfırla, ilerlemen kalır.</p>';
-  h += '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="ghost" id="rs-fs">Dosya sistemini sıfırla</button><button class="ghost danger" id="rs-all">Her şeyi sıfırla</button></div>';
+  h += '<p class="muted">Sanal filesystem\'i bozduysan sadece onu sıfırla, ilerlemen kalır.</p>';
+  h += '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="ghost" id="rs-fs">Filesystem\'i sıfırla</button><button class="ghost danger" id="rs-all">Her şeyi sıfırla</button></div>';
   h += '<p class="muted" style="margin-top:24px;font-size:13px">Gerçek bir Linux pratiği için iPhone\'da iSH ya da a-Shell uygulamaları ücretsizdir. Burada öğrendiklerin oralarda birebir çalışır.</p>';
   $('#v-me').innerHTML = h;
-  $('#rs-fs').onclick = () => { if (confirm('Dosya sistemi, süreçler ve servisler ilk haline dönsün mü?')) { sh.reset(); term.innerHTML = ''; welcome(); renderPrompt(); persist(); toast('Sıfırlandı', 'good'); } };
+  $('#rs-fs').onclick = () => { if (confirm('Filesystem, process\'ler ve servisler ilk haline dönsün mü?')) { sh.reset(); term.innerHTML = ''; welcome(); renderPrompt(); persist(); toast('Sıfırlandı', 'good'); } };
   $('#rs-all').onclick = () => { if (confirm('Tüm XP, rozet ve görev ilerlemesi silinecek. Emin misin?')) { try { localStorage.removeItem(KEY_ST); localStorage.removeItem(KEY_SH); } catch (e) { /* yok */ } location.reload(); } };
 }
 

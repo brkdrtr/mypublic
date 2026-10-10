@@ -8,7 +8,7 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 
 - Sanal dosya sistemi, pipe, `>` `>>` `<` `2>` yönlendirme, `&&` `||` `;`, değişkenler, `$(komut)`, glob, script çalıştırma, alias
 - 100'e yakın komut. `ls grep awk sed sort uniq cut tr find chmod sudo ps kill systemctl journalctl ip ss ping dig curl tee nano` ve fazlası
-- 9 bölüm, 71 görev. Navigasyon, dosyalar, pipe, izinler, süreçler, ağ, olay yeri incelemesi, script
+- 9 bölüm, 71 görev. Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script
 - Gerçekçi senaryolar. Bozuk nginx config'ini bulup düzeltmek, cryptominer süreci, auth.log içinden ssh brute force analizi, /tmp altındaki backdoor
 - XP, seviye, gün serisi, rozetler, quiz, aranabilir komut sözlüğü
 - iPhone klavyesi için Tab, ok tuşları ve özel karakter çubuğu
