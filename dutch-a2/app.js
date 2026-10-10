@@ -16,7 +16,8 @@ const STR = {
     tab_home: 'Bugün', tab_words: 'Kelimeler', tab_practice: 'Pratik', tab_exam: 'Sınav', tab_me: 'Profil',
     back: 'Geri', start: 'Başla', again: 'Tekrar', next: 'Sonraki ›', result: 'Sonuç', check: 'Kontrol et', finish: 'Bitir',
     list_back: 'Listeye dön', listen: '🔊 Dinle',
-    who_title: 'Kim çalışıyor?', who_sub: 'Her profilin ilerlemesi ayrı tutulur.',
+    who_title: 'Kim çalışıyor?', who_sub: 'Her profilin ilerlemesi ve ayarları ayrı tutulur.', who_add: 'Yeni profil', new_title: 'Yeni profil', new_name: 'İsim', new_icon: 'Simge', new_create: 'Profili oluştur', new_err: 'Bir isim yaz', new_dup: 'Bu isimde bir profil zaten var',
+    me_delete: 'Profili sil', me_delete_q: '{name} profili ve tüm ilerlemesi silinecek. Emin misin?', me_voices_all: 'Telefondaki Hollandaca sesler', me_voices_reload: 'Ses listesini yenile', sp_autostop: 'Susunca kendiliğinden durur',
     exam_left: 'Sınava kalan', exam_today: 'Sınav bugün, succes! 🍀', exam_past: 'Sınav tarihi geçti', exam_set: 'Sınav tarihini Profil\'den gir',
     days: '{n} gün', hello: 'Hoi {name} 👋', home_sub: '{w} kelime çalışıldı · bugünkü plan {d}/{t}',
     plan_title: 'Bugünkü plan', plan_cards: 'Flashcard tekrarı', plan_cards_s: 'Bugün {c} kart · {d} kart sırada',
@@ -85,7 +86,8 @@ const STR = {
     tab_home: 'Today', tab_words: 'Words', tab_practice: 'Practice', tab_exam: 'Exam', tab_me: 'Profile',
     back: 'Back', start: 'Start', again: 'Again', next: 'Next ›', result: 'Result', check: 'Check', finish: 'Finish',
     list_back: 'Back to list', listen: '🔊 Listen',
-    who_title: 'Who is studying?', who_sub: 'Each profile keeps its own progress.',
+    who_title: 'Who is studying?', who_sub: 'Each profile keeps its own progress and settings.', who_add: 'New profile', new_title: 'New profile', new_name: 'Name', new_icon: 'Icon', new_create: 'Create profile', new_err: 'Enter a name', new_dup: 'A profile with this name already exists',
+    me_delete: 'Delete profile', me_delete_q: 'The {name} profile and all its progress will be deleted. Are you sure?', me_voices_all: 'Dutch voices on this phone', me_voices_reload: 'Refresh voice list', sp_autostop: 'Stops by itself when you stop talking',
     exam_left: 'Until the exam', exam_today: 'Exam today, succes! 🍀', exam_past: 'Exam date has passed', exam_set: 'Set your exam date in Profile',
     days: '{n} days', hello: 'Hoi {name} 👋', home_sub: '{w} words studied · today\'s plan {d}/{t}',
     plan_title: 'Today\'s plan', plan_cards: 'Flashcard review', plan_cards_s: '{c} cards today · {d} due',
@@ -183,7 +185,11 @@ LEX.tr.forEach((gloss, form) => { const m = /·\s*(de|het)\s+([a-zà-ÿ-]+)\s*$/
 
 /* ---------- profil ve durum ---------- */
 
-const PROFILES = [{ id: 'burak', name: 'Burak', icon: '🧔🏻' }, { id: 'bahu', name: 'Bahu', icon: '👩🏻' }];
+const DEFAULT_PROFILES = [{ id: 'burak', name: 'Burak', icon: '🧔🏻' }, { id: 'bahu', name: 'Bahu', icon: '👩🏻' }];
+const PROFILE_ICONS = ['🧔🏻', '👩🏻', '👨🏻', '🧑🏻', '👧🏻', '👦🏻', '🧕🏻', '👵🏻', '👴🏻', '🙂'];
+function readProfiles() { try { const p = JSON.parse(localStorage.getItem('a2.profiles') || 'null'); if (Array.isArray(p) && p.length) return p; } catch (e) { /* yok */ } return DEFAULT_PROFILES.slice(); }
+let PROFILES = readProfiles();
+function saveProfiles() { lsSet('a2.profiles', JSON.stringify(PROFILES)); }
 const DEF = {
   srs: {}, xp: 0, streak: 0, lastDay: null,
   stats: { lezen: [0, 0], luisteren: [0, 0], knm: [0, 0], grammatica: [0, 0], woorden: [0, 0] },
@@ -338,7 +344,7 @@ const TTS = {
   },
   stop() { this._token = null; if ('speechSynthesis' in window) speechSynthesis.cancel(); },
 };
-if ('speechSynthesis' in window) { TTS.load(); speechSynthesis.onvoiceschanged = () => TTS.load(); }
+if ('speechSynthesis' in window) { TTS.load(); speechSynthesis.onvoiceschanged = () => TTS.load(); document.addEventListener('visibilitychange', () => { if (!document.hidden) TTS.load(); }); }
 
 /* ---------- Claude ile duzeltme ---------- */
 
@@ -572,9 +578,44 @@ function Who() {
     let st = null; try { st = JSON.parse(lsGet(stateKey(p.id)) || 'null'); } catch (e) { st = null; }
     h += `<button class="who-btn" data-p="${p.id}"><span class="e">${p.icon}</span><b>${p.name}</b><span class="small muted">${st ? (st.xp || 0) + ' XP · 🔥 ' + (st.streak || 0) : '&nbsp;'}</span></button>`;
   });
+  h += `<button class="who-btn add" id="who-add"><span class="e">➕</span><b>${esc(t('who_add'))}</b><span class="small muted">&nbsp;</span></button>`;
   h += '</div></div>';
   view(h);
-  $$('.who-btn').forEach(b => b.onclick = () => { loadProfile(b.dataset.p); $('#app').classList.remove('picking'); renderTop(); switchTab('home'); });
+  $$('.who-btn[data-p]').forEach(b => b.onclick = () => { loadProfile(b.dataset.p); $('#app').classList.remove('picking'); renderTop(); switchTab('home'); });
+  $('#who-add').onclick = NewProfile;
+}
+
+function NewProfile() {
+  $('#app').classList.add('picking');
+  let icon = PROFILE_ICONS.find(i => !PROFILES.some(p => p.icon === i)) || PROFILE_ICONS[0];
+  let lg = lang();
+  const draw = () => {
+    let h = `<button class="back" id="np-back">‹ ${esc(t('back'))}</button><h2>${esc(t('new_title'))}</h2><div class="card">`;
+    h += `<div class="field"><label>${esc(t('new_name'))}</label><input id="np-name" class="text-in" maxlength="20" autocapitalize="words" autocomplete="off"></div>`;
+    h += `<div class="field"><label>${esc(t('new_icon'))}</label><div class="chips">${PROFILE_ICONS.map(i => `<button class="chip icon ${i === icon ? 'on' : ''}" data-i="${i}">${i}</button>`).join('')}</div></div>`;
+    h += `<div class="field"><label>${esc(t('me_lang'))}</label><div class="seg mini"><button data-l="tr" class="${lg === 'tr' ? 'on' : ''}">Türkçe</button><button data-l="en" class="${lg === 'en' ? 'on' : ''}">English</button></div></div>`;
+    h += `<button class="btn block" id="np-create">${esc(t('new_create'))}</button></div>`;
+    const keep = $('#np-name') ? $('#np-name').value : '';
+    $('#main').innerHTML = h;
+    $('#np-name').value = keep;
+    $('#np-back').onclick = Who;
+    $$('.chip.icon').forEach(b => b.onclick = () => { icon = b.dataset.i; draw(); });
+    $$('[data-l]').forEach(b => b.onclick = () => { lg = b.dataset.l; draw(); });
+    $('#np-create').onclick = () => {
+      const name = $('#np-name').value.trim();
+      if (!name) { toast(t('new_err')); $('#np-name').focus(); return; }
+      if (PROFILES.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast(t('new_dup')); return; }
+      const id = 'p' + Date.now().toString(36);
+      PROFILES.push({ id, name, icon });
+      saveProfiles();
+      loadProfile(id);
+      S.set.lang = lg;
+      save();
+      $('#app').classList.remove('picking');
+      renderTop(); switchTab('home');
+    };
+  };
+  draw();
 }
 
 /* ---------- ANA SAYFA ---------- */
@@ -1043,7 +1084,7 @@ function Spreken(id) {
     if (SRC) h += `<button class="sp-btn ${listening ? 'on' : ''}" id="sp-sr"><span class="e">${listening ? '■' : '🗣️'}</span><b>${esc(listening ? t('sp_sr_stop') : t('sp_sr'))}</b><small>${esc(t('sp_sr_s'))}</small></button>`;
     h += `<button class="sp-btn rec2 ${recording ? 'on' : ''}" id="sp-rec"><span class="e">${recording ? '■' : '🎙️'}</span><b>${esc(recording ? t('sp_rec_stop') : t('sp_rec'))}</b><small>${esc(recording ? secs + ' / ' + limit + ' s' : t('sp_rec_s'))}</small></button>`;
     h += `</div>`;
-    if (listening) h += `<div class="sp-live">🎙️ ${esc(t('sp_listening'))}</div>`;
+    if (listening) h += `<div class="sp-live">🎙️ ${esc(t('sp_listening'))}<div class="small muted" style="font-weight:400">${esc(t('sp_autostop'))}</div></div>`;
     if (audioURL) h += `<audio controls playsinline src="${audioURL}" style="width:100%;margin-top:10px"></audio>`;
     h += `<div class="field" style="margin-top:12px"><label>${esc(t('sp_transcript'))}</label><textarea id="sp-text" rows="4" lang="nl" autocapitalize="sentences" placeholder="${esc(t('sp_transcript_ph'))}">${esc(transcript)}</textarea></div>`;
     h += `<details class="small muted" style="margin-bottom:10px"><summary>${esc(t('sp_dict_q'))}</summary><p>${esc(t('sp_dict_a'))}</p></details>`;
@@ -1117,7 +1158,12 @@ function Spreken(id) {
     sr.lang = 'nl-NL'; sr.interimResults = true; sr.continuous = true; sr.maxAlternatives = 1;
     const base = transcript.trim() ? transcript.trim() + ' ' : '';
     let finalText = '';
+    /* Konusma bitince kendiliginden dur. Hic ses gelmezse 8 sn, son kelimeden sonra 2,5 sn sessizlik */
+    let quiet = null;
+    const autoStop = ms => { clearTimeout(quiet); quiet = setTimeout(() => { try { sr.stop(); } catch (e) { /* yok */ } }, ms); };
+    autoStop(8000);
     sr.onresult = e => {
+      autoStop(2500);
       let interim = '';
       finalText = '';
       for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) finalText += r[0].transcript + ' '; else interim += r[0].transcript; }
@@ -1130,7 +1176,7 @@ function Spreken(id) {
       else if (code === 'no-speech') toast(t('sp_sr_nospeech'), 3000);
       else if (code !== 'aborted') toast(t('sp_sr_err', { e: code || '?' }), 4000);
     };
-    sr.onend = () => { listening = false; srInst = null; clearTimeout(srTimer); if ($('#sp-text')) draw(); };
+    sr.onend = () => { clearTimeout(quiet); listening = false; srInst = null; clearTimeout(srTimer); if ($('#sp-text')) draw(); };
     try { sr.start(); } catch (e) { toast(t('sp_sr_denied'), 5000); return; }
     srInst = sr; listening = true;
     srTimer = setTimeout(() => { try { sr.stop(); } catch (e) { /* yok */ } }, limit * 1000);
@@ -1474,7 +1520,8 @@ function Me() {
   h += `<div class="setting"><span>${esc(t('me_vm'))}</span><select id="s-vm">${vOpt(S.set.voiceM)}</select></div>`;
   h += `<div class="row" style="margin-top:8px"><button class="btn sm alt" id="s-test">${esc(t('me_test'))}</button></div>`;
   h += `<p class="small muted">${esc(TTS.voices.length ? t('me_voice_found', { n: TTS.voices.length }) : t('me_voice_none'))}</p>`;
-  h += `<div class="small ${best >= 2 ? 'muted' : 'ex'}">${t('me_voice_help')}</div></div>`;
+  h += `<div class="small ${best >= 2 ? 'muted' : 'ex'}">${t('me_voice_help')}</div>`;
+  h += `<details class="small" style="margin-top:10px"><summary>${esc(t('me_voices_all'))}</summary><div class="voice-list">${TTS.voices.length ? TTS.voices.map(v => `<div class="${v === vf || v === vm ? 'on' : ''}">${esc(v.name)} · ${esc(v.lang)} · ${esc(TTS.qualityLabel(v))}${TTS.gender(v) ? ' · ' + (TTS.gender(v) === 'f' ? '♀' : '♂') : ''}<br><span class="muted">${esc(v.voiceURI || '')}</span></div>`).join('') : esc(t('me_voice_none'))}</div><button class="btn sm alt" id="s-vreload" style="margin-top:8px">${esc(t('me_voices_reload'))}</button></details></div>`;
   h += `<h3>${esc(t('me_lt'))}</h3><div class="card"><div class="setting"><span>${esc(t('me_lt'))}</span><input type="checkbox" id="s-lt" ${S.set.lt !== false ? 'checked' : ''}></div><p class="small muted">${esc(t('me_lt_help'))}</p></div>`;
   h += `<h3>${esc(t('me_ai'))}</h3><div class="card"><p class="small muted" style="margin-top:0">${esc(t('me_ai_help'))}</p>`;
   h += `<div class="setting"><span>${esc(t('me_ai_key'))}</span><span class="small ${AI.key() ? '' : 'muted'}" id="s-ai-state">${esc(AI.key() ? t('me_ai_on') : t('me_ai_off'))}</span></div>`;
@@ -1482,7 +1529,7 @@ function Me() {
   const learned = Object.values(S.srs).filter(c => c.iv >= 21).length;
   h += `<h3>${esc(t('me_stats'))}</h3><div class="grid2"><div class="tile"><div class="t">${Object.keys(S.srs).length}/${WORDS.length}</div><div class="s">${esc(t('me_seen'))}</div></div><div class="tile"><div class="t">${learned}</div><div class="s">${esc(t('me_perm'))}</div></div><div class="tile"><div class="t">${esc(t('me_streak', { n: S.streak }))}</div><div class="s">${esc(t('me_streak_l'))}</div></div><div class="tile"><div class="t">${S.exams.length}</div><div class="s">${esc(t('me_exams'))}</div></div></div>`;
   h += `<h3>${esc(t('me_src'))}</h3><div class="card small"><p><a href="https://www.inburgeren.nl" target="_blank" rel="noopener">${esc(t('me_src1'))}</a></p><p><a href="https://ind.nl/nl/inburgering-voor-naturalisatie" target="_blank" rel="noopener">${esc(t('me_src2'))}</a></p><p class="muted">${esc(t('me_src_note'))}</p></div>`;
-  h += `<h3>${esc(t('me_backup'))}</h3><div class="card"><p class="small muted">${esc(t('me_backup_note'))}</p><div class="row"><button class="btn sm alt" id="s-exp">${esc(t('me_exp'))}</button><label class="btn sm alt">${esc(t('me_imp'))}<input type="file" id="s-imp" accept="application/json,.json" style="display:none"></label><button class="btn sm alt" id="s-reset" style="color:var(--bad)">${esc(t('me_reset'))}</button></div></div>`;
+  h += `<h3>${esc(t('me_backup'))}</h3><div class="card"><p class="small muted">${esc(t('me_backup_note'))}</p><div class="row"><button class="btn sm alt" id="s-exp">${esc(t('me_exp'))}</button><label class="btn sm alt">${esc(t('me_imp'))}<input type="file" id="s-imp" accept="application/json,.json" style="display:none"></label><button class="btn sm alt" id="s-reset" style="color:var(--bad)">${esc(t('me_reset'))}</button>${PROFILES.length > 1 ? `<button class="btn sm alt" id="s-del" style="color:var(--bad)">${esc(t('me_delete'))}</button>` : ''}</div></div>`;
   view(h);
   $('#s-who').onclick = () => { TTS.stop(); Who(); };
   $$('[data-l]').forEach(b => b.onclick = () => { S.set.lang = b.dataset.l; save(); Me(); });
@@ -1516,6 +1563,16 @@ function Me() {
       try { const d = JSON.parse(txt); const st = d.state || d; if (!st.srs) throw new Error('x'); S = deepMerge(JSON.parse(JSON.stringify(DEF)), st); save(); toast(t('me_imp_ok')); Me(); }
       catch (err) { toast(t('me_imp_bad')); }
     });
+  };
+  const vr = $('#s-vreload'); if (vr) vr.onclick = () => { TTS.load(); Me(); const d = $('#main details'); if (d) d.open = true; };
+  const del = $('#s-del'); if (del) del.onclick = () => {
+    if (!confirm(t('me_delete_q', { name: profName() }))) return;
+    const gone = PROFILE;
+    Object.keys(localStorage).filter(k => k === stateKey(gone) || k === 'a2.dehet.' + gone || k.startsWith('a2.draft.' + gone + '.')).forEach(lsDel);
+    PROFILES = PROFILES.filter(p => p.id !== gone);
+    saveProfiles();
+    PROFILE = null; lsDel('a2.profile');
+    Who();
   };
   $('#s-reset').onclick = () => { if (confirm(t('me_reset_q', { name: profName() }))) { lsDel(stateKey(PROFILE)); lsDel('a2.dehet.' + PROFILE); loadProfile(PROFILE); save(); switchTab('home'); } };
 }

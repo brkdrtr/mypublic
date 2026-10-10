@@ -226,3 +226,9 @@ b.ins { color: var(--good); background: var(--good-bg); font-weight: 700; border
 .sp-btn.on { border-color: var(--nl-red); background: var(--bad-bg); animation: pulse 1.2s infinite; }
 .sp-live { margin-top: 10px; text-align: center; color: var(--nl-red); font-weight: 700; }
 details summary { cursor: pointer; }
+
+.who-btn.add { border-style: dashed; }
+.who-btn.add .e { font-size: 40px; }
+.chip.icon { font-size: 24px; padding: 4px 8px; }
+.voice-list > div { padding: 6px 0; border-bottom: 1px solid var(--line); word-break: break-all; }
+.voice-list > div.on { font-weight: 700; color: var(--brand); }

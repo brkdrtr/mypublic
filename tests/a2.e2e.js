@@ -59,7 +59,7 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   /* ---------- 1. ilk acilis ve profil secimi ---------- */
   await page.goto(BASE);
   await page.waitForTimeout(300);
-  ok(await count('.who-btn') === 2, 'profil secim ekrani iki profil gosteriyor');
+  ok(await count('.who-btn[data-p]') === 2 && await count('#who-add') === 1, 'profil secim ekrani iki profil ve yeni profil butonu gosteriyor');
   ok(await page.evaluate(() => getComputedStyle(document.querySelector('#tabs')).visibility) === 'hidden', 'profil secilmeden sekmeler gizli');
   await page.click('.who-btn[data-p=burak]');
   ok((await text('#who')).includes('Burak'), 'Burak profili aktif');
@@ -191,6 +191,10 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   ok((await text('.sp-live')).length > 0, 'ses tanima dinlemeye basliyor');
   await page.clock.runFor(200); await page.waitForTimeout(50);
   ok((await page.$eval('#sp-text', e => e.value)) === 'Ik woon al drie jaar in Purmerend', 'ses tanima metni kutuya yaziyor', await page.$eval('#sp-text', e => e.value));
+  await page.clock.runFor(2700); await page.waitForTimeout(50);
+  ok(!(await page.$('.sp-live')), 'ses tanima sessizlikte kendiliginden duruyor');
+  await page.click('#sp-sr'); await page.waitForTimeout(30);
+  ok(!!(await page.$('.sp-live')), 'ses tanima tekrar basliyor');
   await page.click('#sp-sr'); await page.clock.runFor(50); await page.waitForTimeout(50);
   ok(!(await page.$('.sp-live')) && (await page.$eval('#sp-text', e => e.value)).includes('Purmerend'), 'ses tanima bitince metin korunuyor');
   await page.evaluate(() => { window.__srMode = 'deny'; });
@@ -351,6 +355,32 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   ok((await text('#toast')).includes('Yedek yüklendi'), 'yedek geri yukleniyor');
   await page.reload(); await page.waitForTimeout(300);
   ok((await text('#who')).includes('Burak') && (await text('#xp')) === xpBurak, 'yeniden acilista son profil ve ilerleme korunuyor');
+
+  /* ---------- 13b. yeni profil, ayarlarin kaliciligi, silme ---------- */
+  await page.click('#who'); await page.click('#who-add');
+  await page.click('#np-create');
+  ok((await text('#toast')).includes('isim'), 'isimsiz profil olusturulmuyor');
+  await page.fill('#np-name', 'Deniz'); await page.click('.chip.icon[data-i="👧🏻"]'); await page.click('[data-l=en]');
+  await page.click('#np-create');
+  ok((await text('#who')).includes('Deniz') && (await text('#tabs')).includes('Practice'), 'yeni profil olusturuldu ve secilen dille acildi');
+  await tab('me');
+  await page.fill('#s-date', '2027-03-15'); await page.dispatchEvent('#s-date', 'change');
+  await page.selectOption('#s-new', '20'); await page.selectOption('#s-goal', '50'); await page.selectOption('#s-rate', '0.8');
+  await page.uncheck('#s-tr'); await page.uncheck('#s-lt');
+  await page.reload(); await page.waitForTimeout(300);
+  await tab('me');
+  const setv = await page.evaluate(() => [document.querySelector('#s-date').value, document.querySelector('#s-new').value, document.querySelector('#s-goal').value, document.querySelector('#s-rate').value, document.querySelector('#s-tr').checked, document.querySelector('#s-lt').checked, lang()].join(','));
+  ok(setv === '2027-03-15,20,50,0.8,false,false,en', 'profil ayarlari yeniden acilista korunuyor', setv);
+  await page.click('#who'); await page.click('.who-btn[data-p=burak]'); await tab('me');
+  const burakSet = await page.evaluate(() => [document.querySelector('#s-new').value, document.querySelector('#s-tr').checked, lang()].join(','));
+  ok(burakSet === '10,true,tr', 'diger profilin ayarlari etkilenmedi', burakSet);
+  await page.click('#who');
+  ok(await count('.who-btn[data-p]') === 3, 'yeni profil listede');
+  const denizId = await page.$eval('.who-btn[data-p]:nth-child(3)', e => e.dataset.p);
+  await page.click(`.who-btn[data-p="${denizId}"]`); await tab('me');
+  await page.click('#s-del');
+  ok(await count('.who-btn[data-p]') === 2 && await page.evaluate(id => !localStorage.getItem('a2.state.v2.' + id), denizId), 'profil ve verisi silindi');
+  await page.click('.who-btn[data-p=burak]');
 
   /* ---------- 14. sozluk kapsami ---------- */
   ok(allUnknown.size === 0, 'tum ekranlardaki Hollandaca kelimelerin cevirisi var', [...allUnknown].slice(0, 30).join(' '));

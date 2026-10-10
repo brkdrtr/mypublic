@@ -17,7 +17,7 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 
 Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya İngilizce.
 
-- İki profil, Burak ve Bahu. İlerleme, ayarlar ve dil profil başına ayrı
+- Profiller. Burak ve Bahu hazır gelir, yeni profil eklenip silinebilir. İlerleme, ayarlar ve dil profil başına ayrı ve kalıcı
 - Woorden. 17 tema, 515 kelime, SM-2 tarzı aralıklı tekrar, de of het hız oyunu, yazarak test
 - Lezen, Luisteren. 16 metin, 16 diyalog. Her Hollandaca kelimeye dokununca çeviri, şıklarda basılı tut
 - Schrijven. Yazdığın metin düzeltilmiş haliyle ve kelime kelime farkla gelir. Sıra şöyle. Claude API anahtarı varsa Claude ile tam düzeltme ve puan. Yoksa anahtarsız ücretsiz LanguageTool ile yazım ve dilbilgisi düzeltmesi. İnternet yoksa de/het, fiil çekimi, yazım ve büyük harf için offline kurallar
