@@ -94,6 +94,20 @@ LOGS.nginxConf = [
   '}',
 ].join('\n') + '\n';
 
+/* Eklenti noktasi. Baska dosyalar buraya dosya, komut, process, servis ve man sayfasi ekler.
+   files: [{ path: '/etc/x', node: mkfile('...') }]  commands: { name: fn }  manual: { name: {d,u,e} } */
+const LAB_EXT = { files: [], commands: {}, procs: [], services: {}, manual: {}, hooks: [] };
+function registerExt(ext) {
+  if (ext.files) LAB_EXT.files.push(...ext.files);
+  if (ext.commands) Object.assign(LAB_EXT.commands, ext.commands);
+  if (ext.procs) LAB_EXT.procs.push(...ext.procs);
+  if (ext.services) Object.assign(LAB_EXT.services, ext.services);
+  if (ext.manual) Object.assign(LAB_EXT.manual, ext.manual);
+  if (ext.onReset) LAB_EXT.hooks.push(ext.onReset);
+}
+function allCommands() { return Object.assign({}, LAB_EXT.commands, COMMANDS); }
+function manualOf(name) { return MANUAL[name] || LAB_EXT.manual[name]; }
+
 function mkdir(children = {}, mode = 0o755, owner = 'root') {
   return { t: 'd', c: children, m: mode, o: owner, ts: Date.now() };
 }
@@ -305,6 +319,11 @@ class Shell {
         if (s.services) this.services = s.services;
         if (s.history) this.history = s.history;
         if (s.aliases) this.aliases = s.aliases;
+        if (s.crontab) this.crontab = s.crontab;
+        /* Eski kayitta olmayan eklenti dosyalari ve servisleri tamamlanir */
+        LAB_EXT.files.forEach(f => { if (!this.node(f.path)) this.install(f.path, f.node); });
+        LAB_EXT.procs.forEach(p => { if (!this.procs.some(x => x.pid === p.pid)) this.procs.push(Object.assign({}, p)); });
+        Object.keys(LAB_EXT.services).forEach(k => { if (!(k in this.services)) this.services[k] = LAB_EXT.services[k]; });
       } catch (e) { /* bozuk kayit, varsayilan kullan */ }
     }
   }
@@ -322,10 +341,28 @@ class Shell {
     this.lastSubmit = null;
     this.positional = [];
     this.depth = 0;
+    this.funcs = {};
+    this.crontab = '';
+    this.cronLog = [];
+    LAB_EXT.files.forEach(f => this.install(f.path, f.node));
+    this.procs.push(...LAB_EXT.procs.map(p => Object.assign({}, p)));
+    Object.assign(this.services, LAB_EXT.services);
+    LAB_EXT.hooks.forEach(h => h(this));
+  }
+
+  /* Eklenti dosyasini sanal dosya sistemine yerlestirir, ara dizinleri olusturur */
+  install(path, node) {
+    const parts = path.split('/').filter(Boolean);
+    let dir = this.root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!dir.c[parts[i]]) dir.c[parts[i]] = mkdir({}, 0o755, 'root');
+      dir = dir.c[parts[i]];
+    }
+    dir.c[parts[parts.length - 1]] = node;
   }
 
   serialize() {
-    return JSON.stringify({ fs: this.root, cwd: this.cwd, env: this.env, procs: this.procs, services: this.services, history: this.history.slice(-300), aliases: this.aliases });
+    return JSON.stringify({ fs: this.root, cwd: this.cwd, env: this.env, procs: this.procs, services: this.services, history: this.history.slice(-300), aliases: this.aliases, crontab: this.crontab });
   }
 
   get user() { return this.isRoot ? 'root' : USER; }
@@ -620,7 +657,7 @@ class Shell {
       const name = argv[0];
       const args = argv.slice(1);
       if (name.includes('/')) return this.runScript(name, args, true);
-      const fn = COMMANDS[name];
+      const fn = COMMANDS[name] || LAB_EXT.commands[name];
       if (!fn) {
         const hint = SUGGEST[name] ? `\n💡 ${SUGGEST[name]}` : '';
         return fail(`${name}: command not found${hint}`, 127);
@@ -666,7 +703,7 @@ class Shell {
     const last = parts[parts.length - 1];
     let cands;
     if (parts.length === 1) {
-      cands = Object.keys(COMMANDS).filter(c => c.startsWith(last));
+      cands = Object.keys(allCommands()).filter(c => c.startsWith(last));
       if (cands.length === 1) return text.slice(0, text.length - last.length) + cands[0] + ' ';
     } else {
       const slash = last.lastIndexOf('/');
@@ -1463,12 +1500,12 @@ const COMMANDS = {
   man(args) {
     const c = args[0];
     if (!c) return fail('What manual page do you want?');
-    const info = typeof MANUAL !== 'undefined' && MANUAL[c];
+    const info = manualOf(c);
     if (!info) return fail(`No manual entry for ${c}`, 16);
     return ok(`${c.toUpperCase()}(1)\n\nAD\n    ${c}. ${info.d}\n\nKULLANIM\n${info.u.map(u => '    ' + u).join('\n')}\n\nÖRNEKLER\n${info.e.map(e => '    $ ' + e).join('\n')}\n`);
   },
   help() {
-    return ok("Linux Lab shell'i. Desteklenen komutlar\n\n" + Object.keys(COMMANDS).filter(c => !c.startsWith('_')).sort().join('  ') + '\n\nBir komutun detayı için man komut yaz, örnek man grep\nPipe |, redirect > >> <, && || ; ve $(komut) destekleniyor.\n');
+    return ok("Linux Lab shell'i. Desteklenen komutlar\n\n" + Object.keys(allCommands()).filter(c => !c.startsWith('_')).sort().join('  ') + '\n\nBir komutun detayı için man komut yaz, örnek man grep\nPipe |, redirect > >> <, && || ; ve $(komut) destekleniyor.\n');
   },
 
   ps(args) {
@@ -1802,4 +1839,4 @@ const MANUAL = {
   submit: { d: "Lab'a özel, dedektif görevlerinde cevap gönderir", u: ['submit cevap'], e: ['submit 203.0.113.45'] },
 };
 
-if (typeof module !== 'undefined') module.exports = { Shell, LOGS, HOME, USER, lines, COMMANDS, MANUAL };
+if (typeof module !== 'undefined') module.exports = { Shell, LOGS, HOME, USER, lines, join, ok, fail, parseOpts, mkfile, mkdir, COMMANDS, MANUAL, LAB_EXT, registerExt, readInputs };
