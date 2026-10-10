@@ -8,10 +8,16 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 
 - Sanal dosya sistemi, pipe, `>` `>>` `<` `2>` yönlendirme, `&&` `||` `;`, değişkenler, `$(komut)`, glob, script çalıştırma, alias
 - 100'e yakın komut. `ls grep awk sed sort uniq cut tr find chmod sudo ps kill systemctl journalctl ip ss ping dig curl tee nano` ve fazlası
-- 12 bölüm, 100'den fazla görev. Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script, bash programlama, vim, git
+- Masaüstü ve iPad'de sol tarafta terminal, sağ panelde görev, adımlar, kısayollar, bölümler, quiz, sözlük ve profil. iPhone'da sekmeli tek sütun
+- Profiller. Birden fazla profil, her biri kendi filesystem ve ilerlemesiyle. Cihazlar arası senkron için GitHub Gist, sadece gist yetkili bir token yeter, token cihazda kalır
+- Görev bitince popup yok. Terminalde ✔ satırı, panelde tamamlandı kutusu ve 2 saniye sonra sıradaki görev. Profil'den kapatılabilir
+- Adımlar. Her görevin çözümü adım listesi olarak panelde, kullandığın komutlar otomatik işaretlenir, Göster ile açılır, yaz ile terminale yazılır
+- 14 bölüm, 124 görev. Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script, bash programlama, vim, git
 - Gerçekçi senaryolar. Bozuk nginx config'ini bulup düzeltmek, cryptominer süreci, auth.log içinden ssh brute force analizi, /tmp altındaki backdoor
 - Bash bölümü. if, for, while, case, function, exit code ile gerçek script'ler, crontab ve `cron-tick` ile cron simülasyonu
 - Vim bölümü. Gerçek tuş sırasıyla çalışan vim modeli, `:wq` `dd` `yy` `p` `/` `:%s`
+- SD-WAN TAC bölümü. Branch jump box'ında ION event log, path MTU, tcpdump pcap okuma, policy routing, iptables ile engellenen hub trafiği, DNS yanlış resolver, strongSwan NO_PROPOSAL_CHOSEN, openssl ile expired cert. 12 görev, kök neden raporu ile biter
+- Netops bölümü. ethtool, ARP, ip_forward, sysctl, conntrack, nft masquerade, mtr, policy table. 10 görev
 - Git bölümü. Network config repo'sunda `git log`, `blame`, `diff`, `stash`, `bisect` ile kötü commit'i bulma ve düzeltme
 - Günün görevleri. Her gün 3 görev, tamamlayınca bonus XP
 - Zorluk. Guided görev ve ipucu açık, normal, expert görev metni gizli ve XP artırılmış
@@ -48,10 +54,11 @@ Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya 
 ```
 python3 -m http.server 8765 &
 node tests/linux.test.js
+NODE_PATH=$(npm root -g) node tests/linux.e2e.js
 NODE_PATH=$(npm root -g) node tests/a2.e2e.js
 ```
 
-A2 testi Playwright ile iPhone 13 ekranında her ekranı, her içerik öğesini, iki dili, iki profili, yedeklemeyi ve sahte API yanıtıyla Claude düzeltme akışını çalıştırır.
+Linux arayüz testi masaüstü ve iPhone düzenini, otomatik görev geçişini, profilleri ve sahte GitHub API ile iki cihaz arası senkronu çalıştırır. A2 testi Playwright ile iPhone 13 ekranında her ekranı, her içerik öğesini, iki dili, iki profili, yedeklemeyi ve sahte API yanıtıyla Claude düzeltme akışını çalıştırır.
 
 ## Yayınlama
 
