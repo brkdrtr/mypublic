@@ -33,6 +33,9 @@ WORDS.forEach(w => { const k = w.bare.toLowerCase(); if (!DICT.has(k)) DICT.set(
   });
 });
 
+const LEX = new Map();
+if (typeof LEXICON !== 'undefined') LEXICON.trim().split('\n').forEach(l => { const i = l.indexOf('|'); if (i > 0) LEX.set(l.slice(0, i).trim(), l.slice(i + 1).trim()); });
+
 /* ---------- durum ---------- */
 
 const KEY = 'a2.state.v1';
@@ -175,7 +178,8 @@ function Home() {
     { ok: S.day.lezen > 0, t: '1 okuma metni', s: 'Lezen', go: () => open(PickNext, 'lezen') },
     { ok: S.day.luisteren > 0, t: '1 dinleme', s: 'Luisteren', go: () => open(PickNext, 'luisteren') },
     { ok: S.day.knm >= 5, t: '5 KNM sorusu', s: `${S.day.knm}/5 bugün`, go: () => open(KnmQuiz, null, 5) },
-    new Date().getDay() % 2 ? { ok: S.day.out > 0, t: 'Konuşma pratiği', s: 'Spreken', go: () => open(PickNext, 'spreken') } : { ok: S.day.out > 0, t: 'Yazma pratiği', s: 'Schrijven', go: () => open(PickNext, 'schrijven') },
+    { ok: S.day.spreken > 0, t: '1 konuşma sorusu', s: 'Spreken · kaydet ve dinle', go: () => open(PickNext, 'spreken') },
+    { ok: S.day.schrijven > 0, t: '1 yazma görevi', s: 'Schrijven', go: () => open(PickNext, 'schrijven') },
   ];
   const doneN = plan.filter(p => p.ok).length;
   let h = `<div class="card hero"><div class="muted">${dte === null ? 'Sınav tarihini Profiel sekmesinden gir' : dte > 0 ? 'Sınava kalan' : dte === 0 ? 'Sınav bugün, succes!' : 'Sınav tarihi geçti'}</div>`;
@@ -265,7 +269,7 @@ function Flash(themes, reverse) {
     const front = reverse ? `<div class="tr" style="margin:0">${esc(w.tr)}</div>` : `<div class="w">${w.art ? `<span class="art ${w.art}">${w.art}</span> ` : ''}${esc(w.bare)}</div>`;
     const backSide = reverse ? `<div class="w" style="margin-top:12px">${w.art ? `<span class="art ${w.art}">${w.art}</span> ` : ''}${esc(w.bare)}</div>` : `<div class="tr">${esc(w.tr)}</div>`;
     let h = backBtn() + `<div class="qhead"><span>${isNew ? '🆕 yeni kelime' : '🔁 tekrar'}</span><span>${queue.length + 1} kaldı</span></div>`;
-    h += `<div class="card flash" id="f-card">${front}${shown ? backSide + (w.ex ? `<div class="ex">${esc(w.ex)}</div>` : '') : '<div class="muted small" style="margin-top:18px">Cevabı görmek için dokun</div>'}</div>`;
+    h += `<div class="card flash" id="f-card">${front}${shown ? backSide + (w.ex ? `<div class="ex">${tw(w.ex)}</div>` : '') : '<div class="muted small" style="margin-top:18px">Cevabı görmek için dokun</div>'}</div>`;
     h += `<div class="row" style="justify-content:center;margin-bottom:12px"><button class="spk" id="f-say">🔊 kelime</button>${w.ex ? '<button class="spk" id="f-ex">🔊 cümle</button>' : ''}</div>`;
     if (shown) {
       const c = S.srs[w.key];
@@ -380,7 +384,7 @@ function Practice() {
   h += `<button class="tile" data-go="spreken"><div class="e">🗣️</div><div class="t">Spreken</div><div class="s">Konuşma · ${prog('spreken', SPREKEN)}</div></button>`;
   h += `<button class="tile" data-go="knm"><div class="e">🏛️</div><div class="t">KNM</div><div class="s">Toplum bilgisi · ${KNM.length} soru</div></button>`;
   h += `<button class="tile" data-go="gram"><div class="e">🔧</div><div class="t">Grammatica</div><div class="s">${GRAMMAR.length} ders + fiil çekimi</div></button>`;
-  h += '</div>';
+  h += '</div><p class="small muted" style="margin-top:14px">Hollandaca her kelimeye dokununca Türkçesi çıkar. Cevap şıklarında kelimeye basılı tut.</p>';
   view(h);
   $$('[data-go]').forEach(b => b.onclick = () => {
     const k = b.dataset.go;
@@ -417,12 +421,12 @@ function mcBlock(container, questions, opts = {}) {
   const draw = () => {
     let h = '';
     prepared.forEach((q, qi) => {
-      h += `<div class="card"><div class="q">${qi + 1}. ${esc(q.q)}</div>${q.tr && S.set.showTr ? `<div class="qtr">${esc(q.tr)}</div>` : ''}`;
+      h += `<div class="card"><div class="q">${qi + 1}. ${tw(q.q)}</div>${q.tr && S.set.showTr ? `<div class="qtr">${esc(q.tr)}</div>` : ''}`;
       q.opts.forEach((o, oi) => {
         let cls = '';
         if (checked) { if (oi === q.c) cls = 'right'; else if (answers[qi] === oi) cls = 'wrong'; }
         else if (answers[qi] === oi) cls = 'sel';
-        h += `<button class="opt ${cls}" data-q="${qi}" data-o="${oi}">${esc(o)}</button>`;
+        h += `<button class="opt ${cls}" data-q="${qi}" data-o="${oi}">${tw(o)}</button>`;
       });
       if (checked && q.ex) h += `<div class="ex">💡 ${esc(q.ex)}</div>`;
       h += '</div>';
@@ -441,11 +445,23 @@ function mcBlock(container, questions, opts = {}) {
   draw();
 }
 
-function wordWrap(text) {
-  return esc(text).replace(/([A-Za-zÀ-ÿ'-]+)/g, w => {
-    const k = w.toLowerCase().replace(/^'|'$/g, '');
-    return `<span class="wd${DICT.has(k) ? ' known' : ''}" data-w="${esc(k)}">${w}</span>`;
-  });
+/* Hollandaca metni dokunulabilir kelimelere boler. Ham metin parcalanir, her parca ayri escape edilir */
+const WORD_RE = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'-]*)/;
+function tw(text) {
+  return String(text == null ? '' : text).split(WORD_RE).map((part, i) => {
+    if (i % 2 === 0) return esc(part);
+    const k = part.toLowerCase().replace(/'s$/, '').replace(/-$/, '');
+    return `<span class="wd${lookup(k) ? ' known' : ''}" data-w="${esc(k)}">${esc(part)}</span>`;
+  }).join('');
+}
+const wordWrap = tw;
+function lookup(k) {
+  if (!k) return null;
+  const d = DICT.get(k);
+  if (d) return { nl: d.nl, tr: d.tr };
+  if (LEX.has(k)) return { nl: k, tr: LEX.get(k) };
+  if (k.includes('-')) { const parts = k.split('-').map(x => lookup(x)).filter(Boolean); if (parts.length) return { nl: k, tr: parts.map(x => x.tr.split(' · ')[0]).join(' + ') }; }
+  return null;
 }
 function showPop(html) { const p = $('#pop'); p.innerHTML = html; p.classList.remove('hidden'); clearTimeout(showPop.tm); showPop.tm = setTimeout(hidePop, 3500); }
 function hidePop() { const p = $('#pop'); if (p) p.classList.add('hidden'); }
@@ -453,15 +469,9 @@ function hidePop() { const p = $('#pop'); if (p) p.classList.add('hidden'); }
 function Lezen(id) {
   const x = LEZEN.find(l => l.id === id);
   const idx = LEZEN.indexOf(x);
-  let h = backBtn('Lezen') + `<div class="card doc"><div class="type">${esc(x.type)}</div><div style="font-weight:800;font-size:18px;margin:4px 0 8px">${esc(x.title)}</div><div class="reading" id="lz-text">${wordWrap(x.text)}</div><div class="row" style="margin-top:10px"><button class="spk" id="lz-say">🔊 Sesli oku</button><span class="small muted">Altı noktalı kelimelere dokun, anlamını gör</span></div></div><div id="lz-q"></div><div id="lz-after"></div>`;
+  let h = backBtn('Lezen') + `<div class="card doc"><div class="type">${esc(x.type)}</div><div style="font-weight:800;font-size:18px;margin:4px 0 8px">${tw(x.title)}</div><div class="reading" id="lz-text">${tw(x.text)}</div><div class="row" style="margin-top:10px"><button class="spk" id="lz-say">🔊 Sesli oku</button><span class="small muted">Altı noktalı kelimelere dokun, anlamını gör</span></div></div><div id="lz-q"></div><div id="lz-after"></div>`;
   view(h);
   $('#lz-say').onclick = () => TTS.speak(x.text.replace(/\n+/g, '. '));
-  $('#lz-text').onclick = e => {
-    const w = e.target.closest('.wd'); if (!w) return;
-    const d = DICT.get(w.dataset.w);
-    showPop(d ? `<b>${esc(d.nl)}</b> · ${esc(d.tr)}` : `<b>${esc(w.dataset.w)}</b> · sözlükte yok`);
-    TTS.speak(w.textContent);
-  };
   mcBlock($('#lz-q'), x.questions, { onDone: (r, t, res) => {
     res.forEach(ok => stat('lezen', ok));
     if (!S.done.lezen.includes(x.id)) S.done.lezen.push(x.id);
@@ -483,7 +493,7 @@ function Luisteren(id, examMode) {
   let plays = 0; let answered = false; let playing = false;
   const maxPlays = examMode ? 2 : Infinity;
   const draw = () => {
-    let h = backBtn('Luisteren') + `<div class="card"><div style="font-weight:800;font-size:18px">${esc(x.title)}</div><div class="muted small">${esc(x.setting)}</div><div class="player" style="margin-top:12px"><button class="play" id="lu-play">${playing ? '■' : '▶'}</button><div><div style="font-weight:700">${playing ? 'Dinleniyor...' : plays ? 'Tekrar dinle' : 'Dinle'}</div><div class="small muted">${plays} kez dinlendi${examMode ? ' · en fazla 2' : ''}</div></div></div></div>`;
+    let h = backBtn('Luisteren') + `<div class="card"><div style="font-weight:800;font-size:18px">${tw(x.title)}</div><div class="muted small">${tw(x.setting)}</div><div class="player" style="margin-top:12px"><button class="play" id="lu-play">${playing ? '■' : '▶'}</button><div><div style="font-weight:700">${playing ? 'Dinleniyor...' : plays ? 'Tekrar dinle' : 'Dinle'}</div><div class="small muted">${plays} kez dinlendi${examMode ? ' · en fazla 2' : ''}</div></div></div></div>`;
     h += `<div id="lu-q"></div><div id="lu-tr"></div><div id="lu-after"></div>`;
     view(h);
     $('#lu-play').onclick = () => {
@@ -503,7 +513,7 @@ function Luisteren(id, examMode) {
   };
   const transcript = () => {
     let h = '<h3>Metin</h3>';
-    x.lines.forEach((l, i) => { h += `<div class="line ${l.g}" data-i="${i}"><div class="who">${esc(l.s)}</div>${esc(l.t)}</div>`; });
+    x.lines.forEach((l, i) => { h += `<div class="line ${l.g}" data-i="${i}"><div class="who">${esc(l.s)}</div>${tw(l.t)}</div>`; });
     $('#lu-tr').innerHTML = h;
     $$('#lu-tr .line').forEach(el => el.onclick = () => { const l = x.lines[+el.dataset.i]; TTS.speak(l.t, l.g); });
   };
@@ -517,10 +527,10 @@ function Schrijven(id) {
   const draftKey = 'a2.draft.' + id;
   let draft = {};
   try { draft = JSON.parse(localStorage.getItem(draftKey) || '{}'); } catch (e) { draft = {}; }
-  let h = backBtn('Schrijven') + `<div class="card"><div class="small muted">${x.kind === 'formulier' ? 'Formulier' : 'Bericht'}</div><div style="font-weight:800;font-size:18px">${esc(x.title)}</div><p>${esc(x.prompt)}</p>${S.set.showTr ? `<p class="small muted">${esc(x.tr)}</p>` : ''}</div>`;
+  let h = backBtn('Schrijven') + `<div class="card"><div class="small muted">${x.kind === 'formulier' ? 'Formulier' : 'Bericht'}</div><div style="font-weight:800;font-size:18px">${tw(x.title)}</div><p>${tw(x.prompt)}</p>${S.set.showTr ? `<p class="small muted">${esc(x.tr)}</p>` : ''}</div>`;
   h += '<div class="card">';
   if (x.fields && x.fields.length) {
-    x.fields.forEach((f, i) => { h += `<div class="field"><label>${esc(f.label)}</label>${f.long ? `<textarea rows="3" data-f="${i}" placeholder="${esc(f.hint || '')}">${esc(draft['f' + i] || '')}</textarea>` : `<input data-f="${i}" placeholder="${esc(f.hint || '')}" value="${esc(draft['f' + i] || '')}">`}</div>`; });
+    x.fields.forEach((f, i) => { h += `<div class="field"><label>${tw(f.label)}</label>${f.long ? `<textarea rows="3" data-f="${i}" placeholder="${esc(f.hint || '')}">${esc(draft['f' + i] || '')}</textarea>` : `<input data-f="${i}" placeholder="${esc(f.hint || '')}" value="${esc(draft['f' + i] || '')}">`}</div>`; });
   }
   if (x.kind !== 'formulier' || !x.fields || !x.fields.length) h += `<textarea class="answer" id="sc-text" placeholder="Schrijf hier..." autocapitalize="sentences">${esc(draft.text || '')}</textarea><div class="small muted" id="sc-count"></div>`;
   h += `<button class="btn block" id="sc-check" style="margin-top:10px">Kontrol et</button></div><div id="sc-res"></div>`;
@@ -540,7 +550,7 @@ function Schrijven(id) {
       const empty = fields.filter(f => !f).length;
       r += chk(empty === 0, empty ? `${empty} alan boş` : 'Tüm alanlar dolu');
       okAll = okAll && empty === 0;
-      x.fields.forEach((f, i) => { if (f.long) { const v = fields[i]; const sentence = /^[A-ZÀ-Ý]/.test(v) && /[.!?]$/.test(v) && wc(v) >= 4; r += chk(sentence, `${esc(f.label)} tam cümle mi, büyük harfle başlayıp noktayla bitiyor mu`); okAll = okAll && sentence; } });
+      x.fields.forEach((f, i) => { if (f.long) { const v = fields[i]; const sentence = /^[A-ZÀ-Ý]/.test(v) && /[.!?]$/.test(v) && wc(v) >= 4; r += chk(sentence, `${tw(f.label)} tam cümle mi, büyük harfle başlayıp noktayla bitiyor mu`); okAll = okAll && sentence; } });
     }
     if (x.points && x.points.length) {
       x.points.forEach(p => { let ok = false; try { ok = new RegExp(p.re, 'i').test(text); } catch (e) { ok = false; } okAll = okAll && ok; r += chk(ok, `${esc(p.label)} · ${esc(p.tr || '')}`); });
@@ -554,14 +564,14 @@ function Schrijven(id) {
       r += chk(endOk, 'Son satır noktalama veya isimle bitiyor');
     }
     r += `<p class="small muted">Makine kontrolü sadece istenen noktaları arar. Dil bilgisini örnek cevapla kendin karşılaştır.</p></div>`;
-    r += `<div class="card"><div class="row"><div style="font-weight:800">Örnek cevap</div><button class="spk" id="sc-say" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${esc(x.model)}</div></div>`;
+    r += `<div class="card"><div class="row"><div style="font-weight:800">Örnek cevap</div><button class="spk" id="sc-say" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
     r += `<div class="row" style="justify-content:center"><button class="btn alt" id="sc-back">Listeye dön</button>${SCHRIJVEN[idx + 1] ? '<button class="btn" id="sc-next">Sonraki ›</button>' : ''}</div>`;
     $('#sc-res').innerHTML = r;
     $('#sc-say').onclick = () => TTS.speak(x.model.replace(/\n+/g, '. '));
     $('#sc-back').onclick = back;
     const n = $('#sc-next'); if (n) n.onclick = () => { stack.pop(); open(Schrijven, SCHRIJVEN[idx + 1].id); };
     if (!S.done.schrijven.includes(x.id)) S.done.schrijven.push(x.id);
-    rollDay(); S.day.out++; activity(okAll ? 15 : 8); save();
+    rollDay(); S.day.out++; S.day.schrijven = (S.day.schrijven || 0) + 1; activity(okAll ? 15 : 8); save();
     $('#sc-res').scrollIntoView({ behavior: 'smooth' });
   };
 }
@@ -579,13 +589,13 @@ function Spreken(id) {
   const limit = x.part === 3 ? 60 : x.part === 2 ? 30 : 30;
   const draw = () => {
     const recording = rec && rec.mr && rec.mr.state === 'recording';
-    let h = backBtn('Spreken') + `<div class="card"><div class="small muted">Deel ${x.part} · ${['', 'Kısa cevap', 'Duruma tepki', 'Fikir ve açıklama'][x.part]}</div><div style="font-weight:800;font-size:19px;margin:6px 0">${esc(x.prompt)}</div>${S.set.showTr ? `<div class="small muted">${esc(x.tr)}</div>` : ''}<div class="row" style="margin-top:10px"><button class="spk" id="sp-say">🔊 Soruyu dinle</button></div></div>`;
+    let h = backBtn('Spreken') + `<div class="card"><div class="small muted">Deel ${x.part} · ${['', 'Kısa cevap', 'Duruma tepki', 'Fikir ve açıklama'][x.part]}</div><div style="font-weight:800;font-size:19px;margin:6px 0">${tw(x.prompt)}</div>${S.set.showTr ? `<div class="small muted">${esc(x.tr)}</div>` : ''}<div class="row" style="margin-top:10px"><button class="spk" id="sp-say">🔊 Soruyu dinle</button></div></div>`;
     h += `<div class="card center"><button class="rec ${recording ? 'on' : ''}" id="sp-rec">${recording ? '■' : '🎙️'}</button><div style="margin-top:8px;font-weight:700" class="timer">${recording ? secs + ' / ' + limit + ' sn' : audioURL ? 'Kaydın hazır' : 'Kayda başla'}</div>`;
     if (audioURL) h += `<audio controls src="${audioURL}" style="width:100%;margin-top:10px"></audio>`;
     if (transcript) h += `<div class="ex" style="text-align:left;margin-top:10px"><b>Tanınan metin</b><br>${esc(transcript)}</div>`;
     h += `<p class="small muted">İpucu ${esc(x.tip || '')}</p></div>`;
     h += `<button class="btn ${showModel ? 'alt' : ''} block" id="sp-model">${showModel ? 'Örnek cevabı gizle' : 'Örnek cevabı göster'}</button>`;
-    if (showModel) h += `<div class="card" style="margin-top:10px"><div class="row"><b>Örnek cevap</b><button class="spk" id="sp-msay" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${esc(x.model)}</div></div>`;
+    if (showModel) h += `<div class="card" style="margin-top:10px"><div class="row"><b>Örnek cevap</b><button class="spk" id="sp-msay" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
     h += `<div class="row" style="justify-content:center;margin-top:12px"><button class="btn alt" id="sp-done">✅ Yaptım</button>${SPREKEN[idx + 1] ? '<button class="btn" id="sp-next">Sonraki ›</button>' : ''}</div>`;
     view(h);
     $('#sp-say').onclick = () => TTS.speak(x.prompt, 'm');
@@ -595,7 +605,7 @@ function Spreken(id) {
     $('#sp-done').onclick = markDone;
     const nx = $('#sp-next'); if (nx) nx.onclick = () => { markDone(); stack.pop(); open(Spreken, SPREKEN[idx + 1].id); };
   };
-  const markDone = () => { if (!S.done.spreken.includes(x.id)) S.done.spreken.push(x.id); rollDay(); S.day.out++; activity(10); save(); toast('Kaydedildi 👍'); };
+  const markDone = () => { if (!S.done.spreken.includes(x.id)) S.done.spreken.push(x.id); rollDay(); S.day.out++; S.day.spreken = (S.day.spreken || 0) + 1; activity(10); save(); toast('Kaydedildi 👍'); };
   const toggle = async () => {
     if (rec && rec.mr && rec.mr.state === 'recording') { rec.mr.stop(); return; }
     TTS.stop();
@@ -655,8 +665,8 @@ function KnmQuiz(theme, n) {
     const q = qs[i];
     const order = shuffle(q.a.map((_, j) => j));
     let answered = false;
-    let h = backBtn() + `<div class="qhead"><span>${i + 1}/${qs.length} · ${esc(KNM_THEMES[q.theme] || '')}</span><span>✓ ${right}</span></div><div class="card"><div class="q">${esc(q.q)}</div>${S.set.showTr ? `<div class="qtr">${esc(q.tr || '')}</div>` : ''}`;
-    order.forEach(j => { h += `<button class="opt" data-j="${j}">${esc(q.a[j])}</button>`; });
+    let h = backBtn() + `<div class="qhead"><span>${i + 1}/${qs.length} · ${esc(KNM_THEMES[q.theme] || '')}</span><span>✓ ${right}</span></div><div class="card"><div class="q">${tw(q.q)}</div>${S.set.showTr ? `<div class="qtr">${esc(q.tr || '')}</div>` : ''}`;
+    order.forEach(j => { h += `<button class="opt" data-j="${j}">${tw(q.a[j])}</button>`; });
     h += '<div id="kq-ex"></div></div><div id="kq-next"></div>';
     view(h);
     $$('.opt').forEach(b => b.onclick = () => {
@@ -705,8 +715,8 @@ function GramDrill(id) {
     const d = items[i];
     const order = shuffle(d.a.map((_, j) => j));
     let answered = false;
-    let h = backBtn() + `<div class="qhead"><span>${i + 1}/${items.length}</span><span>✓ ${right}</span></div><div class="card"><div class="q" style="font-size:20px">${esc(d.q).replace(/_{2,}/g, '<span style="border-bottom:2px solid var(--brand);padding:0 18px"></span>')}</div><div style="height:8px"></div>`;
-    order.forEach(j => { h += `<button class="opt" data-j="${j}">${esc(d.a[j])}</button>`; });
+    let h = backBtn() + `<div class="qhead"><span>${i + 1}/${items.length}</span><span>✓ ${right}</span></div><div class="card"><div class="q" style="font-size:20px">${tw(d.q).replace(/_{2,}/g, '<span style="border-bottom:2px solid var(--brand);padding:0 18px"></span>')}</div><div style="height:8px"></div>`;
+    order.forEach(j => { h += `<button class="opt" data-j="${j}">${tw(d.a[j])}</button>`; });
     h += '<div id="gd-ex"></div></div><div id="gd-next"></div>';
     view(h);
     $$('.opt').forEach(b => b.onclick = () => {
@@ -766,7 +776,7 @@ function VerbDrill() {
     const opts = shuffle([correct].concat(pick([...wrongs].filter(w => w && w !== correct), 3)));
     let answered = false;
     let h = backBtn() + `<div class="qhead"><span>${i + 1}/${total}</span><span>✓ ${right}</span></div><div class="card center"><div class="muted">${esc(v.tr)}</div><div style="font-size:28px;font-weight:800">${esc(v.inf)}</div><div class="chips" style="justify-content:center;margin-top:8px"><span class="chip on">${esc(tl)}</span><span class="chip">${p}</span></div></div>`;
-    opts.forEach(o => { h += `<button class="opt" data-o="${esc(o)}">${esc(p)} ${esc(o)}</button>`; });
+    opts.forEach(o => { h += `<button class="opt" data-o="${esc(o)}">${tw(p + ' ' + o)}</button>`; });
     h += '<div id="vd-next"></div>';
     view(h);
     $$('.opt').forEach(b => b.onclick = () => {
@@ -837,14 +847,14 @@ function ExamMC(name, qs, sec) {
       const ok = answers[k] === 0;
       stat('knm', ok);
       if (ok) r++;
-      else { if (!S.knmWrong.includes(q.id)) S.knmWrong.push(q.id); rev += `<div class="card"><div class="q">${esc(q.q)}</div><div class="small" style="color:var(--good)">✓ ${esc(q.a[0])}</div>${answers[k] !== null ? `<div class="small" style="color:var(--bad)">✕ ${esc(q.a[answers[k]])}</div>` : '<div class="small muted">boş bırakıldı</div>'}${q.ex ? `<div class="ex">${esc(q.ex)}</div>` : ''}</div>`; }
+      else { if (!S.knmWrong.includes(q.id)) S.knmWrong.push(q.id); rev += `<div class="card"><div class="q">${tw(q.q)}</div><div class="small" style="color:var(--good)">✓ ${tw(q.a[0])}</div>${answers[k] !== null ? `<div class="small" style="color:var(--bad)">✕ ${tw(q.a[answers[k]])}</div>` : '<div class="small muted">boş bırakıldı</div>'}${q.ex ? `<div class="ex">${esc(q.ex)}</div>` : ''}</div>`; }
     });
     finishExam(name, r, qs.length, r === qs.length ? '' : rev);
   };
   const draw = () => {
     const q = qs[i];
-    let h = `<div class="qhead"><span>${i + 1}/${qs.length}</span><span class="timer" id="ex-clock"></span></div><div class="card"><div class="q">${esc(q.q)}</div>`;
-    orders[i].forEach(j => { h += `<button class="opt ${answers[i] === j ? 'sel' : ''}" data-j="${j}">${esc(q.a[j])}</button>`; });
+    let h = `<div class="qhead"><span>${i + 1}/${qs.length}</span><span class="timer" id="ex-clock"></span></div><div class="card"><div class="q">${tw(q.q)}</div>`;
+    orders[i].forEach(j => { h += `<button class="opt ${answers[i] === j ? 'sel' : ''}" data-j="${j}">${tw(q.a[j])}</button>`; });
     h += `</div><div class="row" style="justify-content:space-between"><button class="btn alt" id="ex-prev" ${i === 0 ? 'disabled' : ''}>‹ Önceki</button><span class="small muted">${answers.filter(a => a !== null).length} cevaplandı</span>${i < qs.length - 1 ? '<button class="btn" id="ex-next">Sonraki ›</button>' : '<button class="btn" id="ex-end">Bitir</button>'}</div>`;
     const keep = $('#ex-clock') ? $('#ex-clock').textContent : '';
     view(h);
@@ -862,7 +872,7 @@ function ExamLezen() {
   const texts = pick(LEZEN, 5);
   const container = document.createElement('div');
   let h = backBtn('Examen') + '<div class="qhead"><span>Lezen deneme</span><span class="timer" id="ex-clock"></span></div>';
-  texts.forEach((x, k) => { h += `<div class="card doc"><div class="type">Tekst ${k + 1} · ${esc(x.type)}</div><div style="font-weight:800;margin:4px 0 8px">${esc(x.title)}</div><div class="reading">${esc(x.text)}</div></div><div id="exl-${k}"></div>`; });
+  texts.forEach((x, k) => { h += `<div class="card doc"><div class="type">Tekst ${k + 1} · ${esc(x.type)}</div><div style="font-weight:800;margin:4px 0 8px">${tw(x.title)}</div><div class="reading">${tw(x.text)}</div></div><div id="exl-${k}"></div>`; });
   h += '<button class="btn block" id="exl-end">Bitir ve puanla</button>';
   view(h);
   void container;
@@ -871,13 +881,13 @@ function ExamLezen() {
     const el = $('#exl-' + k);
     const qs = x.questions.map(q => { const order = shuffle(q.a.map((_, j) => j)); return { q, order, ans: null }; });
     all.push(...qs);
-    el.innerHTML = qs.map((o, qi) => `<div class="card"><div class="q">${esc(o.q.q)}</div>${o.order.map(j => `<button class="opt" data-k="${k}" data-qi="${qi}" data-j="${j}">${esc(o.q.a[j])}</button>`).join('')}</div>`).join('');
+    el.innerHTML = qs.map((o, qi) => `<div class="card"><div class="q">${tw(o.q.q)}</div>${o.order.map(j => `<button class="opt" data-k="${k}" data-qi="${qi}" data-j="${j}">${tw(o.q.a[j])}</button>`).join('')}</div>`).join('');
     el.querySelectorAll('.opt').forEach(b => b.onclick = () => { qs[+b.dataset.qi].ans = +b.dataset.j; el.querySelectorAll(`.opt[data-qi="${b.dataset.qi}"]`).forEach(o => o.classList.toggle('sel', o === b)); });
   });
   const finish = () => {
     stopTimers();
     let r = 0; let rev = '<h3>Yanlışlar</h3>';
-    all.forEach(o => { const ok = o.ans === 0; stat('lezen', ok); if (ok) r++; else rev += `<div class="card"><div class="q">${esc(o.q.q)}</div><div class="small" style="color:var(--good)">✓ ${esc(o.q.a[0])}</div></div>`; });
+    all.forEach(o => { const ok = o.ans === 0; stat('lezen', ok); if (ok) r++; else rev += `<div class="card"><div class="q">${tw(o.q.q)}</div><div class="small" style="color:var(--good)">✓ ${tw(o.q.a[0])}</div></div>`; });
     finishExam('Lezen deneme', r, all.length, r === all.length ? '' : rev);
   };
   $('#exl-end').onclick = () => { if (confirm('Deneme bitirilsin mi?')) finish(); };
@@ -893,7 +903,7 @@ function ExamLuisteren() {
     const qs = x.questions.map(q => { const order = shuffle(q.a.map((_, j) => j)); return { q, order, ans: null }; });
     const draw = () => {
       let h = backBtn('Examen') + `<div class="qhead"><span>Fragment ${k + 1}/${items.length}</span><span>${plays}/2 dinleme</span></div><div class="card"><div class="muted small">${esc(x.setting)}</div><div class="player" style="margin-top:10px"><button class="play" id="el-play" ${plays >= 2 && !playing ? 'disabled style="opacity:.4"' : ''}>${playing ? '■' : '▶'}</button><div class="small muted">Önce soruları oku, sonra dinle.</div></div></div>`;
-      h += qs.map((o, qi) => `<div class="card"><div class="q">${esc(o.q.q)}</div>${o.order.map(j => `<button class="opt ${o.ans === j ? 'sel' : ''}" data-qi="${qi}" data-j="${j}">${esc(o.q.a[j])}</button>`).join('')}</div>`).join('');
+      h += qs.map((o, qi) => `<div class="card"><div class="q">${tw(o.q.q)}</div>${o.order.map(j => `<button class="opt ${o.ans === j ? 'sel' : ''}" data-qi="${qi}" data-j="${j}">${tw(o.q.a[j])}</button>`).join('')}</div>`).join('');
       h += `<button class="btn block" id="el-next">${k === items.length - 1 ? 'Bitir' : 'Sonraki fragment ›'}</button>`;
       view(h);
       $('#el-play').onclick = () => {
@@ -910,7 +920,7 @@ function ExamLuisteren() {
         if (k < items.length) run();
         else {
           let r = 0; let rev = '<h3>Yanlışlar</h3>';
-          results.forEach(o => { const ok = o.ans === 0; stat('luisteren', ok); if (ok) r++; else rev += `<div class="card"><div class="q">${esc(o.q.q)}</div><div class="small" style="color:var(--good)">✓ ${esc(o.q.a[0])}</div></div>`; });
+          results.forEach(o => { const ok = o.ans === 0; stat('luisteren', ok); if (ok) r++; else rev += `<div class="card"><div class="q">${tw(o.q.q)}</div><div class="small" style="color:var(--good)">✓ ${tw(o.q.a[0])}</div></div>`; });
           finishExam('Luisteren deneme', r, results.length, r === results.length ? '' : rev);
         }
       };
@@ -967,7 +977,32 @@ function Me() {
 /* ---------- baslat ---------- */
 
 $$('#tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.t));
-document.addEventListener('click', e => { if (!e.target.closest('.reading') && !e.target.closest('#pop')) hidePop(); });
+/* Kelimeye dokununca ceviri. Cevaplanmamis siktaki kelime icin basili tut, normal dokunus sikki secer */
+function showWord(el) {
+  const k = el.dataset.w;
+  const d = lookup(k);
+  showPop(d ? `<b>${esc(el.textContent)}</b> · ${esc(d.tr)}` : `<b>${esc(el.textContent)}</b> · sözlükte yok`);
+  TTS.speak(el.textContent);
+}
+let pressTimer = null, pressFired = false;
+document.addEventListener('pointerdown', e => {
+  const w = e.target.closest('.wd');
+  pressFired = false;
+  if (!w || !w.closest('.opt')) return;
+  pressTimer = setTimeout(() => { pressFired = true; showWord(w); vib(10); }, 450);
+});
+['pointerup', 'pointercancel', 'pointermove'].forEach(ev => document.addEventListener(ev, e => { if (ev === 'pointermove' && Math.abs(e.movementY || 0) < 4) return; clearTimeout(pressTimer); }));
+document.addEventListener('click', e => {
+  if (pressFired) { pressFired = false; e.stopPropagation(); e.preventDefault(); return; }
+  const w = e.target.closest('.wd');
+  if (w) {
+    const opt = w.closest('.opt');
+    const answered = opt && !!opt.parentElement.querySelector('.opt.right');
+    if (!opt || answered) { e.stopPropagation(); e.preventDefault(); showWord(w); return; }
+  }
+  if (!e.target.closest('#pop')) hidePop();
+}, true);
+document.addEventListener('contextmenu', e => { if (e.target.closest('.opt')) e.preventDefault(); });
 renderTop();
 switchTab('home');
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -115,6 +115,8 @@ p { margin: 8px 0; }
 .reading { white-space: pre-wrap; font-size: 16.5px; line-height: 1.65; }
 .reading .wd { border-radius: 4px; }
 .reading .wd.known { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
+.wd { cursor: pointer; }
+.opt { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .reading .wd:active { background: var(--card2); }
 .doc { border-left: 4px solid var(--brand); }
 .doc .type { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--brand); font-weight: 700; }
