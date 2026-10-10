@@ -1287,5 +1287,15 @@ tweeënhalf|two and a half
 uitgezet|switched off · uitzetten
 vast|fixed, permanent, vast contract permanent contract
 zussen|sisters · de zus
+aydın|personal name
+şahin|surname
+ayşe|personal name
+doğan|surname
+yıldız|surname
+jansen|Dutch surname
+apothekersassistente|pharmacy assistant · de apothekersassistente
+omroepster|female announcer · de omroepster
+verkoopster|saleswoman · de verkoopster
+weerman|weatherman · de weerman
 `;
 if (typeof module !== 'undefined') module.exports = { LEXICON_EN };

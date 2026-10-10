@@ -74,6 +74,8 @@ const STR = {
     ai_err_key: 'API anahtarı geçersiz, temel kontrol kullanıldı', ai_err_net: 'Claude\'a ulaşılamadı, temel kontrol kullanıldı', ai_err_refusal: 'Model bu isteği cevaplamadı',
     fix_art: '{n} bir {a}-woord', fix_verb: '{p} ile fiil {f} olur', fix_cap: 'Cümle büyük harfle başlar', fix_space: 'Fazla boşluk', fix_spell: 'Yazım',
     no_tts: 'Bu cihazda konuşma sentezi yok',
+    w_lt_note: 'LanguageTool ile ücretsiz düzeltildi. Yazım ve dilbilgisi hatalarını yakalar ama puan ve geri bildirim vermez. Daha detaylı düzeltme için Profil\'den Claude API anahtarı ekleyebilirsin.', w_lt_fail: 'LanguageTool\'a ulaşılamadı, offline temel kontrol kullanıldı',
+    me_lt: 'Ücretsiz LanguageTool düzeltmesi', me_lt_help: 'Anahtar gerekmez. Schrijven ve Spreken metnin languagetool.org\'a gönderilir ve Hollandaca yazım ve dilbilgisi hataları düzeltilir. Claude anahtarı varsa Claude kullanılır.',
   },
   en: {
     tab_home: 'Today', tab_words: 'Words', tab_practice: 'Practice', tab_exam: 'Exam', tab_me: 'Profile',
@@ -137,6 +139,8 @@ const STR = {
     ai_err_key: 'Invalid API key, basic check used', ai_err_net: 'Could not reach Claude, basic check used', ai_err_refusal: 'The model declined this request',
     fix_art: '{n} is a {a}-word', fix_verb: 'with {p} the verb is {f}', fix_cap: 'A sentence starts with a capital', fix_space: 'Extra space', fix_spell: 'Spelling',
     no_tts: 'Speech synthesis is not available on this device',
+    w_lt_note: 'Corrected for free by LanguageTool. It catches spelling and grammar errors but gives no score or feedback. For a detailed correction you can add a Claude API key in Profile.', w_lt_fail: 'Could not reach LanguageTool, offline basic check used',
+    me_lt: 'Free LanguageTool correction', me_lt_help: 'No key needed. Your Writing and Speaking text is sent to languagetool.org and Dutch spelling and grammar errors are fixed. If a Claude key is set, Claude is used instead.',
   },
 };
 
@@ -178,7 +182,7 @@ const DEF = {
   done: { lezen: [], luisteren: [], schrijven: [], spreken: [], grammar: [] },
   knmWrong: [], exams: [],
   day: { date: null, cards: 0, newCards: 0, lezen: 0, luisteren: 0, knm: 0, spreken: 0, schrijven: 0 },
-  set: { examDate: '', newPerDay: 10, goal: 30, rate: 0.9, voiceF: '', voiceM: '', showTr: true, lang: 'tr' },
+  set: { examDate: '', newPerDay: 10, goal: 30, rate: 0.9, voiceF: '', voiceM: '', showTr: true, lang: 'tr', lt: true },
 };
 function deepMerge(a, b) { for (const k of Object.keys(b || {})) { if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) deepMerge(a[k], b[k]); else a[k] = b[k]; } return a; }
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -404,6 +408,46 @@ better_answer is a natural A2 answer in Dutch that stays close to the learner's 
     return this.ask(system, user, schema);
   },
 };
+
+/* ---------- LanguageTool, anahtarsiz ucretsiz duzeltme ---------- */
+
+const LT = {
+  URL: 'https://api.languagetool.org/v2/check',
+  on() { return S.set.lt !== false; },
+  async check(text) {
+    const ctrl = new AbortController();
+    const tm = setTimeout(() => ctrl.abort(), 9000);
+    try {
+      const r = await fetch(this.URL, { method: 'POST', body: new URLSearchParams({ text, language: 'nl' }), signal: ctrl.signal, headers: { Accept: 'application/json' } });
+      if (!r.ok) throw new Error('LanguageTool ' + r.status);
+      const j = await r.json();
+      return this.apply(text, j.matches || []);
+    } finally { clearTimeout(tm); }
+  },
+  /* Eslesmeleri sondan basa uygular, boylece onceki konumlar kaymaz */
+  apply(text, matches) {
+    const ms = matches.filter(m => m.replacements && m.replacements.length && typeof m.offset === 'number').sort((a, b) => b.offset - a.offset);
+    let s = text; let lastStart = Infinity; const changes = [];
+    for (const m of ms) {
+      if (m.offset + m.length > lastStart) continue;
+      const from = text.substr(m.offset, m.length);
+      const to = m.replacements[0].value;
+      if (from === to) continue;
+      s = s.slice(0, m.offset) + to + s.slice(m.offset + m.length);
+      changes.unshift({ from, to, why: m.message || '' });
+      lastStart = m.offset;
+    }
+    return { fixed: s, changes };
+  },
+};
+
+/* LanguageTool varsa once onu, sonra yerel kurallari uygular */
+async function smartFix(text) {
+  let lt = null, ltErr = false;
+  if (LT.on()) { try { lt = await LT.check(text); } catch (e) { ltErr = true; } }
+  const fx = autoFix(lt ? lt.fixed : text);
+  return { fixed: fx.fixed, changes: (lt ? lt.changes : []).concat(fx.changes), source: lt ? 'lt' : 'rules', ltErr };
+}
 
 /* ---------- temel kural tabanli duzeltme ---------- */
 
@@ -801,7 +845,7 @@ function mcBlock(container, questions, opts = {}) {
 }
 
 /* Hollandaca metni dokunulabilir kelimelere boler */
-const WORD_RE = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'-]*)/;
+const WORD_RE = /([A-Za-zÀ-ÿĀ-ſ][A-Za-zÀ-ÿĀ-ſ'-]*)/;
 function tw(text) {
   return String(text == null ? '' : text).split(WORD_RE).map((part, i) => {
     if (i % 2 === 0) return esc(part);
@@ -907,7 +951,8 @@ function Schrijven(id) {
       if (ai.points && ai.points.length) r += `<div class="card"><b>${esc(t('w_points'))}</b>${ai.points.map(p => chk(p.covered, esc(p.point))).join('')}</div>`;
       if (ai.feedback) r += `<div class="card ex">💬 ${esc(ai.feedback)}</div>`;
     } else {
-      const fx = autoFix(text);
+      const fx = await smartFix(text);
+      if (!$('#sc-res')) return;
       let checks = '';
       if (hasFields) {
         const vals = fieldEls().map(el => el.value.trim());
@@ -918,9 +963,10 @@ function Schrijven(id) {
       (x.points || []).forEach((p, i) => { let ok = false; try { ok = new RegExp(p.re, 'i').test(fx.fixed); } catch (e) { ok = false; } checks += chk(ok, `${esc(p.label)} · ${esc(L10N.wPoint(x, i))}`); });
       if (x.min) checks += chk(wc(text) >= x.min, esc(t('w_len', { n: wc(text), m: x.min })));
       if (aiErr) r += `<div class="card ex">⚠️ ${esc(aiErr)}</div>`;
-      r += `<div class="card"><b>${esc(t('w_fixed'))}</b><div class="diff">${diffHTML(text, fx.fixed)}</div></div>`;
+      if (fx.ltErr) r += `<div class="card ex">⚠️ ${esc(t('w_lt_fail'))}</div>`;
+      r += `<div class="card"><b>${esc(t('w_fixed'))}</b><div class="diff">${diffHTML(text, fx.fixed)}</div>${fx.source === 'lt' ? '<div class="small muted" style="margin-top:6px">🧰 LanguageTool</div>' : ''}</div>`;
       r += `<div class="card"><b>${esc(t('w_changes'))}</b>${changesHTML(fx.changes)}</div>`;
-      r += `<div class="card"><b>${esc(t('w_points'))}</b>${checks}<p class="small muted">${esc(t('w_basic_note'))}</p></div>`;
+      r += `<div class="card"><b>${esc(t('w_points'))}</b>${checks}<p class="small muted">${esc(fx.source === 'lt' ? t('w_lt_note') : t('w_basic_note'))}</p></div>`;
     }
     r += `<div class="card"><div class="row"><b>${esc(t('w_model'))}</b><button class="spk" id="sc-say" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${tw(x.model)}</div></div>`;
     r += `<div class="row" style="justify-content:center"><button class="btn alt" id="sc-back">${esc(t('list_back'))}</button>${SCHRIJVEN[idx + 1] ? `<button class="btn" id="sc-next">${esc(t('next'))}</button>` : ''}</div>`;
@@ -947,7 +993,7 @@ function stopRecording() {
 const STOP_NL = new Set('de het een en of maar want omdat dat die dit deze ik je jij u hij zij ze wij we jullie mijn mij me zijn haar ons onze is ben bent was heb hebt heeft hebben in op aan van voor met naar bij om te er niet geen ook dan als wat wie waar hoe wel nog al heel veel graag ja nee'.split(' '));
 function contentWords(s) { return new Set((String(s).toLowerCase().match(/[a-zà-ÿ]+/g) || []).filter(w => w.length > 2 && !STOP_NL.has(w))); }
 
-function basicSpeakEval(x, text) {
+function basicSpeakEval(x, text, fx) {
   const words = wc(text);
   const target = x.part === 3 ? 25 : x.part === 2 ? 8 : 12;
   const sentences = text.split(/[.!?]+|\n/).filter(s => wc(s) >= 2).length || (words ? 1 : 0);
@@ -955,7 +1001,7 @@ function basicSpeakEval(x, text) {
   let overlap = 0; contentWords(text).forEach(w => { if (kw.has(w)) overlap++; });
   const answers = overlap >= (x.part === 2 ? 1 : 2);
   const conn = x.part !== 3 || /\b(omdat|want)\b/i.test(text);
-  const fx = autoFix(text);
+  fx = fx || autoFix(text);
   const substantial = words >= target / 2;
   const score = 1 + (words >= target ? 1 : substantial ? 0.5 : 0) + (answers ? 1.5 : 0) + (x.part === 3 && conn && substantial ? 0.5 : 0) + (substantial ? (fx.changes.length <= 1 ? 1 : fx.changes.length <= 3 ? 0.5 : 0) : 0) + (x.part !== 3 && words >= target ? 0.5 : 0);
   return { score: Math.round(Math.min(5, score)), words, target, sentences, answers, conn, fx };
@@ -1011,15 +1057,18 @@ function Spreken(id) {
       if (ai.feedback) r += `<div class="card ex">💬 ${esc(ai.feedback)}</div>`;
       if (better) r += `<div class="card"><div class="row"><b>${esc(t('sp_better'))}</b><button class="spk" id="sp-bsay" style="margin-left:auto">🔊</button></div><div class="model" style="margin-top:8px">${tw(better)}</div></div>`;
     } else {
-      const b = basicSpeakEval(x, text);
+      const sfx = await smartFix(text);
+      if (!$('#sp-res')) return;
+      const b = basicSpeakEval(x, text, sfx);
       if (aiErr) r += `<div class="card ex">⚠️ ${esc(aiErr)}</div>`;
+      if (sfx.ltErr) r += `<div class="card ex">⚠️ ${esc(t('w_lt_fail'))}</div>`;
       r += `<div class="card"><div class="row"><b>${esc(t('sp_eval'))}</b><span style="margin-left:auto">${scoreBadge(b.score)}</span></div>`;
       r += chk(b.answers, esc(t('sp_keywords')));
       r += chk(b.words >= b.target, esc(t('sp_len', { n: b.words, m: b.target })));
       r += chk(b.sentences >= (x.part === 2 ? 1 : 2), esc(t('sp_sent', { n: b.sentences })));
       if (x.part === 3) r += chk(b.conn, esc(t('sp_conn')));
       r += `<div class="diff" style="margin-top:8px">${diffHTML(text, b.fx.fixed)}</div></div>`;
-      r += `<div class="card"><b>${esc(t('w_changes'))}</b>${changesHTML(b.fx.changes)}<p class="small muted">${esc(t('w_basic_note'))}</p></div>`;
+      r += `<div class="card"><b>${esc(t('w_changes'))}</b>${changesHTML(b.fx.changes)}<p class="small muted">${esc(sfx.source === 'lt' ? t('w_lt_note') : t('w_basic_note'))}</p></div>`;
     }
     resultHTML = r;
     res.innerHTML = r;
@@ -1375,6 +1424,7 @@ function Me() {
   h += `<div class="row" style="margin-top:8px"><button class="btn sm alt" id="s-test">${esc(t('me_test'))}</button></div>`;
   h += `<p class="small muted">${esc(TTS.voices.length ? t('me_voice_found', { n: TTS.voices.length }) : t('me_voice_none'))}</p>`;
   h += `<div class="small ${best >= 2 ? 'muted' : 'ex'}">${t('me_voice_help')}</div></div>`;
+  h += `<h3>${esc(t('me_lt'))}</h3><div class="card"><div class="setting"><span>${esc(t('me_lt'))}</span><input type="checkbox" id="s-lt" ${S.set.lt !== false ? 'checked' : ''}></div><p class="small muted">${esc(t('me_lt_help'))}</p></div>`;
   h += `<h3>${esc(t('me_ai'))}</h3><div class="card"><p class="small muted" style="margin-top:0">${esc(t('me_ai_help'))}</p>`;
   h += `<div class="setting"><span>${esc(t('me_ai_key'))}</span><span class="small ${AI.key() ? '' : 'muted'}" id="s-ai-state">${esc(AI.key() ? t('me_ai_on') : t('me_ai_off'))}</span></div>`;
   h += `<input id="s-key" class="text-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="sk-ant-..." value="${esc(AI.key())}"><div class="row" style="margin-top:8px"><button class="btn sm" id="s-key-save">${esc(t('me_ai_save'))}</button><button class="btn sm alt" id="s-key-test">${esc(t('me_ai_test'))}</button></div></div>`;
@@ -1389,6 +1439,7 @@ function Me() {
   $('#s-new').onchange = e => { S.set.newPerDay = +e.target.value; save(); };
   $('#s-goal').onchange = e => { S.set.goal = +e.target.value; save(); };
   $('#s-tr').onchange = e => { S.set.showTr = e.target.checked; save(); };
+  $('#s-lt').onchange = e => { S.set.lt = e.target.checked; save(); };
   $('#s-rate').onchange = e => { S.set.rate = +e.target.value; save(); };
   $('#s-vf').onchange = e => { S.set.voiceF = e.target.value; save(); Me(); };
   $('#s-vm').onchange = e => { S.set.voiceM = e.target.value; save(); Me(); };

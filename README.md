@@ -20,7 +20,7 @@ Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya 
 - İki profil, Burak ve Bahu. İlerleme, ayarlar ve dil profil başına ayrı
 - Woorden. 17 tema, 515 kelime, SM-2 tarzı aralıklı tekrar, de of het hız oyunu, yazarak test
 - Lezen, Luisteren. 16 metin, 16 diyalog. Her Hollandaca kelimeye dokununca çeviri, şıklarda basılı tut
-- Schrijven. Yazdığın metin düzeltilmiş haliyle ve kelime kelime farkla gelir. Claude API anahtarı varsa tam düzeltme ve puan, yoksa de/het, fiil çekimi, yazım ve büyük harf için kural tabanlı düzeltme
+- Schrijven. Yazdığın metin düzeltilmiş haliyle ve kelime kelime farkla gelir. Sıra şöyle. Claude API anahtarı varsa Claude ile tam düzeltme ve puan. Yoksa anahtarsız ücretsiz LanguageTool ile yazım ve dilbilgisi düzeltmesi. İnternet yoksa de/het, fiil çekimi, yazım ve büyük harf için offline kurallar
 - Spreken. Kaydet, dinle, söylediğin metni kontrol ettir. Metin konuşma tanımadan ya da klavye diktesinden gelir, Claude ile ya da temel kurallarla puanlanır
 - KNM. 100 soru, açıklamalı, hatalarım listesi
 - Grammatica. 15 ders, 201 alıştırma, 40 fiillik çekim antrenörü
@@ -28,7 +28,7 @@ Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya 
 - Ses. iPhone'daki en iyi Hollandaca ses otomatik seçilir, Enhanced Xander ve Claire önerilir
 - Yedek indir ve yükle
 
-Claude entegrasyonu için Profil sekmesine Anthropic API anahtarı girilir. Anahtar sadece cihazda saklanır. SDK `dutch-a2/vendor` altında yerel olarak gelir, CDN gerekmez.
+Ücretsiz düzeltme [LanguageTool](https://github.com/languagetool-org/languagetool) public API ile yapılır, anahtar gerekmez, Profil sekmesinden kapatılabilir. Claude entegrasyonu için Profil sekmesine Anthropic API anahtarı girilir. Anahtar sadece cihazda saklanır. SDK `dutch-a2/vendor` altında yerel olarak gelir, CDN gerekmez.
 
 ## Testler
 

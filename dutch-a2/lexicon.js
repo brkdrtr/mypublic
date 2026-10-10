@@ -1287,5 +1287,15 @@ tweeënhalf|iki buçuk
 uitgezet|kapattı, kapatılmış · uitzetten
 vast|sabit, kalıcı, vast contract süresiz sözleşme
 zussen|kız kardeşler · de zus
+aydın|kişi adı
+şahin|soyadı
+ayşe|kişi adı
+doğan|soyadı
+yıldız|soyadı
+jansen|Hollandaca soyadı
+apothekersassistente|eczane asistanı · de apothekersassistente
+omroepster|anons yapan kadın, spiker · de omroepster
+verkoopster|kadın satış elemanı · de verkoopster
+weerman|hava durumu sunucusu · de weerman
 `;
 if (typeof module !== 'undefined') module.exports = { LEXICON };

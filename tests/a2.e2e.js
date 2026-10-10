@@ -15,9 +15,19 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror ' + e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource.*(favicon|anthropic|401)/.test(m.text())) errors.push('console ' + m.text()); });
+  page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource.*(favicon|anthropic|401|ERR_FAILED)/.test(m.text())) errors.push('console ' + m.text()); });
   page.on('dialog', d => d.accept());
   await page.clock.install();
+  /* LanguageTool varsayilan olarak erisilemez, ayri testte sahte yanit verilir */
+  let ltMode = 'down';
+  await page.route('https://api.languagetool.org/**', async route => {
+    if (ltMode === 'down') return route.abort();
+    const body = new URLSearchParams(route.request().postData() || '');
+    const txt = body.get('text') || '';
+    const i = txt.indexOf('pakket');
+    const matches = i >= 0 ? [{ message: 'Het pakket, niet de pakket', offset: i - 3, length: 9, replacements: [{ value: 'het pakket' }] }] : [];
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ language: { code: 'nl' }, matches }) });
+  });
 
   const tab = async t => { await page.click(`#tabs button[data-t=${t}]`); await page.waitForTimeout(30); };
   const text = async sel => (await page.textContent(sel)) || '';
@@ -30,7 +40,8 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   const turkishLeft = async () => page.evaluate(() => {
     const clone = document.querySelector('#main').cloneNode(true);
     clone.querySelectorAll('.wd, .reading, .model, textarea, input, select, [data-l]').forEach(e => e.remove());
-    const txt = clone.innerText;
+    const names = new Set([...document.querySelectorAll('.wd')].map(e => e.textContent));
+    const txt = clone.innerText.split(/(\s+)/).filter(w => !names.has(w.replace(/[.,!?']+$/g, '').replace(/'s$/, ''))).join('');
     const m = txt.match(/[^\n]*[ğışİçĞŞÇ][^\n]*/g);
     return m ? m.slice(0, 3) : [];
   });
@@ -136,6 +147,16 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
   const fixed = await page.evaluate(() => autoFix('beste meneer, ik werkt morgen niet. de huis is koud.  Ik heeft een afsprak bij de huisarts. Groeten, Burak').fixed);
   ok(/ik werk morgen/.test(fixed) && /Het huis/.test(fixed) && /Ik heb een afspraak/.test(fixed) && /Beste/.test(fixed), 'temel duzeltme fiil, de het, yazim ve buyuk harf hatalarini duzeltiyor', fixed.replace(/\n/g, ' '));
   ok(await count('#sc-res s.del') >= 4 && await count('#sc-res b.ins') >= 4, 'duzeltme farki silinen ve eklenen kelimeleri isaretliyor');
+
+  ltMode = 'up';
+  await tab('practice'); await page.click('[data-go=schrijven]'); await page.click(`[data-id="${sch.find(s => !s.fields).id}"]`);
+  await page.fill('#sc-text', 'Beste buurvrouw, dank je wel voor de pakket. Ik werkt morgen. Groeten, Burak');
+  await page.click('#sc-check'); await page.waitForSelector('#sc-res .diff');
+  const ltTxt = await text('#sc-res');
+  ok(ltTxt.includes('LanguageTool') && (await page.$$eval('#sc-res .diff b.ins', e => e.map(x => x.textContent))).join(' ') === 'het werk', 'LanguageTool duzeltmesi ve yerel kurallar birlikte uygulaniyor', ltTxt.slice(0, 160));
+  ltMode = 'down';
+  await page.click('#sc-check'); await page.waitForSelector('#sc-res .diff');
+  ok((await text('#sc-res')).includes('LanguageTool\'a ulaşılamadı'), 'LanguageTool erisilemezse offline kontrole dusuyor');
 
   /* ---------- 7. Spreken ---------- */
   const spIds = await page.evaluate(() => SPREKEN.map(x => x.id));
@@ -308,7 +329,7 @@ function ok(cond, name, extra) { results.push((cond ? 'PASS ' : 'FAIL ') + name 
     GRAMMAR.forEach(g => g.drills.forEach(d => texts.push(d.q.replace(/_+/, d.a[0]), ...d.a)));
     WORDS.forEach(w => texts.push(w.ex));
     const out = new Set();
-    texts.forEach(s => String(s || '').split(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'-]*)/).forEach((part, i) => { if (i % 2) { const k = part.toLowerCase().replace(/'s$/, '').replace(/-$/, ''); if (!lookup(k)) out.add(k); } }));
+    texts.forEach(s => String(s || '').split(/([A-Za-zÀ-ÿĀ-ſ][A-Za-zÀ-ÿĀ-ſ'-]*)/).forEach((part, i) => { if (i % 2) { const k = part.toLowerCase().replace(/'s$/, '').replace(/-$/, ''); if (!lookup(k)) out.add(k); } }));
     return [...out];
   });
   ok(dataUnknown.length === 0, 'tum icerikteki Hollandaca kelimelerin cevirisi var', dataUnknown.slice(0, 30).join(' '));
