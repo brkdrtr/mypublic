@@ -336,10 +336,37 @@ function stepDone(step, lines) {
     return hit / toks.length >= 0.6;
   });
 }
+let stripCol = false;
+/* Mobilde terminalin ustunde kompakt gorev seridi, dikey ekranda goreve gitmeden calisilsin */
+function renderStrip(m, done, taskHidden, steps, since) {
+  const sp = $('#mstrip');
+  if (!m) { sp.className = 'mstrip mobile-only'; sp.innerHTML = `<div class="mh"><span class="tt muted">🧪 Serbest terminal</span><button class="tg" id="ms-go">Görev ›</button></div>`; $('#ms-go').onclick = () => show('mission'); return; }
+  sp.className = 'mstrip mobile-only' + (stripCol ? ' col' : '');
+  const doneN = steps.filter(s => stepDone(s, since)).length;
+  let h = `<div class="mh"><span class="tt">${done ? '✅ ' : '🎯 '}${esc(m.title)}</span><span class="pill xp">+${xpFor(m)}</span>${steps.length ? `<span class="pill">${done ? steps.length : doneN}/${steps.length}</span>` : ''}<button class="tg" id="ms-tg">${stripCol ? '▾' : '▴'}</button></div><div class="mb">`;
+  if (done) h += `<div class="done-box"><div class="t">Görev tamamlandı</div><div class="small muted">${autoTm ? 'Sıradaki görev birazdan açılıyor' : 'Sıradaki göreve geçebilirsin'}</div><div class="row"><button class="btn small" id="ms-next">Sonraki ›</button></div></div>`;
+  else h += taskHidden ? `<div class="task locked">🔒 Görev gizli, uzman modu. <button class="ghost" id="ms-reveal">Göster</button></div>` : `<div class="task">${md(m.task)}</div>`;
+  if (steps.length && !done && (stepsShown || steps.some(s => stepDone(s, since)))) {
+    h += '<ol class="steps">';
+    steps.forEach((s, i) => { const ok = stepDone(s, since); const vis = stepsShown || ok; h += `<li class="${ok ? 'ok' : ''}"><span class="ck">${ok ? '✓' : i + 1}</span><span class="st ${vis ? '' : 'blur'}">${esc(vis ? s : s.replace(/\S/g, '•'))}</span>${vis && !ok ? `<button class="use" data-use="${esc(s)}">yaz</button>` : ''}</li>`; });
+    h += '</ol>';
+  }
+  if (hintShown && !done) h += `<div class="hint">💡 ${md(m.hint)}</div>`;
+  h += `<div class="row">${!done && !stepsShown ? '<button class="ghost" id="ms-steps">Adımlar</button>' : ''}${!done && !hintShown ? '<button class="ghost" id="ms-hint">💡 İpucu</button>' : ''}<button class="ghost" id="ms-go">Detay ›</button></div></div>`;
+  sp.innerHTML = h;
+  $('#ms-tg').onclick = () => { stripCol = !stripCol; renderMission(); };
+  $('#ms-go').onclick = () => show('mission');
+  const nx = $('#ms-next'); if (nx) nx.onclick = goNext;
+  const rv = $('#ms-reveal'); if (rv) rv.onclick = () => { if (!st.revealed.includes(m.id)) st.revealed.push(m.id); persist(); renderMission(); };
+  const sb = $('#ms-steps'); if (sb) sb.onclick = () => { stepsShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); persist(); renderMission(); };
+  const hb = $('#ms-hint'); if (hb) hb.onclick = () => { hintShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); persist(); renderMission(); };
+  $$('#mstrip [data-use]').forEach(b => b.onclick = () => { input.value = b.dataset.use; input.focus(); });
+}
 function renderMission() {
   const box = $('#v-mission');
   const m = ALL.find(x => x.id === st.current);
   if (!m) {
+    renderStrip(null);
     box.innerHTML = `<div class="card"><div style="font-weight:700;margin-bottom:4px">🧪 Serbest terminal</div><div class="muted small">Burası senin sandbox'ın. Ne istersen dene, bir şeyi bozarsan Profil sekmesinden filesystem'i sıfırla. <code>help</code> komut listesini verir.</div></div>` + nextBlock() + keyHelp();
     bindKeyHelp();
     const nb = $('#mp-next'); if (nb) nb.onclick = () => { const nm = nextMission(); if (nm) startMission(nm.id); };
@@ -352,6 +379,7 @@ function renderMission() {
   if (modeOf() === 'guided') { stepsShown = true; if (!hintShown) { hintShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); } }
   const steps = stepsOf(m);
   const since = sh.history.slice(-40);
+  renderStrip(m, done, taskHidden, steps, since);
   let h = `<div class="mhdr"><div><div class="ch">${ch.icon} ${esc(ch.title)}</div><div class="tt">${done ? '✅ ' : ''}${esc(m.title)}</div></div><div class="right"><span class="pill xp">+${xpFor(m)} XP</span>${expert ? '<span class="pill">uzman</span>' : ''}</div></div>`;
   if (done) h += `<div class="done-box"><div class="t">Görev tamamlandı</div><div class="small muted" id="mp-auto">${autoTm ? 'Sıradaki görev birazdan açılıyor' : 'Sıradaki göreve geçebilirsin'}</div><div class="row" style="margin-top:8px"><button class="btn small" id="mp-next">Sonraki ›</button>${autoTm ? '<button class="btn alt small" id="mp-stay">Burada kal</button>' : ''}</div></div>`;
   h += `<div class="story">${md(m.story)}</div>`;
@@ -380,7 +408,7 @@ function renderMission() {
   const nx = $('#mp-next'); if (nx) nx.onclick = goNext;
   const sk = $('#mp-skip'); if (sk) sk.onclick = goNext;
   const stay = $('#mp-stay'); if (stay) stay.onclick = () => { clearTimeout(autoTm); autoTm = null; renderMission(); };
-  $$('[data-use]').forEach(b => b.onclick = () => { input.value = b.dataset.use; show('term'); input.focus(); });
+  $$('#v-mission [data-use]').forEach(b => b.onclick = () => { input.value = b.dataset.use; show('term'); input.focus(); });
   const tb = $('#mp-term'); if (tb) tb.onclick = () => { show('term'); input.focus(); };
 }
 function nextBlock() { const nm = nextMission(); return nm ? `<div class="card soft"><div class="small muted">Sıradaki görev</div><div style="font-weight:600">${esc(nm.title)}</div><button class="btn small" id="mp-next" style="margin-top:8px">Başla ›</button></div>` : ''; }

@@ -233,6 +233,20 @@ body.kb .keys { padding-bottom: 6px; }
 .spark { position: fixed; width: 7px; height: 7px; border-radius: 2px; z-index: 90; pointer-events: none; animation: fall 1.3s ease-in forwards; }
 @keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(720deg); opacity: .2; } }
 
+/* terminal ustu gorev seridi, sadece mobil */
+.mstrip { background: var(--panel); border-bottom: 1px solid var(--line); padding: 8px 12px; font-size: 13.5px; max-height: 38%; overflow-y: auto; }
+.mstrip .mh { display: flex; align-items: center; gap: 8px; }
+.mstrip .mh .tt { font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mstrip .mh .pill { flex: none; }
+.mstrip .mh .tg { color: var(--muted); font-size: 16px; padding: 0 4px; flex: none; }
+.mstrip .mb { margin-top: 6px; }
+.mstrip .task { margin: 6px 0; padding: 8px 10px; font-size: 13.5px; }
+.mstrip .steps li { padding: 5px 0; font-size: 13px; }
+.mstrip .row { margin-top: 6px; }
+.mstrip.col .mb { display: none; }
+.mstrip .done-box { padding: 8px 10px; margin: 6px 0; }
+.mstrip .done-box .t { font-size: 14px; }
+
 /* ---------- mobil, tek sutun ---------- */
 @media (max-width: 899px) {
   #body { grid-template-rows: 1fr auto; }

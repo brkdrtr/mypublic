@@ -58,13 +58,13 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   ok(await count(d, '.steps .st.blur') > 0, 'normal modda adimlar gizli');
   await d.click('#mp-steps');
   ok(await count(d, '.steps .st.blur') === 0 && await count(d, '[data-use]') > 0, 'adimlar goster ile aciliyor');
-  await d.click('[data-use]');
+  await d.click('#v-mission [data-use]');
   ok((await d.$eval('#cmd', e => e.value)).length > 0, 'adim yaz butonu komutu terminale koyuyor');
   await d.fill('#cmd', '');
   /* ilk gorevi coz, otomatik gecis */
   for (const line of first.solution.split('\n')) if (line.trim() && !line.startsWith('#')) await run(d, line.trim());
   ok((await text(d, '#term')).includes('Görev tamamlandı'), 'gorev tamamlandi satiri terminalde');
-  ok(await count(d, '.done-box') === 1 && await count(d, '.celebrate') === 0, 'popup yok, panelde tamamlandi kutusu');
+  ok(await count(d, '#v-mission .done-box') === 1 && await count(d, '.celebrate') === 0, 'popup yok, panelde tamamlandi kutusu');
   ok((await text(d, '#mp-auto')).includes('birazdan'), 'otomatik gecis sayaci');
   await d.waitForTimeout(2600);
   const second = await d.evaluate(() => ALL[1]);
@@ -133,6 +133,16 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   ok(await vis(m, '#v-home') && !(await vis(m, '#term')), 'iPhone acilista bolumler, terminal gizli');
   await m.click('#go-next');
   ok(await vis(m, '#term') && await vis(m, '#keys'), 'gorev baslayinca terminal ve tus cubugu');
+  ok(await vis(m, '#mstrip') && (await text(m, '#mstrip .task')).length > 5, 'terminal ustunde gorev seridi ve gorev metni');
+  await m.click('#ms-tg');
+  ok(!(await vis(m, '#mstrip .task')) && (await text(m, '#mstrip .tt')).length > 2, 'serit katlaninca sadece baslik');
+  await m.click('#ms-tg');
+  await m.click('#ms-steps');
+  ok(await count(m, '#mstrip .steps li') >= 1 && await count(m, '#mstrip [data-use]') >= 1, 'seritte adimlar aciliyor');
+  await m.click('#mstrip [data-use]');
+  ok((await m.$eval('#cmd', e => e.value)).length > 0, 'seritteki yaz butonu komutu koyuyor');
+  await m.fill('#cmd', '');
+  ok(!(await vis(d, '#mstrip')), 'masaustunde serit yok');
   await m.click('#tabs [data-v=mission]');
   ok(await vis(m, '#v-mission') && !(await vis(m, '#term')), 'gorev sekmesi paneli aciyor');
   await m.click('#tabs [data-v=term]');
@@ -143,6 +153,7 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   const mf = await m.evaluate(() => ALL[0]);
   for (const line of mf.solution.split('\n')) if (line.trim() && !line.startsWith('#')) await run(m, line.trim());
   ok((await text(m, '#term')).includes('Görev tamamlandı') && await count(m, '.celebrate') === 0, 'iPhone da popup yok');
+  ok(await count(m, '#mstrip .done-box') === 1, 'seritte tamamlandi kutusu');
   await m.waitForTimeout(2600);
   ok(await m.evaluate(() => st.current === ALL[1].id), 'iPhone da otomatik gecis');
   const hs = await m.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
