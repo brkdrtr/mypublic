@@ -12,7 +12,7 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 - Profiller. Birden fazla profil, her biri kendi filesystem ve ilerlemesiyle. Cihazlar arası senkron için GitHub Gist, sadece gist yetkili bir token yeter, token cihazda kalır
 - Görev bitince popup yok. Terminalde ✔ satırı, panelde tamamlandı kutusu ve 2 saniye sonra sıradaki görev. Profil'den kapatılabilir
 - Adımlar. Her görevin çözümü adım listesi olarak panelde, kullandığın komutlar otomatik işaretlenir, Göster ile açılır, yaz ile terminale yazılır
-- 14 bölüm, 124 görev. Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script, bash programlama, vim, git
+- 22 bölüm, 204 görev. Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script, bash programlama, vim, git
 - Gerçekçi senaryolar. Bozuk nginx config'ini bulup düzeltmek, cryptominer süreci, auth.log içinden ssh brute force analizi, /tmp altındaki backdoor
 - Bash bölümü. if, for, while, case, function, exit code ile gerçek script'ler, crontab ve `cron-tick` ile cron simülasyonu
 - Vim bölümü. Gerçek tuş sırasıyla çalışan vim modeli, `:wq` `dd` `yy` `p` `/` `:%s`
@@ -49,12 +49,27 @@ Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya 
 
 Ücretsiz düzeltme [LanguageTool](https://github.com/languagetool-org/languagetool) public API ile yapılır, anahtar gerekmez, Profil sekmesinden kapatılabilir. Claude entegrasyonu için Profil sekmesine Anthropic API anahtarı girilir. Anahtar sadece cihazda saklanır. SDK `dutch-a2/vendor` altında yerel olarak gelir, CDN gerekmez.
 
+## NetDevOps Lab
+
+Orta ve ileri seviye uygulamalı NetDevOps eğitimi. Linux Lab ile aynı sanal shell ve arayüz, artı gerçek Python ve simüle altyapı.
+
+- Python 3.14 tarayıcıda, Pyodide ile. pytest, pyyaml, jinja2, lxml hazır, çevrimdışı çalışır. Pipe ve yönlendirme Python çıktısıyla çalışır, Python'un yazdığı dosyalar sanal diskte görünür
+- Editor sekmesi. Dosya gezgini, Tab girintisi, Kaydet, tek tuşla python3 veya pytest
+- Cihazlar. r1.lab ve r2.lab IOS-XE simülasyonu, SSH show komutları, NETCONF running ve candidate datastore, RESTCONF, gNMI. ncclient, pygnmi, netmiko ve requests kütüphaneleri gerçek API imzalarıyla simülatöre bağlı
+- Simülatörler. api.lab REST API, GitHub Actions ve GitLab CI runner, docker ve compose, kubectl, ansible ve ansible-playbook, terraform, pyang, gnmic
+- 13 bölüm, 156 görev, 128 quiz. Python 16, Unit ve Integration Test 12, Git Workflow 14, REST API 12, CI ve CD 12, Docker 12, Kubernetes 12, YANG 10, NETCONF 12, RESTCONF 10, gNMI 10, Ansible 12, Terraform 12
+- Profiller ve GitHub Gist senkronu Linux Lab ile aynı
+
+Modül sözleşmesi `netdevops-lab/CONTRACT.md` içinde. Test `tests/netdevops.test.js` her görevin çözümünü gerçek Pyodide ile Chromium içinde oynatır, `tests/netdevops.e2e.js` arayüzü test eder.
+
 ## Testler
 
 ```
 python3 -m http.server 8765 &
 node tests/linux.test.js
 NODE_PATH=$(npm root -g) node tests/linux.e2e.js
+NODE_PATH=$(npm root -g) node tests/netdevops.test.js
+NODE_PATH=$(npm root -g) node tests/netdevops.e2e.js
 NODE_PATH=$(npm root -g) node tests/a2.e2e.js
 ```
 

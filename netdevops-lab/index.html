@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NetDevOps Lab">
+<meta name="theme-color" content="#0a0d12">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>NetDevOps Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="brand"><span class="logo">&gt;_</span><span>NetDevOps Lab</span></div>
+    <div class="topmis" id="topmis"></div>
+    <div class="stats">
+      <span id="pychip" class="chip py" title="Python">🐍</span>
+      <span id="sync" class="chip sync" title="Senkron">·</span>
+      <span id="streak" class="chip">🔥 0</span>
+      <span id="level" class="chip lvl">Lv 1</span>
+      <button id="who" class="chip who">👤</button>
+    </div>
+    <div class="xpbar"><div id="xpfill"></div></div>
+  </header>
+
+  <div id="body">
+    <section id="work">
+      <div class="termbar">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span id="ttitle" class="ttitle">burak@lab: ~</span>
+        <span class="tacts"><button class="keybtn" data-k="CLEAR" title="Ctrl L">clear</button><button id="t-help" title="help">?</button></span>
+      </div>
+      <div id="mstrip" class="mstrip mobile-only"></div>
+      <div id="term" class="term" aria-live="polite"></div>
+      <form id="cmdform" class="cmdline" autocomplete="off">
+        <span id="prompt" class="prompt"></span>
+        <input id="cmd" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" enterkeyhint="go" aria-label="Komut">
+      </form>
+      <div id="keys" class="keys">
+        <button class="keybtn" data-k="TAB">Tab</button><button class="keybtn" data-k="UP">↑</button><button class="keybtn" data-k="DOWN">↓</button>
+        <button class="keybtn" data-k="|">|</button><button class="keybtn" data-k="-">-</button><button class="keybtn" data-k="/">/</button><button class="keybtn" data-k="~">~</button>
+        <button class="keybtn" data-k=">">&gt;</button><button class="keybtn" data-k="*">*</button><button class="keybtn" data-k="$">$</button><button class="keybtn" data-k="'">'</button><button class="keybtn" data-k='"'>"</button>
+        <button class="keybtn" data-k="{">{</button><button class="keybtn" data-k="}">}</button><button class="keybtn" data-k="[">[</button><button class="keybtn" data-k="]">]</button><button class="keybtn" data-k="&">&amp;</button><button class="keybtn" data-k=";">;</button>
+      </div>
+    </section>
+
+    <aside id="panel">
+      <nav id="tabs">
+        <button data-v="term" class="mobile-only"><span>⌨️</span>Terminal</button>
+        <button data-v="mission"><span>🎯</span>Görev</button>
+        <button data-v="editor"><span>📝</span>Editor</button>
+        <button data-v="home"><span>🗺️</span>Bölümler</button>
+        <button data-v="quiz" class="desk-only"><span>🎓</span>Quiz</button>
+        <button data-v="man" class="desk-only"><span>📚</span>Sözlük</button>
+        <button data-v="me" class="desk-only"><span>👤</span>Profil</button>
+        <button data-v="more" class="mobile-only"><span>⋯</span>Daha</button>
+      </nav>
+      <div id="views">
+        <section id="v-mission" class="view"></section>
+        <section id="v-editor" class="view"></section>
+        <section id="v-more" class="view"></section>
+        <section id="v-home" class="view"></section>
+        <section id="v-chapter" class="view"></section>
+        <section id="v-quiz" class="view"></section>
+        <section id="v-man" class="view"></section>
+        <section id="v-me" class="view"></section>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="editor" class="modal hidden">
+  <div class="ed-head"><span id="ed-title">nano</span><span class="ed-actions"><button id="ed-cancel" class="ghost">İptal</button><button id="ed-save">Kaydet</button></span></div>
+  <textarea id="ed-text" autocapitalize="none" autocorrect="off" spellcheck="false"></textarea>
+  <div class="ed-foot">^O Kaydet &nbsp; ^X Çık &nbsp; burada butonları kullan</div>
+</div>
+
+<div id="vim" class="modal hidden">
+  <div class="ed-head"><span id="vim-title">vim</span><span class="ed-actions"><button class="ghost" data-k=":,q,!,Enter" id="vim-quit">:q!</button><button data-k=":,w,q,Enter" id="vim-wq">:wq</button></span></div>
+  <pre id="vim-screen" class="vim-screen"></pre>
+  <div id="vim-status" class="vim-status"></div>
+  <div id="vim-keys" class="keys">
+    <button data-k="Escape">Esc</button><button data-k=":">:</button><button data-k="i">i</button><button data-k="o">o</button><button data-k="ArrowLeft">←</button><button data-k="ArrowDown">↓</button><button data-k="ArrowUp">↑</button><button data-k="ArrowRight">→</button><button data-k="d,d">dd</button><button data-k="y,y">yy</button><button data-k="p">p</button><button data-k="u">u</button><button data-k="x">x</button><button data-k="/">/</button><button data-k="G">G</button><button data-k="g,g">gg</button><button data-k="FOCUS">⌨️</button>
+  </div>
+  <input id="vim-in" class="vim-in" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="vim input">
+</div>
+
+<div id="whobox" class="overlay hidden"><div class="sheet" id="whosheet"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="../linux-lab/shell.js"></script>
+<script src="../linux-lab/ext-git.js"></script>
+<script src="../linux-lab/ext-vim.js"></script>
+<script src="vendor/js-yaml.min.js"></script>
+<script src="lab.js"></script>
+<script src="sim-http.js"></script>
+<script src="sim-device.js"></script>
+<script src="sim-api.js"></script>
+<script src="sim-ci.js"></script>
+<script src="sim-docker.js"></script>
+<script src="sim-k8s.js"></script>
+<script src="sim-ansible.js"></script>
+<script src="sim-terraform.js"></script>
+<script src="py.js"></script>
+<script src="missions-python.js"></script>
+<script src="missions-test.js"></script>
+<script src="missions-git.js"></script>
+<script src="missions-api.js"></script>
+<script src="missions-ci.js"></script>
+<script src="missions-docker.js"></script>
+<script src="missions-k8s.js"></script>
+<script src="missions-yang.js"></script>
+<script src="missions-netconf.js"></script>
+<script src="missions-restconf.js"></script>
+<script src="missions-gnmi.js"></script>
+<script src="missions-ansible.js"></script>
+<script src="missions-terraform.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
