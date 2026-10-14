@@ -248,11 +248,14 @@ function parseOpts(args, valued = '') {
   return { flags, vals, rest };
 }
 
-function globToRe(p) {
+function globToRe(p, anyChar) {
+  /* anyChar, case desenlerinde * ve ? / karakterini de esler, dosya glob'unda eslemez */
   let re = '';
-  for (const ch of p) {
-    if (ch === '*') re += '[^/]*';
-    else if (ch === '?') re += '[^/]';
+  for (let i = 0; i < p.length; i++) {
+    const ch = p[i];
+    if (ch === '*') re += anyChar ? '.*' : '[^/]*';
+    else if (ch === '?') re += anyChar ? '.' : '[^/]';
+    else if (ch === '[' && anyChar) { const j = p.indexOf(']', i + 2); if (j > 0) { re += '[' + p.slice(i + 1, j).replace(/^!/, '^').replace(/\\/g, '\\\\') + ']'; i = j; } else re += '\\['; }
     else re += ch.replace(/[.+^${}()|[\]\\]/g, '\\$&');
   }
   return new RegExp('^' + re + '$');
@@ -967,7 +970,7 @@ class Shell {
           const { argv } = this.parseCmd('x ' + n.word);
           const w = argv.slice(1).join(' ');
           for (const it of n.items) {
-            if (it.pats.some(p => globToRe(this.parseCmd('x ' + p).argv.slice(1).join(' ')).test(w))) { code = this.runNodes(it.body, write, io); break; }
+            if (it.pats.some(p => globToRe(this.parseCmd('x ' + p).argv.slice(1).join(' '), true).test(w))) { code = this.runNodes(it.body, write, io); break; }
           }
           break;
         }

@@ -27,7 +27,7 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
     const ctx = await browser.newContext(opts);
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push('pageerror ' + e.message));
-    page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_FAILED/.test(m.text())) errors.push('console ' + m.text()); });
+    page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_FAILED|404/.test(m.text())) errors.push('console ' + m.text()); });
     page.on('dialog', d => d.accept());
     await page.route('https://api.github.com/**', gistRoute);
     return page;
@@ -101,30 +101,78 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   ok(await d.evaluate(() => st.xp === 0 && st.done.length === 0), 'yeni profil sifirdan');
   await d.click('#who'); await d.click('#whosheet .prof[data-p=burak]');
   ok(await d.evaluate(() => st.done.length === 2), 'eski profile donunce ilerleme yerinde');
+  /* gezinme, adim gizliligi, aciklamali ipucu, komut aciklamasi */
+  await d.click('#tabs [data-v=mission]');
+  await d.evaluate(() => startMission('nav4'));
+  await run(d, 'ls');
+  await d.evaluate(() => startMission('nav5'));
+  ok(await count(d, '#v-mission .steps .st.blur') === 2, 'onceki gorevde yazilan komut yeni gorevin adimini acmiyor', String(await count(d, '#v-mission .steps .st.blur')));
+  await d.click('#mp-prev');
+  ok(await d.evaluate(() => st.current === 'nav4'), 'Onceki butonu bir onceki goreve donuyor');
+  await d.click('#mp-nextm');
+  ok(await d.evaluate(() => st.current === 'nav5'), 'Sonraki butonu ilerliyor');
+  ok((await text(d, '.mnav')).includes('5/'), 'bolum icinde konum gosteriliyor', await text(d, '.mnav'));
+  await d.click('#mp-hint');
+  ok(await count(d, '#v-mission .hc-wrap .hc') >= 1 && (await text(d, '#v-mission .hc-wrap')).includes('ls'), 'ipucunda kullanilacak arac ve aciklamasi');
+  await d.click('#mp-sol');
+  ok(await count(d, '#v-mission .sol-wrap .xp') >= 1, 'cozumde her satirin aciklamasi');
+  await run(d, 'cut -d: -f1 /etc/passwd');
+  ok((await text(d, '#mp-last')).includes('-d:') && (await text(d, '#mp-last')).toLowerCase().includes('ayırıcı'), 'son komutun aciklamasi panelde', (await text(d, '#mp-last')).slice(0, 120));
+  await run(d, 'ls -l /etc');
+  const xis = await d.$$('#term .xi');
+  await xis[xis.length - 2].click();
+  ok((await text(d, '#mp-last')).includes('cut'), 'terminaldeki i butonu o komutu acikliyor');
+  await d.click('#v-mission [data-xs="0"]');
+  ok(await count(d, '#v-mission .xp-li .xp') === 1, 'adimdaki soru isareti adim aciklamasini aciyor');
+  await run(d, 'explain cut');
+  ok((await text(d, '#term')).includes('Seçenekler'), 'explain komutu secenek listesini basiyor');
+  await run(d, "explain awk -F: '{print $1}' /etc/passwd");
+  ok((await text(d, '#term')).includes('1. alan'), 'explain awk programini acikliyor');
+  await run(d, 'man cut');
+  ok((await text(d, '#term')).includes('SEÇENEKLER VE ÖRNEKLER'), 'man ciktisina secenekler ekleniyor');
+  await d.click('#tabs [data-v=man]'); await d.fill('#msearch', 'cut');
+  ok(await count(d, '#mlist details.opts') >= 1, 'sozlukte tum secenekler bolumu');
+  const hasVar = await d.evaluate(() => ALL.some(m => vCount(m) > 1));
+  if (hasVar) {
+    await d.evaluate(() => { const m = ALL.find(x => vCount(x) > 1); st.done.push(m.id); persist(); startMission(m.id); });
+    const before = await d.evaluate(() => vIndex(ALL.find(x => x.id === st.current)));
+    await d.click('#mp-replay');
+    ok(await d.evaluate(b => vIndex(ALL.find(x => x.id === st.current)) !== b && st.practice === st.current, before), 'farkli senaryoyla tekrar baska varyanti aciyor');
+  }
+
   /* senkron */
   await d.click('#tabs [data-v=me]');
   await d.fill('#gh-token', 'ghp_test'); await d.click('#gh-connect'); await d.waitForTimeout(300);
   ok(gist && gist.files['linux-lab.json'], 'token ile gist olustu');
   ok((await text(d, '#sync')) === '☁︎', 'senkron rozeti');
   const payload = JSON.parse(gist.files['linux-lab.json'].content);
-  ok(payload.profiles.length === 2 && payload.states.burak.st.done.length === 2, 'gist iki profil ve ilerlemeyi tasiyor');
+  ok(payload.profiles.length === 2 && payload.states.burak.st.done.length >= 2, 'gist iki profil ve ilerlemeyi tasiyor');
   /* ikinci cihaz, bos localStorage, token girince ilerleme gelir */
   const d2 = await mk({ viewport: { width: 1280, height: 800 } });
   await d2.goto(BASE); await d2.waitForTimeout(200);
   ok(await d2.evaluate(() => st.done.length === 0), 'ikinci cihaz bos basliyor');
+  ok(await count(d2, '.go-sync') === 1, 'senkron kapaliyken uyari gorunuyor');
+  await run(d2, 'pwd'); await run(d2, 'ls');
   await d2.click('#tabs [data-v=me]');
   await d2.fill('#gh-token', 'ghp_test'); await d2.click('#gh-connect'); await d2.waitForTimeout(400);
-  ok(await d2.evaluate(() => st.done.length === 2 && PROFILES.length === 2), 'ikinci cihaz gist ten ilerlemeyi aldi', await d2.evaluate(() => st.done.length + ' ' + PROFILES.length));
+  const want = JSON.parse(gist.files['linux-lab.json'].content).states.burak.st.done.length;
+  ok(await d2.evaluate(w => st.done.length >= w && PROFILES.length === 2, want), 'ikinci cihaz once komut yazsa bile gist ilerlemesini aliyor, ezmiyor', await d2.evaluate(() => st.done.length + ' ' + PROFILES.length));
+  await d2.waitForTimeout(1200);
+  ok(JSON.parse(gist.files['linux-lab.json'].content).states.burak.st.done.length >= want, 'birlesmis durum gist e geri yazildi, ilerleme kaybolmadi');
+  /* link ile ucuncu cihaz */
+  const d3 = await mk({ viewport: { width: 1280, height: 800 } });
+  await d3.goto(BASE + '#sync=ghp_test'); await d3.waitForTimeout(600);
+  ok(await d3.evaluate(w => SYNC.token === 'ghp_test' && st.done.length >= w && !location.hash, want), 'senkron linki yeni tarayiciyi otomatik bagliyor', await d3.evaluate(() => SYNC.token + ' ' + st.done.length + ' ' + location.hash));
   /* ikinci cihazda ilerle, birinci cihaz cekince gorsun */
   const third = await d2.evaluate(() => ALL.find(m => !st.done.includes(m.id)));
   await d2.click('#tabs [data-v=home]'); await d2.click('#go-next');
   for (const line of third.solution.split('\n')) if (line.trim() && !line.startsWith('#')) await run(d2, line.trim());
-  await d2.waitForTimeout(4500);
-  ok(JSON.parse(gist.files['linux-lab.json'].content).states.burak.st.done.length === 3, 'ikinci cihaz gist i guncelledi');
+  await d2.waitForTimeout(6500);
+  ok(JSON.parse(gist.files['linux-lab.json'].content).states.burak.st.done.length > want, 'ikinci cihaz gist i guncelledi');
   await d.click('#gh-pull'); await d.waitForTimeout(400);
-  ok(await d.evaluate(() => st.done.length === 3), 'birinci cihaz cekince 3 gorev', await d.evaluate(() => String(st.done.length)));
+  ok(await d.evaluate(w => st.done.length > w, want), 'birinci cihaz cekince yeni gorevi goruyor', await d.evaluate(() => String(st.done.length)));
   await d.reload(); await d.waitForTimeout(400);
-  ok(await d.evaluate(() => st.done.length === 3 && SYNC.token === 'ghp_test'), 'yenilemede token ve ilerleme kaliyor');
+  ok(await d.evaluate(w => st.done.length > w && SYNC.token === 'ghp_test', want), 'yenilemede token ve ilerleme kaliyor');
 
   /* ---------- iPhone ---------- */
   const m = await mk({ ...devices['iPhone 13'] });

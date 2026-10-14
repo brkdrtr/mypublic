@@ -12,7 +12,7 @@ function drop(k) { try { localStorage.removeItem(k); } catch (e) { /* yok */ } }
 
 const ALL = CHAPTERS.flatMap(c => c.missions.map(m => ({ ...m, chapter: c.id })));
 const TITLES = ['Çaylak', 'Meraklı', 'Terminal Kaşifi', 'Pipe Çırağı', 'Script Kiddie', 'Junior Sysadmin', 'Sysadmin', 'Log Avcısı', 'Kıdemli Sysadmin', 'Kernel Fısıldayan', 'Root'];
-const DEF_ST = { done: [], xp: 0, cmds: 0, streak: 0, lastDay: null, noHint: 0, hinted: [], quizBest: 0, quizPerfect: false, secret: false, current: null, badges: [], mode: 'normal', daily: null, dailyDone: 0, revealed: [], auto: true, updatedAt: 0 };
+const DEF_ST = { done: [], xp: 0, cmds: 0, streak: 0, lastDay: null, noHint: 0, hinted: [], quizBest: 0, quizPerfect: false, secret: false, current: null, badges: [], mode: 'normal', daily: null, dailyDone: 0, revealed: [], auto: true, updatedAt: 0, progAt: 0, mVar: {}, mStart: {}, everDone: [], round: 0, practice: null };
 
 /* ---------- profiller ---------- */
 
@@ -46,8 +46,9 @@ function useProfile(id) {
   let raw = {};
   try { raw = JSON.parse(load(stKey(id)) || '{}'); } catch (e) { raw = {}; }
   st = Object.assign(JSON.parse(JSON.stringify(DEF_ST)), raw);
+  lastSig = progSig();
   sh = new Shell(load(shKey(id)));
-  quiz = null; hintShown = false; solShown = false; stepsShown = false;
+  quiz = null; hintShown = false; solShown = false; stepsShown = false; xpSteps.clear(); lastXp = null;
   term.innerHTML = '';
   welcome();
   renderPrompt();
@@ -71,9 +72,12 @@ function deleteProfile(id) {
   if (PROFILE === id) useProfile(PROFILES[0].id);
   syncLater();
 }
+let lastSig = '';
+function progSig() { return [st.xp, st.done.length, st.cmds, st.quizBest, (st.everDone || []).length].join('|'); }
 function persist() {
   if (!PROFILE) return;
   st.updatedAt = Date.now();
+  const sig = progSig(); if (sig !== lastSig) { st.progAt = Date.now(); lastSig = sig; }
   save(stKey(PROFILE), JSON.stringify(st));
   save(shKey(PROFILE), sh.serialize());
   syncLater();
@@ -82,9 +86,9 @@ function persist() {
 /* ---------- senkron, GitHub Gist ---------- */
 
 const SYNC = {
-  token: load('ll.gh.token') || '',
+  token: load('labs.gh.token') || load('ll.gh.token') || load('nd.gh.token') || '',
   gist: load('ll.gh.gist') || '',
-  status: 'off', msg: '', tm: null, busy: false,
+  status: 'off', msg: '', tm: null, busy: false, ready: false, lastPull: 0,
   api(path, method, body) {
     return fetch('https://api.github.com' + path, { method: method || 'GET', headers: { Authorization: 'Bearer ' + this.token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
       .then(async r => { if (!r.ok) throw new Error('GitHub ' + r.status); return r.status === 204 ? null : r.json(); });
@@ -102,53 +106,119 @@ const SYNC = {
     if (g) { this.gist = g.id; save('ll.gh.gist', g.id); return g.id; }
     return null;
   },
+  async readRemote(id) {
+    const g = await this.api('/gists/' + id);
+    const f = g.files && g.files['linux-lab.json'];
+    if (!f) return null;
+    let raw = f.content;
+    if (f.truncated) raw = await fetch(f.raw_url).then(r => r.text());
+    try { return JSON.parse(raw); } catch (e) { this.set('err', 'Gist bozuk'); return null; }
+  },
+  /* Uzaktaki durumu yereldekiyle birlestirir. Aktif profil bellekteki st ile birlesir, digerleri localStorage ile.
+     Donus {changed, needPush}. changed aktif profilde gorunur bir degisiklik oldu demek */
+  mergeRemote(data, replaceShell) {
+    let changed = false, needPush = false;
+    (data.profiles || []).forEach(p => { if (!PROFILES.some(x => x.id === p.id)) { PROFILES.push(p); changed = true; } });
+    Object.entries(data.states || {}).forEach(([pid, s]) => {
+      if (!s || !s.st) return;
+      const active = pid === PROFILE && st;
+      let loc = null;
+      if (active) loc = st; else { try { loc = JSON.parse(load(stKey(pid)) || 'null'); } catch (e) { loc = null; } }
+      if (!loc) { save(stKey(pid), JSON.stringify(s.st)); if (s.sh) save(shKey(pid), s.sh); return; }
+      /* Zaman damgasi degil ilerleme birlestirilir. Yeni acilan bos tarayici uzaktaki ilerlemeyi ezemez */
+      const merged = mergeSt(loc, s.st);
+      const takeShell = replaceShell && !!s.sh && (s.st.progAt || 0) > (loc.progAt || 0);
+      const diff = JSON.stringify(merged) !== JSON.stringify(loc);
+      if (diff || takeShell) {
+        save(stKey(pid), JSON.stringify(merged));
+        if (takeShell) save(shKey(pid), s.sh);
+        if (active) { if (takeShell) changed = true; else { const vis = merged.done.length !== st.done.length || merged.xp !== st.xp; st = merged; lastSig = progSig(); if (vis) changed = 'soft'; } }
+      }
+      if (JSON.stringify(merged) !== JSON.stringify(s.st)) needPush = true;
+    });
+    PROFILES.forEach(p => { if (!(data.states || {})[p.id]) needPush = true; });
+    save(KEY_PROFILES, JSON.stringify(PROFILES));
+    return { changed, needPush };
+  },
   async pull() {
     if (!this.token) return false;
     this.set('busy', 'Çekiliyor');
     const id = await this.findGist();
+    this.lastPull = Date.now();
     if (!id) { this.set('ok', 'Gist henüz yok, ilk kayıtta oluşur'); return false; }
-    const g = await this.api('/gists/' + id);
-    const f = g.files && g.files['linux-lab.json'];
-    if (!f) { this.set('ok'); return false; }
-    let raw = f.content;
-    if (f.truncated) raw = await fetch(f.raw_url).then(r => r.text());
-    let data; try { data = JSON.parse(raw); } catch (e) { this.set('err', 'Gist bozuk'); return false; }
-    let changed = false;
-    (data.profiles || []).forEach(p => { if (!PROFILES.some(x => x.id === p.id)) { PROFILES.push(p); changed = true; } });
-    Object.entries(data.states || {}).forEach(([pid, s]) => {
-      if (!s || !s.st) return;
-      let loc = null; try { loc = JSON.parse(load(stKey(pid)) || 'null'); } catch (e) { loc = null; }
-      if (!loc || (s.updatedAt || 0) > (loc.updatedAt || 0)) { save(stKey(pid), JSON.stringify(s.st)); if (s.sh) save(shKey(pid), s.sh); changed = true; }
-    });
-    if (changed) save(KEY_PROFILES, JSON.stringify(PROFILES));
+    const data = await this.readRemote(id);
+    if (!data) { this.set('ok'); return false; }
+    const r = this.mergeRemote(data, true);
     this.set('ok', 'Son çekme ' + new Date().toLocaleTimeString('tr-TR'));
-    return changed;
+    if (r.needPush) setTimeout(() => this.push(), 500);
+    return r.changed;
   },
+  /* Gondermeden once uzaktakini okuyup birlestirir, iki cihaz birbirinin ilerlemesini ezemez */
   async push() {
-    if (!this.token || this.busy) return;
+    if (!this.token) return;
+    if (this.busy) { this.again = true; return; }
     this.busy = true;
     try {
       this.set('busy', 'Gönderiliyor');
-      const body = { description: 'linux-lab-sync', public: false, files: { 'linux-lab.json': { content: JSON.stringify(this.payload()) } } };
       const id = await this.findGist();
+      if (id) {
+        const data = await this.readRemote(id);
+        if (data) { const r = this.mergeRemote(data, false); if (r.changed === 'soft' && typeof renderAll === 'function') { renderTop(); renderAll(); } }
+        if (PROFILE && st) save(stKey(PROFILE), JSON.stringify(st));
+      }
+      const body = { description: 'linux-lab-sync', public: false, files: { 'linux-lab.json': { content: JSON.stringify(this.payload()) } } };
       if (id) await this.api('/gists/' + id, 'PATCH', body);
       else { const g = await this.api('/gists', 'POST', body); this.gist = g.id; save('ll.gh.gist', g.id); }
       this.set('ok', 'Son gönderme ' + new Date().toLocaleTimeString('tr-TR'));
     } catch (e) { this.set('err', String(e.message || e)); }
     this.busy = false;
+    if (this.again) { this.again = false; setTimeout(() => this.push(), 300); }
   },
   async connect(token) {
-    this.token = token.trim(); save('ll.gh.token', this.token); this.gist = ''; drop('ll.gh.gist');
+    this.token = token.trim(); save('labs.gh.token', this.token); this.gist = ''; drop('ll.gh.gist');
     if (!this.token) { this.set('off'); return; }
     try {
       const changed = await this.pull();
+      this.ready = true;
       if (changed) { loadProfiles(); useProfile(PROFILES.some(p => p.id === PROFILE) ? PROFILE : PROFILES[0].id); toast('Diğer cihazdaki ilerleme alındı', 'good'); }
       await this.push();
-      toast('Senkron açık', 'good');
+      toast('Senkron açık, bu tarayıcı artık eşitleniyor', 'good');
     } catch (e) { this.set('err', String(e.message || e)); toast('Bağlanamadı, token ve gist yetkisini kontrol et', 'bad'); }
   },
 };
-function syncLater() { if (!SYNC.token) return; clearTimeout(SYNC.tm); SYNC.tm = setTimeout(() => SYNC.push(), 4000); }
+function syncLater() { if (!SYNC.token || !SYNC.ready) return; clearTimeout(SYNC.tm); SYNC.tm = setTimeout(() => { SYNC.tm = null; SYNC.push(); }, 4000); }
+/* Iki cihazin ilerlemesini birlestirir. Tamamlanan gorevler, rozetler birlesir, sayaclar buyuk olani alir, ayarlar son ilerleme yapilan taraftan gelir */
+function dayNum(d) { if (!d) return 0; const [y, m, dd] = String(d).split('-').map(Number); return new Date(y, (m || 1) - 1, dd || 1).getTime(); }
+function mergeSt(a, b) {
+  const pa = a.progAt || 0, pb = b.progAt || 0;
+  const base = pb > pa ? b : a, other = base === a ? b : a;
+  const out = Object.assign({}, other, base);
+  const uni = k => [...new Set([].concat(a[k] || [], b[k] || []))];
+  ['done', 'hinted', 'revealed', 'badges', 'everDone'].forEach(k => { out[k] = uni(k); });
+  ['xp', 'cmds', 'quizBest', 'dailyDone', 'noHint', 'round'].forEach(k => { out[k] = Math.max(a[k] || 0, b[k] || 0); });
+  out.quizPerfect = !!(a.quizPerfect || b.quizPerfect); out.secret = !!(a.secret || b.secret);
+  const da = dayNum(a.lastDay), db = dayNum(b.lastDay);
+  if (da === db) out.streak = Math.max(a.streak || 0, b.streak || 0); else { const w = da > db ? a : b; out.streak = w.streak || 0; out.lastDay = w.lastDay; }
+  out.mVar = Object.assign({}, other.mVar || {}, base.mVar || {});
+  out.mStart = Object.assign({}, base.mStart || {});
+  out.progAt = Math.max(pa, pb); out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0);
+  return out;
+}
+async function syncPullReload(quiet) {
+  try {
+    const ch = await SYNC.pull();
+    if (ch === true) { loadProfiles(); useProfile(PROFILES.some(p => p.id === PROFILE) ? PROFILE : PROFILES[0].id); }
+    else if (ch === 'soft') { persist(); renderTop(); renderAll(); }
+    if (ch && !quiet) toast('Diğer cihazdaki ilerleme alındı', 'good');
+    return ch;
+  } catch (e) { SYNC.set('err', String(e.message || e)); return false; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (!SYNC.token || !SYNC.ready) return;
+  if (document.visibilityState === 'hidden') { if (SYNC.tm) { clearTimeout(SYNC.tm); SYNC.tm = null; SYNC.push(); } }
+  else if (Date.now() - SYNC.lastPull > 20000) syncPullReload(false);
+});
+function syncLink() { return location.origin + location.pathname + '#sync=' + encodeURIComponent(SYNC.token); }
 window.addEventListener('pagehide', () => { if (SYNC.token && SYNC.tm) { clearTimeout(SYNC.tm); SYNC.push(); } });
 
 /* ---------- genel ---------- */
@@ -170,7 +240,7 @@ function renderTop() {
   $('#level').innerHTML = 'Lv ' + level() + '<span class="full"> · ' + esc(title()) + '</span>';
   $('#xpfill').style.width = ((st.xp % 120) / 120 * 100) + '%';
   $('#who').textContent = profIcon() + ' ' + profName();
-  const m = ALL.find(x => x.id === st.current);
+  const m = curMission();
   $('#topmis').innerHTML = m ? `<b>${esc(m.title)}</b> · ${esc(CHAPTERS.find(c => c.id === m.chapter).title)} · +${xpFor(m)} XP` : 'Serbest terminal';
   const p = sh.prompt();
   $('#ttitle').textContent = `${p.user}: ${p.path}`;
@@ -257,6 +327,12 @@ function dailyMark(id) {
 }
 const MODES = { guided: { label: 'Rehberli', desc: 'Adımlar ve ipucu baştan açık, acele yok', mult: 0.8 }, normal: { label: 'Normal', desc: 'Görev metni var, adımları istersen açarsın', mult: 1 }, expert: { label: 'Uzman', desc: 'Sadece semptom, görev gizli, %50 bonus XP', mult: 1.5 } };
 function modeOf() { return MODES[st.mode] ? st.mode : 'normal'; }
+/* Senaryo varyanti. Her gorevin temel senaryosu ve varyantlari var, hangisinin oynanacagi profil durumunda saklanir */
+function vCount(m) { return typeof variantCount === 'function' ? variantCount(m) : 1; }
+function vIndex(m) { const n = vCount(m); const k = st.mVar && st.mVar[m.id] != null ? st.mVar[m.id] : (st.round || 0); return n > 1 ? ((k % n) + n) % n : 0; }
+function eff(m) { return m && typeof variantOf === 'function' ? variantOf(m, vIndex(m)) : m; }
+function curMission() { const m = ALL.find(x => x.id === st.current); return m ? eff(m) : null; }
+function isDone(m) { return st.done.includes(m.id) && st.practice !== m.id; }
 function xpFor(m) { const base = Math.round(m.xp * MODES[modeOf()].mult); return modeOf() === 'expert' && (st.hinted.includes(m.id) || st.revealed.includes(m.id)) ? m.xp : base; }
 
 function renderHome() {
@@ -265,13 +341,14 @@ function renderHome() {
   let h = `<div class="hero"><div class="muted small">Hoş geldin, ${esc(profName())}</div><div class="big">${st.done.length}/${total} görev tamam</div>`;
   h += `<div class="muted small" style="margin-top:2px">${nm ? 'Sıradaki görev ' + esc(nm.title) : 'Tüm görevler bitti. Artık serbest terminalde istediğini dene.'}</div><div class="prog"><div style="width:${st.done.length / total * 100}%"></div></div>`;
   h += `<div class="row">${nm ? `<button class="btn" id="go-next">▶ Devam et</button>` : ''}<button class="btn alt" id="go-free">Serbest terminal</button></div></div>`;
+  h += syncWarn();
   const d = dailyMissions();
   h += `<h3>Günün görevleri <span style="text-transform:none;letter-spacing:0;font-weight:400">· ${d.done.length}/3${d.bonus ? ' · bonus alındı 🎁' : ' · hepsi bitince +30 XP'}</span></h3>`;
   d.ids.forEach(id => {
     const m = ALL.find(x => x.id === id); if (!m) return;
     const ch = CHAPTERS.find(c => c.id === m.chapter);
     const ok = d.done.includes(id) || st.done.includes(id);
-    h += `<button class="mis ${ok ? 'done' : ''} ${st.current === id ? 'cur' : ''}" data-m="${m.id}"><span class="n">${ok ? '✓' : ch.icon}</span><span style="min-width:0"><span>${esc(m.title)}</span><div class="muted" style="font-size:12px">${esc(ch.title)}</div></span><span class="xp">+${xpFor(m)}</span></button>`;
+    h += `<button class="mis ${ok ? 'done' : ''} ${st.current === id ? 'cur' : ''}" data-m="${m.id}"><span class="n">${ok ? '✓' : ch.icon}</span><span style="min-width:0"><span>${esc(eff(m).title)}</span><div class="muted" style="font-size:12px">${esc(ch.title)}</div></span><span class="xp">+${xpFor(m)}</span></button>`;
   });
   h += `<h3>Zorluk</h3><div class="seg">${Object.keys(MODES).map(k => `<button data-mode="${k}" class="${modeOf() === k ? 'on' : ''}">${MODES[k].label}</button>`).join('')}</div><p class="muted small" style="margin:-4px 0 12px">${esc(MODES[modeOf()].desc)}</p>`;
   h += '<h3>Bölümler</h3>';
@@ -282,6 +359,7 @@ function renderHome() {
   });
   $('#v-home').innerHTML = h;
   const gn = $('#go-next'); if (gn) gn.onclick = () => startMission(nm.id);
+  bindSyncWarn($('#v-home'));
   $('#go-free').onclick = () => { st.current = null; persist(); renderTop(); renderMission(); show('term'); if (isDesk()) show('mission'); };
   $$('.chap').forEach(b => b.onclick = () => renderChapter(b.dataset.c));
   $$('#v-home .mis').forEach(b => b.onclick = () => startMission(b.dataset.m));
@@ -291,12 +369,21 @@ function renderHome() {
 function renderChapter(cid) {
   const c = CHAPTERS.find(x => x.id === cid);
   let h = `<button class="back" id="bk">‹ Bölümler</button><h2>${c.icon} ${esc(c.title)}</h2><p class="muted small" style="margin-top:-6px">${esc(c.sub)}</p>`;
+  const anyDone = c.missions.some(m => st.done.includes(m.id));
+  const nv = Math.max(...c.missions.map(m => vCount(m)));
   c.missions.forEach((m, i) => {
     const done = st.done.includes(m.id);
-    h += `<button class="mis ${done ? 'done' : ''} ${st.current === m.id ? 'cur' : ''}" data-m="${m.id}"><span class="n">${done ? '✓' : i + 1}</span><span>${esc(m.title)}</span><span class="xp">+${m.xp}</span></button>`;
+    const em = eff(Object.assign({}, m, { chapter: c.id }));
+    h += `<button class="mis ${done ? 'done' : ''} ${st.current === m.id ? 'cur' : ''}" data-m="${m.id}"><span class="n">${done ? '✓' : i + 1}</span><span>${esc(em.title)}</span><span class="xp">+${m.xp}</span></button>`;
   });
+  if (anyDone && nv > 1) h += `<button class="btn alt block" id="ch-replay" style="margin-top:10px">🔄 Bölümü farklı senaryoyla baştan oyna</button><p class="small muted" style="margin-top:6px">Her görevin ${nv} farklı senaryosu var. Aynı komutları farklı dosya, kullanıcı ve log'larla tekrar çözersin. Tekrar XP'si yarıdır.</p>`;
   $('#v-chapter').innerHTML = h;
   $('#bk').onclick = () => show('home');
+  const rp = $('#ch-replay'); if (rp) rp.onclick = () => {
+    if (!confirm('Bu bölümdeki görevler sıfırlanıp farklı senaryoyla baştan başlasın mı?')) return;
+    c.missions.forEach(m => { const base = ALL.find(x => x.id === m.id); st.mVar[m.id] = (vIndex(base) + 1) % vCount(base); st.done = st.done.filter(x => x !== m.id); });
+    persist(); startMission(c.missions[0].id);
+  };
   $$('#v-chapter .mis').forEach(b => b.onclick = () => startMission(b.dataset.m));
   currentView = 'chapter';
   $$('.view').forEach(x => x.classList.toggle('active', x.id === 'v-chapter'));
@@ -304,17 +391,22 @@ function renderChapter(cid) {
 
 /* ---------- gorev paneli ---------- */
 
-let hintShown = false, solShown = false, stepsShown = false, autoTm = null;
-function startMission(id) {
-  const m = ALL.find(x => x.id === id);
-  if (!m) return;
+let hintShown = false, solShown = false, stepsShown = false, autoTm = null, lastXp = null;
+const xpSteps = new Set();
+function startMission(id, opts) {
+  const base = ALL.find(x => x.id === id);
+  if (!base) return;
   clearTimeout(autoTm); autoTm = null;
+  if (opts && opts.replay) { st.mVar[id] = (vIndex(base) + 1) % vCount(base); st.practice = id; }
+  else if (st.practice && st.practice !== id) st.practice = null;
+  const m = eff(base);
   st.current = id;
-  hintShown = false; solShown = false; stepsShown = false;
+  st.mStart[id] = sh.history.length;
+  hintShown = false; solShown = false; stepsShown = false; xpSteps.clear();
   if (m.setup) { try { m.setup(sh); } catch (e) { /* yok say */ } }
   persist();
   renderTop();
-  printSys(`\n── Görev ${m.title} ──\n`, 'mhead');
+  printSys(`\n── Görev ${m.title}${vCount(base) > 1 ? ' · senaryo ' + (vIndex(base) + 1) + '/' + vCount(base) : ''} ──\n`, 'mhead');
   renderMission();
   if (isDesk()) { show('mission'); input.focus(); } else show('term');
 }
@@ -323,19 +415,41 @@ function startMission(id) {
 function stepsOf(m) {
   return String(m.solution || '').split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'));
 }
+/* Sadece bu gorev basladiktan sonra yazilan komutlar sayilir, onceki gorevlerin komutlari adimlari kendiliginden acmasin */
 function stepDone(step, lines) {
   const norm = s => s.replace(/^sudo\s+/, '').replace(/\s+/g, ' ').trim();
   const t = norm(step);
-  const cmd = t.split(' ')[0];
   const toks = t.split(' ');
   return lines.some(l => {
     const u = norm(l);
     if (u === t) return true;
-    if (u.split(' ')[0] !== cmd) return false;
-    const hit = toks.filter(x => u.includes(x)).length;
-    return hit / toks.length >= 0.6;
+    const ut = u.split(' ');
+    if (ut[0] !== toks[0]) return false;
+    const a = new Set(toks), b = new Set(ut); let inter = 0; a.forEach(x => { if (b.has(x)) inter++; });
+    return inter / (a.size + b.size - inter) >= 0.75;
   });
 }
+function sinceStart(m) { const s0 = st.mStart && st.mStart[m.id]; return s0 != null && s0 <= sh.history.length ? sh.history.slice(s0) : []; }
+/* Ipucu, cozumdeki komutlarin ne ise yaradigi ve hangi secenekleri kullanacagin, degerleri vermeden */
+function hintCmdsHTML(m) {
+  if (typeof explainHint !== 'function') return '';
+  const list = explainHint(m.solution).filter(x => x.name && x.name !== 'submit');
+  if (!list.length) return '';
+  const opName = { '|': 'pipe |', '>': 'yönlendirme >', '>>': 'ekleme >>', '2>': 'hata yönlendirme 2>', '2>&1': '2>&1', '&&': '&&', '||': '||', ';': ';', '<': 'girdi <', '&': 'arka plan &' };
+  return '<div class="hc-wrap"><div class="hc-h">Kullanacağın araçlar</div>' + list.map(x => `<div class="hc"><code>${esc(x.name)}</code> <span>${esc(x.d)}</span>${x.opts.length ? '<ul>' + x.opts.map(o => `<li><code>${esc(o.k)}</code> ${esc(o.t)}</li>`).join('') + '</ul>' : ''}${x.ops.length ? `<div class="small muted">Bağlantı ${x.ops.map(o => esc(opName[o] || o)).join(', ')}</div>` : ''}</div>`).join('') + '</div>';
+}
+function xpBlock(line) { return typeof explainHTML === 'function' ? explainHTML(line) : ''; }
+function showExplain(line) {
+  lastXp = line;
+  if (isDesk()) { show('mission'); const el = $('#mp-last'); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  else openSheet(`<h2>Komut açıklaması</h2><div class="xp-line"><code>${esc(line)}</code></div>${xpBlock(line)}<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="ghost" id="sh-close">Kapat</button></div>`);
+}
+function syncWarn() { return !SYNC.token && load('labs.synchint') !== 'off' ? `<div class="card warn"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="small">☁︎ İlerlemen sadece bu tarayıcıda. Başka tarayıcı ya da cihazdan devam etmek için senkronu aç.</span><button class="ghost sync-x" title="gizle">✕</button></div><button class="btn small go-sync" style="margin-top:8px">Senkronu kur</button></div>` : ''; }
+function bindSyncWarn(root) {
+  root.querySelectorAll('.go-sync').forEach(b => b.onclick = () => { show('me'); setTimeout(() => { const el = $('#sync-card'); if (el) el.scrollIntoView({ block: 'start' }); }, 50); });
+  root.querySelectorAll('.sync-x').forEach(b => b.onclick = () => { save('labs.synchint', 'off'); renderAll(); if (currentView === 'home') renderHome(); });
+}
+function navOf(m) { const gi = ALL.findIndex(x => x.id === m.id); return { prev: ALL[gi - 1] || null, next: ALL[gi + 1] || null }; }
 let stripCol = false;
 /* Mobilde terminalin ustunde kompakt gorev seridi, dikey ekranda goreve gitmeden calisilsin */
 function renderStrip(m, done, taskHidden, steps, since) {
@@ -343,7 +457,8 @@ function renderStrip(m, done, taskHidden, steps, since) {
   if (!m) { sp.className = 'mstrip mobile-only'; sp.innerHTML = `<div class="mh"><span class="tt muted">🧪 Serbest terminal</span><button class="tg" id="ms-go">Görev ›</button></div>`; $('#ms-go').onclick = () => show('mission'); return; }
   sp.className = 'mstrip mobile-only' + (stripCol ? ' col' : '');
   const doneN = steps.filter(s => stepDone(s, since)).length;
-  let h = `<div class="mh"><span class="tt">${done ? '✅ ' : '🎯 '}${esc(m.title)}</span><span class="pill xp">+${xpFor(m)}</span>${steps.length ? `<span class="pill">${done ? steps.length : doneN}/${steps.length}</span>` : ''}<button class="tg" id="ms-tg">${stripCol ? '▾' : '▴'}</button></div><div class="mb">`;
+  const nav = navOf(m);
+  let h = `<div class="mh"><button class="tg" id="ms-prev" ${nav.prev ? '' : 'disabled'} aria-label="önceki">‹</button><span class="tt">${done ? '✅ ' : '🎯 '}${esc(m.title)}</span><span class="pill xp">+${xpFor(m)}</span>${steps.length ? `<span class="pill">${done ? steps.length : doneN}/${steps.length}</span>` : ''}<button class="tg" id="ms-nextm" ${nav.next ? '' : 'disabled'} aria-label="sonraki">›</button><button class="tg" id="ms-tg">${stripCol ? '▾' : '▴'}</button></div><div class="mb">`;
   if (done) h += `<div class="done-box"><div class="t">Görev tamamlandı</div><div class="small muted">${autoTm ? 'Sıradaki görev birazdan açılıyor' : 'Sıradaki göreve geçebilirsin'}</div><div class="row"><button class="btn small" id="ms-next">Sonraki ›</button></div></div>`;
   else h += taskHidden ? `<div class="task locked">🔒 Görev gizli, uzman modu. <button class="ghost" id="ms-reveal">Göster</button></div>` : `<div class="task">${md(m.task)}</div>`;
   if (steps.length && !done && (stepsShown || steps.some(s => stepDone(s, since)))) {
@@ -351,10 +466,12 @@ function renderStrip(m, done, taskHidden, steps, since) {
     steps.forEach((s, i) => { const ok = stepDone(s, since); const vis = stepsShown || ok; h += `<li class="${ok ? 'ok' : ''}"><span class="ck">${ok ? '✓' : i + 1}</span><span class="st ${vis ? '' : 'blur'}">${esc(vis ? s : s.replace(/\S/g, '•'))}</span>${vis && !ok ? `<button class="use" data-use="${esc(s)}">yaz</button>` : ''}</li>`; });
     h += '</ol>';
   }
-  if (hintShown && !done) h += `<div class="hint">💡 ${md(m.hint)}</div>`;
+  if (hintShown && !done) h += `<div class="hint">💡 ${md(m.hint)}${hintCmdsHTML(m)}</div>`;
   h += `<div class="row">${!done && !stepsShown ? '<button class="ghost" id="ms-steps">Adımlar</button>' : ''}${!done && !hintShown ? '<button class="ghost" id="ms-hint">💡 İpucu</button>' : ''}<button class="ghost" id="ms-go">Detay ›</button></div></div>`;
   sp.innerHTML = h;
   $('#ms-tg').onclick = () => { stripCol = !stripCol; renderMission(); };
+  $('#ms-prev').onclick = () => { if (nav.prev) startMission(nav.prev.id); };
+  $('#ms-nextm').onclick = () => { if (nav.next) startMission(nav.next.id); };
   $('#ms-go').onclick = () => show('mission');
   const nx = $('#ms-next'); if (nx) nx.onclick = goNext;
   const rv = $('#ms-reveal'); if (rv) rv.onclick = () => { if (!st.revealed.includes(m.id)) st.revealed.push(m.id); persist(); renderMission(); };
@@ -364,24 +481,29 @@ function renderStrip(m, done, taskHidden, steps, since) {
 }
 function renderMission() {
   const box = $('#v-mission');
-  const m = ALL.find(x => x.id === st.current);
+  const base = ALL.find(x => x.id === st.current);
+  const m = base ? eff(base) : null;
   if (!m) {
     renderStrip(null);
-    box.innerHTML = `<div class="card"><div style="font-weight:700;margin-bottom:4px">🧪 Serbest terminal</div><div class="muted small">Burası senin sandbox'ın. Ne istersen dene, bir şeyi bozarsan Profil sekmesinden filesystem'i sıfırla. <code>help</code> komut listesini verir.</div></div>` + nextBlock() + keyHelp();
-    bindKeyHelp();
+    box.innerHTML = syncWarn() + `<div class="card"><div style="font-weight:700;margin-bottom:4px">🧪 Serbest terminal</div><div class="muted small">Burası senin sandbox'ın. Ne istersen dene, bir şeyi bozarsan Profil sekmesinden filesystem'i sıfırla. <code>help</code> komut listesini verir.</div></div>` + nextBlock() + keyHelp();
+    bindKeyHelp(); bindSyncWarn(box);
     const nb = $('#mp-next'); if (nb) nb.onclick = () => { const nm = nextMission(); if (nm) startMission(nm.id); };
     return;
   }
   const ch = CHAPTERS.find(c => c.id === m.chapter);
-  const done = st.done.includes(m.id);
+  const done = isDone(m);
   const expert = modeOf() === 'expert' && !done;
   const taskHidden = expert && !st.revealed.includes(m.id);
   if (modeOf() === 'guided') { stepsShown = true; if (!hintShown) { hintShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); } }
   const steps = stepsOf(m);
-  const since = sh.history.slice(-40);
+  const since = sinceStart(m);
   renderStrip(m, done, taskHidden, steps, since);
-  let h = `<div class="mhdr"><div><div class="ch">${ch.icon} ${esc(ch.title)}</div><div class="tt">${done ? '✅ ' : ''}${esc(m.title)}</div></div><div class="right"><span class="pill xp">+${xpFor(m)} XP</span>${expert ? '<span class="pill">uzman</span>' : ''}</div></div>`;
-  if (done) h += `<div class="done-box"><div class="t">Görev tamamlandı</div><div class="small muted" id="mp-auto">${autoTm ? 'Sıradaki görev birazdan açılıyor' : 'Sıradaki göreve geçebilirsin'}</div><div class="row" style="margin-top:8px"><button class="btn small" id="mp-next">Sonraki ›</button>${autoTm ? '<button class="btn alt small" id="mp-stay">Burada kal</button>' : ''}</div></div>`;
+  const nav = navOf(m);
+  const idx = ch.missions.findIndex(x => x.id === m.id);
+  const nv = vCount(base);
+  let h = syncWarn() + `<div class="mnav"><button class="ghost" id="mp-prev" ${nav.prev ? '' : 'disabled'}>‹ Önceki</button><span class="small muted">${ch.icon} ${esc(ch.title)} · ${idx + 1}/${ch.missions.length}</span><button class="ghost" id="mp-nextm" ${nav.next ? '' : 'disabled'}>Sonraki ›</button></div>`;
+  h += `<div class="mhdr"><div><div class="tt">${done ? '✅ ' : ''}${esc(m.title)}</div>${nv > 1 ? `<div class="ch">Senaryo ${vIndex(base) + 1}/${nv}${st.practice === m.id ? ' · tekrar' : ''}</div>` : ''}</div><div class="right"><span class="pill xp">+${xpFor(m)} XP</span>${expert ? '<span class="pill">uzman</span>' : ''}</div></div>`;
+  if (done) h += `<div class="done-box"><div class="t">Görev tamamlandı</div><div class="small muted" id="mp-auto">${autoTm ? 'Sıradaki görev birazdan açılıyor' : 'Sıradaki göreve geçebilirsin'}</div><div class="row" style="margin-top:8px"><button class="btn small" id="mp-next">Sonraki ›</button>${autoTm ? '<button class="btn alt small" id="mp-stay">Burada kal</button>' : `<button class="btn alt small" id="mp-replay">🔄 ${nv > 1 ? 'Farklı senaryoyla tekrar' : 'Tekrar çöz'}</button>`}</div></div>`;
   h += `<div class="story">${md(m.story)}</div>`;
   h += taskHidden ? `<div class="task locked">🔒 Uzman modu, görev metni gizli. Semptomdan yola çık. <button class="ghost" id="mp-reveal" style="margin-top:6px">Görevi göster</button></div>` : `<div class="task">${md(m.task)}</div>`;
   if (steps.length) {
@@ -390,23 +512,30 @@ function renderMission() {
     steps.forEach((s, i) => {
       const ok = done || stepDone(s, since);
       const vis = stepsShown || done || ok;
-      h += `<li class="${ok ? 'ok' : ''}"><span class="ck">${ok ? '✓' : i + 1}</span><span class="st ${vis ? '' : 'blur'}">${esc(vis ? s : s.replace(/\S/g, '•'))}</span>${vis && !ok ? `<button class="use" data-use="${esc(s)}">yaz</button>` : ''}</li>`;
+      h += `<li class="${ok ? 'ok' : ''}"><span class="ck">${ok ? '✓' : i + 1}</span><span class="st ${vis ? '' : 'blur'}">${esc(vis ? s : s.replace(/\S/g, '•'))}</span>${vis ? `<button class="use" data-xs="${i}" title="ne demek">?</button>` : ''}${vis && !ok ? `<button class="use" data-use="${esc(s)}">yaz</button>` : ''}</li>`;
+      if (vis && xpSteps.has(i)) h += `<li class="xp-li">${xpBlock(s)}</li>`;
     });
     h += '</ol>';
   }
   h += `<div class="row">${!hintShown ? '<button class="ghost" id="mp-hint">💡 İpucu</button>' : ''}${!solShown ? '<button class="ghost" id="mp-sol">🔓 Çözüm</button>' : ''}${done ? '' : '<button class="ghost" id="mp-skip">Atla ›</button>'}</div>`;
   h += `<button class="btn block mobile-only" id="mp-term" style="margin-top:14px">⌨️ Terminale geç</button>`;
-  if (hintShown) h += `<div class="hint">💡 ${md(m.hint)}</div>`;
-  if (solShown) h += `<div class="sol">${esc(m.solution)}</div>`;
+  if (hintShown) h += `<div class="hint">💡 ${md(m.hint)}${hintCmdsHTML(m)}</div>`;
+  if (solShown) h += `<div class="sol-wrap"><div class="hc-h">Çözüm ve açıklaması</div>${steps.map(sx => `<div class="sol-line"><code>${esc(sx)}</code></div>${/^(sudo\s+)?(nano|vim|vi)\s/.test(sx) ? '<div class="small muted" style="margin:4px 0 8px">Editörde dosyayı aç, görev metnindeki değişikliği yap, kaydet.</div>' : xpBlock(sx)}`).join('')}</div>`;
+  if (lastXp) h += `<div id="mp-last"><h3>Son komutun açıklaması</h3><div class="xp-line"><code>${esc(lastXp)}</code></div>${xpBlock(lastXp)}</div>`;
+  else h += `<p class="small muted desk-only" style="margin-top:14px">Terminalde çalıştırdığın her komutun yanındaki ⓘ ile o komutu parça parça açıklatabilirsin. <code>explain komut</code> bir komutun tüm seçeneklerini listeler.</p>`;
   h += keyHelp();
   box.innerHTML = h;
-  bindKeyHelp();
+  bindKeyHelp(); bindSyncWarn(box);
   const rv = $('#mp-reveal'); if (rv) rv.onclick = () => { if (!st.revealed.includes(m.id)) st.revealed.push(m.id); persist(); renderMission(); };
   const hb = $('#mp-hint'); if (hb) hb.onclick = () => { hintShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); persist(); renderMission(); };
   const sb = $('#mp-sol'); if (sb) sb.onclick = () => { solShown = true; stepsShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); persist(); renderMission(); };
   const stb = $('#mp-steps'); if (stb) stb.onclick = () => { stepsShown = true; if (!st.hinted.includes(m.id)) st.hinted.push(m.id); persist(); renderMission(); };
   const nx = $('#mp-next'); if (nx) nx.onclick = goNext;
   const sk = $('#mp-skip'); if (sk) sk.onclick = goNext;
+  $('#mp-prev').onclick = () => { if (nav.prev) startMission(nav.prev.id); };
+  $('#mp-nextm').onclick = () => { if (nav.next) startMission(nav.next.id); };
+  const rpl = $('#mp-replay'); if (rpl) rpl.onclick = () => startMission(m.id, { replay: true });
+  $$('#v-mission [data-xs]').forEach(b => b.onclick = () => { const i = +b.dataset.xs; if (xpSteps.has(i)) xpSteps.delete(i); else xpSteps.add(i); renderMission(); });
   const stay = $('#mp-stay'); if (stay) stay.onclick = () => { clearTimeout(autoTm); autoTm = null; renderMission(); };
   $$('#v-mission [data-use]').forEach(b => b.onclick = () => { input.value = b.dataset.use; show('term'); input.focus(); });
   const tb = $('#mp-term'); if (tb) tb.onclick = () => { show('term'); input.focus(); };
@@ -441,8 +570,10 @@ function welcome() {
 
 function execute(line) {
   const echo = document.createElement('div');
-  echo.innerHTML = promptHTML() + esc(line);
+  echo.innerHTML = promptHTML() + esc(line) + (line.trim() && typeof explainLine === 'function' ? ' <button class="xi" title="komutu açıkla">ⓘ</button>' : '');
+  echo.dataset.line = line;
   term.appendChild(echo);
+  if (line.trim() && !/^\s*(explain|clear|help)\b/.test(line)) lastXp = line.trim();
   if (/^\s*cowsay\b|^\s*sl\s*$|^\s*fortune\b|^\s*matrix\b|^\s*neofetch\b/.test(line)) { if (!st.secret) { st.secret = true; } }
   const res = sh.run(line);
   if (res.ui.clear) term.innerHTML = '';
@@ -466,15 +597,19 @@ function execute(line) {
 }
 
 function evaluate(line, out, submit) {
-  const m = ALL.find(x => x.id === st.current);
+  const m = curMission();
   if (!m) { checkBadges(); return; }
-  if (st.done.includes(m.id)) { checkBadges(); if (line.trim()) renderMission(); return; }
+  if (isDone(m)) { checkBadges(); if (line.trim()) renderMission(); return; }
   let passed = false;
   try { passed = !!m.check(sh, { line: line.trim(), out, submit: submit == null ? null : submit }); } catch (e) { passed = false; }
   if (passed) {
-    st.done.push(m.id);
-    if (!st.hinted.includes(m.id)) st.noHint = (st.noHint || 0) + 1;
-    const gained = xpFor(m);
+    const practice = st.practice === m.id;
+    const replay = !practice && (st.everDone || []).includes(m.id);
+    if (!st.done.includes(m.id)) st.done.push(m.id);
+    if (!st.everDone.includes(m.id)) st.everDone.push(m.id);
+    st.practice = null;
+    if (!practice && !replay && !st.hinted.includes(m.id)) st.noHint = (st.noHint || 0) + 1;
+    const gained = practice ? Math.max(3, Math.round(xpFor(m) * 0.3)) : replay ? Math.max(5, Math.round(xpFor(m) * 0.5)) : xpFor(m);
     addXP(gained);
     dailyMark(m.id);
     printSys(`\n✔ Görev tamamlandı +${gained} XP · Lv ${level()} ${title()}\n`, 'okk');
@@ -483,7 +618,7 @@ function evaluate(line, out, submit) {
     checkBadges();
     persist();
     const nm = ALL.slice(ALL.findIndex(x => x.id === m.id) + 1).find(x => !st.done.includes(x.id)) || nextMission();
-    if (st.auto !== false && nm) {
+    if (st.auto !== false && nm && !practice) {
       autoTm = setTimeout(() => { autoTm = null; goNext(); }, 2200);
       toast(`✔ <b>${esc(m.title)}</b> +${gained} XP · sıradaki geliyor`, 'good', 2000);
     } else toast(`✔ <b>${esc(m.title)}</b> +${gained} XP`, 'good');
@@ -543,7 +678,7 @@ document.addEventListener('click', e => {
   input.focus();
 });
 $('#t-help').onclick = () => { input.value = 'help'; $('#cmdform').requestSubmit(); };
-term.addEventListener('click', () => { if (!window.getSelection().toString()) input.focus(); });
+term.addEventListener('click', e => { const xi = e.target.closest('.xi'); if (xi) { e.stopPropagation(); showExplain(xi.parentElement.dataset.line); return; } if (!window.getSelection().toString()) input.focus(); });
 
 /* iOS klavye acildiginda yuksekligi ayarla */
 if (window.visualViewport) {
@@ -727,7 +862,8 @@ function cheatSheetText() {
 }
 function useCmd(c) { input.value = c; show('term'); input.focus(); }
 function renderMan(filter = '') {
-  const keys = Object.keys(Object.assign({}, LAB_EXT.manual, MANUAL)).sort();
+  const keys = Object.keys(Object.assign({}, LAB_EXT.manual, MANUAL, typeof EXPLAIN_DB !== 'undefined' ? EXPLAIN_DB : {})).sort();
+  const descOf = k => { try { const mm = manualOf(k); if (mm && mm.d) return mm; } catch (e) { /* yok */ } const e = typeof EXPLAIN_DB !== 'undefined' && EXPLAIN_DB[k]; return { d: e ? e.d : '', u: [], e: e && e.ex ? e.ex.map(x => x[0]) : [] }; };
   let h = `<h2>📚 Komut Sözlüğü</h2><div class="seg"><button data-mt="all" class="${manTab === 'all' ? 'on' : ''}">Tüm komutlar</button><button data-mt="mine" class="${manTab === 'mine' ? 'on' : ''}">Öğrendiklerim</button></div>`;
   if (manTab === 'mine') {
     const list = learnedCommands();
@@ -746,11 +882,12 @@ function renderMan(filter = '') {
   $$('[data-mt]').forEach(b => b.onclick = () => { manTab = b.dataset.mt; renderMan(); });
   const list = () => {
     const f = $('#msearch').value.toLowerCase();
-    $('#mlist').innerHTML = keys.filter(k => !f || k.includes(f) || manualOf(k).d.toLowerCase().includes(f)).map(k => {
-      const m = manualOf(k);
-      return `<div class="mitem"><div class="c">${esc(k)}</div><div class="d">${esc(m.d)}</div><div class="u">${m.u.map(esc).join('\n')}</div><div class="ex">${m.e.map(e => `<button data-e="${esc(e)}">$ ${esc(e)}</button>`).join('')}</div></div>`;
+    $('#mlist').innerHTML = keys.filter(k => !f || k.includes(f) || (descOf(k).d || '').toLowerCase().includes(f)).map(k => {
+      const m = descOf(k);
+      const ref = typeof explainRef === 'function' ? explainRef(k, true) : null;
+      return `<div class="mitem"><div class="c">${esc(k)}</div><div class="d">${esc(m.d)}</div><div class="u">${(m.u || []).map(esc).join('\n')}</div><div class="ex">${(m.e || []).map(e => `<button data-e="${esc(e)}">$ ${esc(e)}</button>`).join('')}</div>${ref ? `<details class="opts"><summary>Tüm seçenekler ve açıklamalı örnekler</summary>${ref}</details>` : ''}</div>`;
     }).join('');
-    $$('#mlist .ex button').forEach(b => b.onclick = () => useCmd(b.dataset.e));
+    $$('#mlist .ex button, #mlist .xp-ex').forEach(b => b.onclick = () => useCmd(b.dataset.e));
   };
   $('#msearch').oninput = list;
   list();
@@ -771,10 +908,11 @@ function renderMe() {
   h += '<h3>Profiller</h3>';
   PROFILES.forEach(p => { h += `<button class="prof ${p.id === PROFILE ? 'on' : ''}" data-p="${p.id}"><span class="ic">${p.icon}</span><span><div class="nm">${esc(p.name)}</div><div class="sub">${p.id === PROFILE ? 'aktif' : 'geç'}</div></span>${PROFILES.length > 1 ? `<span class="del" data-del="${p.id}" title="sil">🗑</span>` : ''}</button>`; });
   h += `<div class="row" style="margin-top:6px"><input type="text" id="np-name" placeholder="Yeni profil adı" class="search" style="margin:0;flex:1;min-width:120px"><button class="btn small" id="np-add">Ekle</button></div>`;
-  h += `<h3>Cihazlar arası senkron</h3><div class="card"><p class="small muted" style="margin:0 0 8px">İlerleme GitHub hesabındaki gizli bir gist'e yazılır, başka cihazda aynı token'ı girince kaldığın yerden devam edersin. Token sadece bu cihazda saklanır. github.com, Settings, Developer settings, Personal access tokens, Tokens classic, sadece <b>gist</b> yetkisi.</p>
+  h += `<h3 id="sync-card">Cihazlar arası senkron</h3><div class="card"><p class="small muted" style="margin:0 0 8px">Senkron kapalıyken ilerleme sadece bu tarayıcıda durur, başka tarayıcı ya da cihaz baştan başlar. Senkron GitHub hesabındaki gizli bir gist'e yazar. Token sadece cihazda saklanır, aynı siteden açılan Linux Lab ve NetDevOps Lab ortak kullanır.</p>
+    ${SYNC.token ? '' : `<ol class="small" style="margin:0 0 10px;padding-left:18px"><li><a href="https://github.com/settings/tokens/new?scopes=gist&description=Lab%20sync" target="_blank" rel="noopener">Bu linkle token oluştur</a>, sadece gist kutusu işaretli gelir, Generate token</li><li>ghp_ ile başlayan token'ı aşağıya yapıştır, Bağlan</li><li>Diğer cihazda Profil, Senkron altındaki linki aç ya da aynı token'ı gir</li></ol>`}
     <div class="row"><input type="password" id="gh-token" placeholder="ghp_… token" class="search" style="margin:0;flex:1;min-width:140px" value="${esc(SYNC.token)}"><button class="btn small" id="gh-connect">${SYNC.token ? 'Güncelle' : 'Bağlan'}</button>${SYNC.token ? '<button class="ghost" id="gh-off">Kapat</button>' : ''}</div>
     <div class="small muted" id="gh-status" style="margin-top:8px">${SYNC.token ? (SYNC.status === 'err' ? '⚠️ ' + esc(SYNC.msg) : '☁︎ Bağlı' + (SYNC.msg ? ' · ' + esc(SYNC.msg) : '')) : 'Kapalı'}</div>
-    ${SYNC.token ? '<div class="row" style="margin-top:8px"><button class="ghost" id="gh-pull">⬇ Şimdi çek</button><button class="ghost" id="gh-push">⬆ Şimdi gönder</button></div>' : ''}</div>`;
+    ${SYNC.token ? '<div class="row" style="margin-top:8px"><button class="ghost" id="gh-pull">⬇ Şimdi çek</button><button class="ghost" id="gh-push">⬆ Şimdi gönder</button><button class="ghost" id="gh-link">🔗 Diğer cihaz için link</button></div><p class="small muted" style="margin:8px 0 0">Link token içerir, sadece kendine gönder. Diğer cihazda açınca senkron otomatik kurulur.</p>' : ''}</div>`;
   h += '<h3>Ayarlar</h3><div class="card">';
   h += `<label class="toggle"><span>Görev bitince otomatik sıradakine geç</span><input type="checkbox" id="s-auto" ${st.auto !== false ? 'checked' : ''}></label>`;
   h += `<label class="toggle"><span>Zorluk</span><select id="s-mode">${Object.keys(MODES).map(k => `<option value="${k}" ${modeOf() === k ? 'selected' : ''}>${MODES[k].label}</option>`).join('')}</select></label></div>`;
@@ -792,13 +930,14 @@ function renderMe() {
   });
   $('#np-add').onclick = () => { const n = $('#np-name').value.trim(); if (!n) return; addProfile(n); show('me'); };
   $('#gh-connect').onclick = async () => { const tok = $('#gh-token').value.trim(); if (!tok) return toast('Token gir', 'bad'); $('#gh-status').textContent = 'Bağlanıyor…'; await SYNC.connect(tok); renderMe(); };
-  const off = $('#gh-off'); if (off) off.onclick = () => { SYNC.token = ''; drop('ll.gh.token'); drop('ll.gh.gist'); SYNC.gist = ''; SYNC.set('off'); renderMe(); };
+  const off = $('#gh-off'); if (off) off.onclick = () => { SYNC.token = ''; SYNC.ready = false; ['labs.gh.token', 'll.gh.token', 'nd.gh.token', 'll.gh.gist', 'nd.gh.gist'].forEach(drop); SYNC.gist = ''; SYNC.set('off'); renderMe(); };
   const pl = $('#gh-pull'); if (pl) pl.onclick = async () => { try { const ch = await SYNC.pull(); if (ch) { loadProfiles(); useProfile(PROFILES.some(p => p.id === PROFILE) ? PROFILE : PROFILES[0].id); toast('Güncel ilerleme alındı', 'good'); } else toast('Zaten güncel', 'good'); } catch (e) { SYNC.set('err', String(e.message || e)); toast('Çekilemedi', 'bad'); } renderMe(); };
+  const gl = $('#gh-link'); if (gl) gl.onclick = async () => { const u = syncLink(); try { await navigator.clipboard.writeText(u); toast('Link kopyalandı, diğer cihazda aç', 'good'); } catch (e) { prompt('Bu linki kopyala', u); } };
   const ps = $('#gh-push'); if (ps) ps.onclick = async () => { await SYNC.push(); toast(SYNC.status === 'ok' ? 'Gönderildi' : 'Gönderilemedi', SYNC.status === 'ok' ? 'good' : 'bad'); renderMe(); };
   $('#s-auto').onchange = e => { st.auto = e.target.checked; persist(); };
   $('#s-mode').onchange = e => { st.mode = e.target.value; persist(); renderMission(); };
   $('#rs-fs').onclick = () => { if (confirm('Filesystem, process\'ler ve servisler ilk haline dönsün mü?')) { sh.reset(); term.innerHTML = ''; welcome(); renderPrompt(); persist(); toast('Sıfırlandı', 'good'); } };
-  $('#rs-all').onclick = () => { if (confirm(`${profName()} profilinin XP, rozet ve görev ilerlemesi silinecek. Emin misin?`)) { drop(stKey(PROFILE)); drop(shKey(PROFILE)); useProfile(PROFILE); persist(); show('me'); } };
+  $('#rs-all').onclick = () => { if (confirm(`${profName()} profilinin XP, rozet ve görev ilerlemesi silinecek. Baştan oynarken görevler farklı senaryolarla gelir. Emin misin?`)) { const r = (st.round || 0) + 1; drop(stKey(PROFILE)); drop(shKey(PROFILE)); useProfile(PROFILE); st.round = r; persist(); show('me'); } };
 }
 
 /* profil secici, ust bardaki chip */
@@ -813,6 +952,7 @@ function openWho() {
   $('#wp-close').onclick = closeWho;
 }
 function closeWho() { $('#whobox').classList.add('hidden'); }
+function openSheet(html) { $('#whosheet').innerHTML = html; $('#whobox').classList.remove('hidden'); const c = $('#sh-close'); if (c) c.onclick = closeWho; $$('#whosheet .xp-ex').forEach(b => b.onclick = () => { closeWho(); useCmd(b.dataset.e); }); }
 $('#whobox').addEventListener('click', e => { if (e.target.id === 'whobox') closeWho(); });
 $('#who').onclick = openWho;
 
@@ -822,7 +962,13 @@ $$('#tabs button').forEach(b => b.onclick = () => show(b.dataset.v));
 loadProfiles();
 useProfile(PROFILES.some(p => p.id === load(KEY_CUR)) ? load(KEY_CUR) : PROFILES[0].id);
 show(isDesk() ? 'mission' : (st.current ? 'term' : 'home'));
-if (SYNC.token) { SYNC.set('busy'); SYNC.pull().then(ch => { if (ch) { loadProfiles(); useProfile(PROFILES.some(p => p.id === PROFILE) ? PROFILE : PROFILES[0].id); toast('Diğer cihazdaki ilerleme alındı', 'good'); } }).catch(e => SYNC.set('err', String(e.message || e))); }
+const syncHash = /[#&]sync=([^&]+)/.exec(location.hash);
+if (syncHash) { history.replaceState(null, '', location.pathname + location.search); SYNC.connect(decodeURIComponent(syncHash[1])).then(() => renderAll()); }
+else if (SYNC.token) { SYNC.set('busy'); syncPullReload(false).finally(() => { SYNC.ready = true; syncLater(); }); }
+if (typeof explainRef === 'function' && COMMANDS.man) {
+  const origMan = COMMANDS.man;
+  COMMANDS.man = function (args, stdin) { const r = origMan.call(this, args, stdin) || ok(); const ref = args[0] && explainRef(args[0]); if (ref) r.out = (r.out || '') + '\nSEÇENEKLER VE ÖRNEKLER\n' + ref; if (r.out && r.err && ref) r.err = ''; if (!r.out && ref) { r.out = ref; r.err = ''; r.code = 0; } return r; };
+}
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
