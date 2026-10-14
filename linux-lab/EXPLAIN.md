@@ -32,6 +32,11 @@ Alanlar
 - `num` sayı kısayolu açıklaması, head -5 için `num: 'Satır sayısı, -n 5 ile aynı'`. `numf` biçimleyici adı, kill -9 için `numf: 'signal'`.
 - `sub` alt komutlar, `ip addr show`, `git log`, `systemctl restart`. Her alt komut kendi `d`, `o`, `al`, `pos`, `sub` alanlarına sahip olabilir, `al2: ['a', 'address']` kısaltmalar. Üst komutun seçenekleri alt komutta da geçerli.
 
+Ek alanlar
+- `o` içinde tiresiz anahtar, anahtar kelime argümanı, `ip route ... via GW dev eth0`, `dig +short`. Seçenekte `p` bu kelime pozisyonel sayılsın.
+- Seçenekte `ao` değer isteğe bağlı, `ends` ya da `end` bu seçenekten sonra seçenekler biter, `posAfter` sonraki argüman etiketleri, `cmd` değeri bir komut satırı, `v` değerlerin anlamı `{wide: '...'}`.
+- Komutta `wt` wrap satırının metni, `noopt` hiç seçenek yok, `stop` ilk pozisyonelden sonra seçenek yok, `stopAt` n pozisyonelden sonra, `ddpos` `--` sonrası etiket.
+
 Kurallar
 - Türkçe açıklama, Linux terimleri İngilizce. Em dash, en dash, parantez, iki nokta ve ** yok. Açıklama kısa, tek ya da iki cümle, neden kullanılır sorusuna cevap verir.
 - Komutun gerçek GNU ve Linux davranışı. Lab'da olmayan ama gerçekte sık kullanılan önemli seçenekler de eklenir.

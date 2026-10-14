@@ -1,7 +1,15 @@
 'use strict';
 /* Linux Lab komut sozlugu. Bicim EXPLAIN.md. Konulara gore bloklar halinde, her blok Object.assign ile ekler.
-   o icindeki tiresiz anahtarlar anahtar kelime argumanidir, ip route ... dev eth0, tcpdump port 53, dig +short gibi.
-   ao deger istege bagli demek, p anahtar kelime pozisyonel argüman sayilir, wt wrap satirinin metni. */
+   EXPLAIN.md disindaki ek alanlar, motor explain.js bunlari da okur
+   - o icindeki tiresiz anahtar, anahtar kelime argumani. ip route ... via GW dev eth0, tcpdump port 53, dig +short, dig @sunucu, [ a = b ]
+     secenekte p, bu anahtar kelime pozisyonel argüman sayilsin, iptables -A INPUT gibi
+   - secenekte ao, deger istege bagli. Sonraki kelime tire ile baslamiyorsa deger sayilir, lsof -i, ulimit -n
+   - secenekte ends, bu secenekten sonra secenekler biter, python3 -m modul -v. posAfter ile sonraki argümanlarin etiketleri
+   - secenekte cmd, degeri bir komut satiri, ici de aciklanir. bash -c, su -c
+   - komutta wt, wrap satirinin metni. sp wrap ile pos verilirse once o argümanlar etiketlenir sonra komut gelir, timeout 5 komut, ssh host komut
+   - komutta noopt, hic secenek yok, submit -rw------- gibi cevaplar
+   - komutta stop, ilk pozisyonel argümandan sonra secenekler biter, bash script.sh -v
+   - komutta ddpos, -- isaretinden sonraki argümanlarin etiketi, git diff a b -- dosya */
 
 /* ---------- metin isleme ---------- */
 Object.assign(EXPLAIN_DB, {
@@ -9,7 +17,7 @@ Object.assign(EXPLAIN_DB, {
     d: 'Her satırdan seçilen alanları, karakterleri ya da byte\'ları keser',
     o: {
       '-d': { a: 'ayırıcı', t: 'Alan ayırıcı, tek karakter olmalı. Varsayılan Tab, /etc/passwd için iki nokta verilir' },
-      '-f': { a: 'alanlar', t: 'Seçilecek alan numaraları. 1,3 tek tek, 2-4 aralık, 3- üçüncüden sona', f: 'list', u: 'alan' },
+      '-f': { a: 'alanlar', t: 'Seçilecek alanlar. 1,3 tek tek, 2-4 aralık, 3- üçüncüden sona', f: 'list', u: 'alan' },
       '-c': { a: 'karakterler', t: 'Alan yerine karakter konumu seç, sabit genişlikli çıktılar için', f: 'list', u: 'karakter' },
       '-b': { a: 'byte', t: 'Byte konumu seç. Türkçe karakter gibi çok byte\'lı harflerde -c daha güvenli', f: 'list', u: 'byte' },
       '-s': { t: 'Ayırıcı içermeyen satırları atla. Yoksa böyle satırlar olduğu gibi basılır' },
@@ -392,7 +400,7 @@ Object.assign(EXPLAIN_DB, {
   },
   dirname: {
     d: 'Path\'in dizin kısmını verir, son bölümü atar',
-    pos: ['path...'],
+    pos: ['dosya ya da dizin...'],
     ex: [['dirname /var/log/nginx/access.log', '/var/log/nginx basar'], ['cd "$(dirname "$0")"', 'Script içinde script\'in bulunduğu dizine geç']],
   },
   readlink: {
@@ -404,7 +412,7 @@ Object.assign(EXPLAIN_DB, {
       '-n': { t: 'Sonuna satır sonu koyma' },
     },
     al: { '--canonicalize': '-f', '--canonicalize-existing': '-e', '--canonicalize-missing': '-m', '--no-newline': '-n' },
-    pos: ['path...'],
+    pos: ['dosya ya da dizin...'],
     ex: [['readlink ~/access.log', 'Link\'in hedefi'], ['readlink -f /usr/bin/python3', 'Zincirleme symlink\'lerin sonundaki gerçek dosya'], ['readlink -f .', 'Bulunduğun dizinin gerçek mutlak path\'i']],
   },
 });
@@ -560,7 +568,7 @@ Object.assign(EXPLAIN_DB, {
       '--one-file-system': { t: 'Recursive silerken başka filesystem\'e geçme, mount edilmiş diskleri koru' },
     },
     al: { '--recursive': '-r', '--force': '-f', '--interactive': '-i', '--verbose': '-v', '--dir': '-d' },
-    pos: ['dosya...'],
+    pos: ['dosya ya da dizin...'],
     ex: [['rm ~/lab/arsiv.txt', 'Tek dosya sil'], ['rm -r ~/lab/proje', 'Dizini içiyle sil'], ['rm -i *.tmp', 'Her dosya için onay alarak sil'], ['rm -- -garip-ad.txt', 'Tire ile başlayan dosya, -- seçenekleri bitirir']],
     tip: 'rm -rf geri dönüşsüz. Değişkenle path kurarken rm -rf "$DIR"/ yazıldığında DIR boşsa kök dizine iner, önce echo ile kontrol et. Boşluklu bir yazım hatası rm -rf /tmp/x / gibi kökü de hedefe ekler',
   },
@@ -606,7 +614,7 @@ Object.assign(EXPLAIN_DB, {
       '-group': { a: 'grup', t: 'Grubu bu olanlar' },
       '-nouser': { t: 'Sahibi artık var olmayan bir UID, silinmiş kullanıcıdan kalanlar' },
       '-nogroup': { t: 'Grubu artık var olmayan dosyalar' },
-      '-perm': { a: 'izin', t: 'İzne göre. 644 tam eşit, -4000 bu bitlerin hepsi var, /6000 en az biri var', f: 'perm' },
+      '-perm': { a: 'izin', t: 'İzne göre. Sayı tek başına tam eşleşme, - önekli bu bitlerin hepsi, / önekli en az biri', f: 'perm' },
       '-readable': { t: 'Senin okuyabildiğin dosyalar' },
       '-writable': { t: 'Senin yazabildiğin dosyalar' },
       '-executable': { t: 'Senin çalıştırabildiğin dosyalar ve girebildiğin dizinler' },
@@ -905,13 +913,13 @@ Object.assign(EXPLAIN_DB, {
     d: '.gz dosyasını açar ve sıkıştırılmış hali siler',
     o: { '-k': { t: 'Sıkıştırılmış dosyayı silme' }, '-c': { t: 'stdout\'a aç, dosyaya dokunma' }, '-f': { t: 'Var olan dosyanın üzerine yaz' }, '-v': { t: 'Ayrıntılı çıktı' }, '-t': { t: 'Bütünlük testi' }, '-l': { t: 'İçerik bilgisini listele' }, '-r': { t: 'Dizinlerde recursive' } },
     al: { '--keep': '-k', '--stdout': '-c', '--force': '-f', '--verbose': '-v', '--test': '-t', '--list': '-l', '--recursive': '-r' },
-    pos: ['dosya.gz...'],
+    pos: ['gz dosyası...'],
     ex: [['gunzip data.tar.gz', 'data.tar geri gelir'], ['gunzip -k log.gz', 'Sıkıştırılmış hali de kalsın'], ['gunzip -c app.log.gz | grep ERROR', 'Diske açmadan içinde ara']],
   },
   zcat: {
     d: '.gz dosyasını açmadan içeriğini ekrana basar, gunzip -c ile aynı',
     o: { '-f': { t: 'Sıkıştırılmamış dosyayı da olduğu gibi bas' } },
-    pos: ['dosya.gz...'],
+    pos: ['gz dosyası...'],
     ex: [['zcat old.log.gz | grep ERROR', 'Rotate edilmiş eski log\'da arama'], ['zcat /var/log/syslog.*.gz | wc -l', 'Tüm eski log\'ların satır sayısı']],
     tip: 'zgrep ve zless de vardır, zcat | grep yerine zgrep desen dosya.gz yazılabilir',
   },
@@ -927,12 +935,12 @@ Object.assign(EXPLAIN_DB, {
     d: '.bz2 dosyasını açar',
     o: { '-k': { t: 'Sıkıştırılmış dosyayı silme' }, '-c': { t: 'stdout\'a aç' }, '-f': { t: 'Var olanın üzerine yaz' }, '-v': { t: 'Ayrıntılı çıktı' } },
     al: { '--keep': '-k', '--stdout': '-c', '--force': '-f', '--verbose': '-v' },
-    pos: ['dosya.bz2...'],
+    pos: ['bz2 dosyası...'],
     ex: [['bunzip2 rapor.csv.bz2', 'rapor.csv geri gelir'], ['bunzip2 -k yedek.bz2', 'Arşivi de tut']],
   },
   bzcat: {
     d: '.bz2 dosyasını açmadan ekrana basar',
-    pos: ['dosya.bz2...'],
+    pos: ['bz2 dosyası...'],
     ex: [['bzcat rapor.csv.bz2 | head', 'İlk satırlara bak'], ['bzcat log.bz2 | grep -c ERROR', 'Açmadan hata say']],
   },
   xz: {
@@ -947,12 +955,12 @@ Object.assign(EXPLAIN_DB, {
     d: '.xz dosyasını açar',
     o: { '-k': { t: 'Sıkıştırılmış dosyayı silme' }, '-c': { t: 'stdout\'a aç' }, '-f': { t: 'Var olanın üzerine yaz' }, '-v': { t: 'Ayrıntılı çıktı' } },
     al: { '--keep': '-k', '--stdout': '-c', '--force': '-f', '--verbose': '-v' },
-    pos: ['dosya.xz...'],
+    pos: ['xz dosyası...'],
     ex: [['unxz arsiv.tar.xz', 'arsiv.tar geri gelir'], ['unxz -k yedek.xz', 'Arşivi de tut']],
   },
   xzcat: {
     d: '.xz dosyasını açmadan ekrana basar',
-    pos: ['dosya.xz...'],
+    pos: ['xz dosyası...'],
     ex: [['xzcat log.xz | tail', 'Son satırlar'], ['xzcat arsiv.tar.xz | tar t', 'tar arşivinin içini listele']],
   },
   zip: {
@@ -974,7 +982,7 @@ Object.assign(EXPLAIN_DB, {
       '-T': { t: 'Bitince arşivi test et' },
     },
     al: { '--recurse-paths': '-r', '--quiet': '-q', '--encrypt': '-e', '--password': '-P', '--update': '-u', '--delete': '-d', '--move': '-m', '--junk-paths': '-j', '--symlinks': '-y', '--exclude': '-x', '--split-size': '-s', '--test': '-T' },
-    pos: ['arşiv.zip', 'dosya...'],
+    pos: ['zip arşivi', 'dosya ya da dizin...'],
     ex: [['zip -r webapp.zip webapp', 'Dizini içiyle zip\'le'], ['zip rapor.zip rapor.pdf ek.xlsx', 'Birkaç dosyayı paketle'], ["zip -r site.zip site -x '*.log'", 'Log dosyaları hariç']],
   },
   unzip: {
@@ -993,7 +1001,7 @@ Object.assign(EXPLAIN_DB, {
       '-x': { a: 'desen', t: 'Bu desene uyanları çıkarma' },
       '-Z': { t: 'zipinfo modu, ayrıntılı arşiv bilgisi' },
     },
-    pos: ['arşiv.zip', 'dosya...'],
+    pos: ['zip arşivi', 'dosya ya da dizin...'],
     ex: [['unzip -l webapp.zip', 'İçinde ne var, çıkarmadan'], ['unzip webapp.zip -d /tmp/wa', 'Belirli dizine çıkar'], ["unzip -o arsiv.zip 'config/*'", 'Sadece config dizinini, sormadan üzerine yazarak']],
     tip: 'Bazı zip dosyaları tüm dosyaları doğrudan köke koyar, bulunduğun dizini dağıtır. Önce -l ile bak, gerekirse -d kullan',
   },
@@ -1140,24 +1148,24 @@ Object.assign(EXPLAIN_DB, {
   jobs: {
     d: 'Bu shell\'in arka plan ve durdurulmuş job\'larını listeler',
     o: { '-l': { t: 'Job numarasının yanında PID de göster' }, '-p': { t: 'Sadece PID\'leri bas' }, '-r': { t: 'Sadece çalışan job\'lar' }, '-s': { t: 'Sadece durdurulmuş job\'lar' } },
-    pos: ['%job...'],
+    pos: ['job numarası...'],
     ex: [['jobs', 'Job listesi, + en son, - bir önceki'], ['jobs -l', 'PID\'lerle birlikte'], ['sleep 300 &', 'Arka planda job başlat, sonra jobs ile gör']],
     tip: 'Job\'lar shell\'e aittir. Başka terminalden ya da shell kapandıktan sonra jobs ile göremezsin, ps kullan',
   },
   bg: {
     d: 'Durdurulmuş job\'ı arka planda çalışmaya devam ettirir. Ctrl+Z sonrası klasik hamle',
-    pos: ['%job'],
+    pos: ['job numarası'],
     ex: [['bg', 'Son durdurulan job\'ı arkada sürdür'], ['bg %1', '1 numaralı job\'ı arkada sürdür']],
   },
   fg: {
     d: 'Job\'ı ön plana alır, terminal ona bağlanır',
-    pos: ['%job'],
+    pos: ['job numarası'],
     ex: [['fg', 'Son job\'ı öne al'], ['fg %2', '2 numaralı job\'ı öne al, sonra Ctrl+C ile durdurulabilir']],
   },
   disown: {
     d: 'Job\'ı shell\'in job listesinden çıkarır, shell kapanınca SIGHUP almaz',
     o: { '-h': { t: 'Listede tut ama shell kapanırken SIGHUP gönderme' }, '-a': { t: 'Tüm job\'lar' }, '-r': { t: 'Sadece çalışan job\'lar' } },
-    pos: ['%job...'],
+    pos: ['job numarası...'],
     ex: [['disown %1', 'Uzun işi oturumdan ayır'], ['sleep 900 & disown', 'Başlat ve hemen ayır, nohup\'ı unuttuysan kurtarıcı']],
   },
   wait: {
@@ -1644,6 +1652,11 @@ Object.assign(EXPLAIN_DB, {
       tomorrow: { t: 'Yarın, saatle birlikte kullanılabilir', p: true },
       midnight: { t: 'Gece yarısı', p: true },
       noon: { t: 'Öğlen 12', p: true },
+      '+': { t: 'now ile birlikte, şu andan bu kadar sonra' },
+      minutes: { t: 'Zaman birimi, dakika' }, minute: { t: 'Zaman birimi, dakika' },
+      hours: { t: 'Zaman birimi, saat' }, hour: { t: 'Zaman birimi, saat' },
+      days: { t: 'Zaman birimi, gün' }, day: { t: 'Zaman birimi, gün' },
+      weeks: { t: 'Zaman birimi, hafta' }, week: { t: 'Zaman birimi, hafta' },
     },
     pos: ['zaman ifadesi...'],
     ex: [['echo "bash ~/scripts/hello.sh" | at now + 5 minutes', '5 dakika sonra bir kez çalıştır'], ['echo "reboot" | sudo at 03:00', 'Gece 3\'te reboot'], ['at -f gorev.sh tomorrow', 'Yarın bu saatte dosyadaki komutlar'], ['atq', 'Kuyruktaki işler']],
@@ -1818,7 +1831,7 @@ Object.assign(EXPLAIN_DB, {
     o: {
       '-': { t: 'Login shell gibi geç, hedefin ortamı, PATH\'i ve home dizini yüklenir' },
       '-l': { t: 'Login shell, tek tire ile aynı' },
-      '-c': { a: 'komut', t: 'Shell açmadan tek komut çalıştır' },
+      '-c': { a: 'komut', cmd: true, t: 'Shell açmadan tek komut çalıştır' },
       '-s': { a: 'shell', t: 'Bu shell\'i kullan' },
       '-p': { t: 'Mevcut ortamı koru' },
       '-m': { t: 'Mevcut ortamı koru, -p ile aynı' },
@@ -2679,6 +2692,7 @@ Object.assign(EXPLAIN_DB, {
       '-W': { a: 'host ve port', t: 'stdin ve stdout\'u hedefe bağla, ProxyCommand için' },
       '-E': { a: 'dosya', t: 'Hata ayıklama çıktısını dosyaya yaz' },
       '-b': { a: 'adres', t: 'Kaynak adres' },
+      '-s': { a: 'alt sistem', t: 'Komut yerine sunucudaki bir subsystem\'i çağır. NETCONF için ssh -p 830 kullanıcı@router -s netconf' },
     },
     pos: ['hedef'],
     ex: [['ssh deploy@web01.lab', 'Uzak sunucuya oturum aç'], ['ssh -p 2222 -i ~/.ssh/lab_ed25519 burak@backup.lab', 'Farklı port ve anahtarla'], ['ssh backup.lab ls /var/backups', 'Uzakta tek komut çalıştır'], ['ssh -L 8080:localhost:80 -J bastion web01', 'Bastion üzerinden web01\'in 80 portunu yerelde 8080\'e getir']],
@@ -2727,7 +2741,7 @@ Object.assign(EXPLAIN_DB, {
       '-v': { t: 'Aktarılan dosyaları yaz' },
       '-z': { t: 'Aktarırken sıkıştır, ağ üzerinden' },
       '-n': { t: 'Dry run, hiçbir şey yapmadan ne yapılacağını göster' },
-      '-r': { t: 'Recursive' },
+      '-r': { t: 'Dizinlere recursive in. -a zaten içerir' },
       '-l': { t: 'Symlink\'leri symlink olarak kopyala' },
       '-p': { t: 'İzinleri koru' },
       '-t': { t: 'Değişiklik zamanlarını koru' },
@@ -3245,7 +3259,7 @@ Object.assign(EXPLAIN_DB, {
   bash: {
     d: 'Bash shell. Script çalıştırır ya da yeni bir shell açar',
     o: {
-      '-c': { a: 'komut', t: 'Bu metni komut olarak çalıştır' },
+      '-c': { a: 'komut', cmd: true, ends: true, posAfter: ['$0 olarak okunan argüman', '$1 olarak okunan argüman', '$2 olarak okunan argüman', 'argüman...'], t: 'Bu metni komut olarak çalıştır. Arkasındakiler sırayla $0 $1 olur' },
       '-x': { t: 'Her komutu çalıştırmadan önce yazdır, script debug için' },
       '-n': { t: 'Çalıştırma, sadece sözdizimini kontrol et' },
       '-e': { t: 'Hata olunca dur' },
@@ -3262,14 +3276,16 @@ Object.assign(EXPLAIN_DB, {
       '--posix': { t: 'POSIX uyumlu mod' },
       '--version': { t: 'Sürüm' },
     },
-    pos: ['script', 'argüman...'],
+    stop: true,
+    pos: ['script', '$1 olarak okunan argüman', '$2 olarak okunan argüman', '$3 olarak okunan argüman', 'script argümanı...'],
     ex: [['bash ~/scripts/backup.sh', 'Script\'i çalıştır, x izni gerekmez'], ['bash -x ~/scripts/check.sh 10.0.0.1', 'Her adımı görerek çalıştır'], ['bash -n deploy.sh', 'Çalıştırmadan sözdizimi kontrolü'], ["bash -c 'echo $0 $1' a b", 'Metni komut olarak çalıştır, argümanlar $0 ve $1 olur']],
     tip: 'Script içindeki argümanlar $1 $2 olarak, hepsi $@ olarak, sayısı $# olarak okunur. Script\'in ilk satırı #!/bin/bash olmalı',
   },
   sh: {
     d: 'POSIX shell. Debian\'da dash\'e bağlıdır, bash\'in özelliklerinin çoğu yoktur',
-    o: { '-c': { a: 'komut', t: 'Metni komut olarak çalıştır' }, '-x': { t: 'Komutları yazdır' }, '-n': { t: 'Sözdizimi kontrolü' }, '-e': { t: 'Hata olunca dur' }, '-u': { t: 'Tanımsız değişkende hata' }, '-v': { t: 'Satırları yazdır' }, '-i': { t: 'Etkileşimli' }, '-l': { t: 'Login shell' }, '-s': { t: 'stdin\'den oku' } },
-    pos: ['script', 'argüman...'],
+    o: { '-c': { a: 'komut', cmd: true, ends: true, posAfter: ['$0 olarak okunan argüman', '$1 olarak okunan argüman', '$2 olarak okunan argüman', 'argüman...'], t: 'Metni komut olarak çalıştır. Arkasındakiler sırayla $0 $1 olur' }, '-x': { t: 'Komutları yazdır' }, '-n': { t: 'Sözdizimi kontrolü' }, '-e': { t: 'Hata olunca dur' }, '-u': { t: 'Tanımsız değişkende hata' }, '-v': { t: 'Satırları yazdır' }, '-i': { t: 'Etkileşimli' }, '-l': { t: 'Login shell' }, '-s': { t: 'stdin\'den oku' } },
+    stop: true,
+    pos: ['script', '$1 olarak okunan argüman', '$2 olarak okunan argüman', '$3 olarak okunan argüman', 'script argümanı...'],
     ex: [['sh install.sh', 'POSIX script çalıştır'], ["sudo sh -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'", 'Yönlendirmeyi de root ile yapmak için']],
     tip: '[[ ]], diziler ve source gibi bash özellikleri sh ile çalışmaz. bash için yazılmış script\'i sh ile çağırma',
   },
@@ -3377,9 +3393,231 @@ Object.assign(EXPLAIN_DB, {
   matrix: { d: 'Lab\'a özel eğlence. Matrix filmindeki gibi yağan yeşil karakterler', ex: [['matrix', 'Ekran efekti, herhangi bir tuşla çık'], ['clear', 'Sonra ekranı temizle']] },
 });
 
+/* ---------- ipuçlarında geçen yardımcı komutlar ---------- */
+Object.assign(EXPLAIN_DB, {
+  dd: {
+    d: 'Byte seviyesinde kopyalar. Disk imajı alma, USB\'ye ISO yazma, test dosyası üretme. Seçenekleri anahtar=değer biçiminde',
+    sp: 'dd',
+    kv: {
+      if: 'Girdi dosyası ya da aygıtı. Verilmezse stdin',
+      of: 'Çıktı dosyası ya da aygıtı. Yanlış disk verilirse veri geri dönmez, iki kez kontrol et',
+      bs: 'Blok boyutu, bir okuma ve yazmada kaç byte. 4M gibi büyük değer hızlandırır',
+      count: 'Kaç blok kopyalanacak. bs ile çarpımı toplam boyut',
+      skip: 'Girdinin başından kaç blok atlanacak',
+      seek: 'Çıktının başından kaç blok atlanacak',
+      status: 'İlerleme bilgisi. progress canlı gösterir, none susturur',
+      conv: 'Dönüşümler. fsync bitince diske yazdır, notrunc çıktıyı kırpma, noerror hatada durma',
+      oflag: 'Çıktı bayrakları. direct önbelleği atla, sync her yazmayı bekle',
+      iflag: 'Girdi bayrakları. direct önbelleği atla, fullblock eksik okumaları tamamla',
+      ibs: 'Sadece okuma blok boyutu',
+      obs: 'Sadece yazma blok boyutu',
+    },
+    ex: [['dd if=/dev/zero of=test.img bs=1M count=100', '100 MB sıfırlarla dolu test dosyası'], ['sudo dd if=ubuntu.iso of=/dev/sdb bs=4M status=progress conv=fsync', 'ISO\'yu USB belleğe yaz, ilerlemeyi göster'], ['sudo dd if=/dev/sda of=mbr.bin bs=512 count=1', 'Diskin ilk sektörünü yedekle'], ['dd if=/dev/zero of=/tmp/t bs=1M count=500 oflag=direct', 'Önbelleksiz yazma hızı testi']],
+    tip: 'of= ile yanlış diski verirsen saniyeler içinde silinir. Önce lsblk ile hedef aygıtı doğrula. dd\'nin lakabı disk destroyer boşuna değil',
+  },
+  nproc: {
+    d: 'Kullanılabilir CPU sayısını yazar, paralel iş sayısı belirlemek için',
+    o: { '--all': { t: 'Çevrimdışı olanlar dahil tüm işlemciler' }, '--ignore': { a: 'sayı', t: 'Bu kadarını düş' } },
+    ex: [['nproc', 'Mantıksal CPU sayısı'], ['make -j$(nproc)', 'Tüm çekirdeklerle derle']],
+  },
+  fuser: {
+    d: 'Bir dosyayı, dizini, mount noktasını ya da portu hangi süreçlerin kullandığını gösterir',
+    o: { '-v': { t: 'Ayrıntılı tablo, kullanıcı ve erişim tipiyle' }, '-m': { t: 'Mount noktasındaki tüm dosyalar, umount busy hatası için' }, '-k': { t: 'Bulunan süreçleri öldür, dikkat' }, '-i': { t: '-k ile her süreç için sor' }, '-n': { a: 'alan', t: 'Ad alanı, tcp ya da udp. 80/tcp gibi port sorgusu için' }, '-s': { t: 'Sessiz, sadece exit code' } },
+    al: { '--verbose': '-v', '--mount': '-m', '--kill': '-k', '--interactive': '-i', '--namespace': '-n', '--silent': '-s' },
+    pos: ['dosya, dizin ya da port...'],
+    ex: [['sudo fuser -vm /mnt', 'mnt\'yi kim tutuyor'], ['sudo fuser -n tcp 80', '80 portunu kullanan PID']],
+  },
+  'iptables-save': {
+    d: 'Mevcut iptables kurallarını tekrar yüklenebilir metin olarak basar. Yedek ve kalıcılık için',
+    o: { '-t': { a: 'tablo', t: 'Sadece bu tablo' }, '-c': { t: 'Paket ve byte sayaçlarını da kaydet' } },
+    al: { '--table': '-t', '--counters': '-c' },
+    ex: [['sudo iptables-save > /etc/iptables/rules.v4', 'Kuralları kalıcı dosyaya yaz'], ['sudo iptables-save | grep HUB', 'Belirli zincirin kurallarını metin olarak gör']],
+  },
+  'iptables-restore': {
+    d: 'iptables-save çıktısını tek seferde ve atomik olarak geri yükler',
+    o: { '-t': { t: 'Yüklemeden sadece sözdizimini test et' }, '-n': { t: 'Mevcut kuralları silmeden ekle' }, '-c': { t: 'Sayaçları da geri yükle' } },
+    al: { '--test': '-t', '--noflush': '-n', '--counters': '-c' },
+    pos: ['dosya'],
+    ex: [['sudo iptables-restore < /etc/iptables/rules.v4', 'Kayıtlı kuralları yükle'], ['sudo iptables-restore -t < yeni.rules', 'Önce sadece test et']],
+  },
+  zgrep: {
+    d: 'Sıkıştırılmış .gz dosyalarında açmadan grep yapar',
+    sp: 'grep',
+    o: EXPLAIN_DB.grep.o,
+    al: EXPLAIN_DB.grep.al,
+    pos: ['desen', 'gz dosyası...'],
+    ex: [['zgrep "Failed password" /var/log/auth.log.*.gz', 'Rotate edilmiş eski log\'larda ara'], ['zgrep -c ERROR app.log.gz', 'Açmadan hata say']],
+  },
+});
+
+/* ---------- görevlerde geçen diğer komutlar ---------- */
+Object.assign(EXPLAIN_DB, {
+  python3: {
+    d: 'Python 3 yorumlayıcısı. Script çalıştırır, -m ile modül, -c ile tek satır kod',
+    o: {
+      '-c': { a: 'kod', ends: true, t: 'Bu metni Python kodu olarak çalıştır, arkasındakiler koda argüman olur' },
+      '-m': { a: 'modül', ends: true, t: 'Modülü script gibi çalıştır. http.server, venv, pip, json.tool. Arkasındakiler modülün argümanları' },
+      '-V': { t: 'Sürüm' },
+      '--version': { t: 'Sürüm' },
+      '-i': { t: 'Script bittikten sonra etkileşimli kabukta kal, hata ayıklama için' },
+      '-u': { t: 'Çıktıyı tamponlama, log ve pipe içinde hemen görünsün' },
+      '-B': { t: '.pyc dosyası yazma' },
+      '-E': { t: 'PYTHON ile başlayan ortam değişkenlerini yok say' },
+      '-O': { t: 'assert satırlarını atla' },
+      '-q': { t: 'Etkileşimli kabukta başlık basma' },
+      '-W': { a: 'filtre', t: 'Uyarı filtresi, ignore ya da error' },
+      '-X': { a: 'seçenek', t: 'Uygulamaya özel seçenek, dev ya da utf8' },
+      '-h': { t: 'Yardım' },
+    },
+    stop: true,
+    pos: ['script', 'script argümanı...'],
+    ex: [['python3 /opt/report/build_report.py', 'Script\'i çalıştır'], ['python3 -m http.server 8000', 'Bulunduğun dizini 8000 portunda HTTP ile sun'], ['python3 -m venv .venv', 'Sanal ortam oluştur'], ['echo \'{"a":1}\' | python3 -m json.tool', 'JSON\'u okunur biçimde bas']],
+    tip: 'Paketleri sistem Python\'una sudo pip ile kurma, dağıtımın paketlerini bozar. Proje başına python3 -m venv kullan',
+  },
+  yes: {
+    d: 'Verilen metni, verilmezse y harfini durdurulana kadar sonsuz basar. Onay sorularını otomatik cevaplamak ve yapay CPU yükü için',
+    pos: ['metin...'],
+    ex: [['yes | sudo apt install htop', 'Tüm sorulara y cevabı ver, -y yoksa'], ['yes > /dev/null &', 'Bir çekirdeği yüzde 100 meşgul et, CPU alarmı testi'], ['yes hayir | head -3', 'Üç kez hayir bas']],
+    tip: 'yes > /dev/null & ile başlattığın yükü işin bitince kill ya da killall yes ile durdurmayı unutma',
+  },
+});
+
 /* ---------- eş komutlar ---------- */
 EXPLAIN_DB.cc = Object.assign({}, EXPLAIN_DB.gcc, { d: 'Sistemin varsayılan C derleyicisi, Linux\'ta genelde gcc\'ye bağlıdır', ex: [['cc -o hello hello.c', 'hello.c\'yi derle'], ['cc --version', 'Arkada hangi derleyici var']] });
 EXPLAIN_DB.cc.o = Object.assign({}, EXPLAIN_DB.gcc.o, { '--version': { t: 'Derleyici sürümü' } });
 EXPLAIN_DB.netcat = Object.assign({}, EXPLAIN_DB.nc, { d: 'nc komutunun uzun adı. TCP ve UDP bağlantısı açar ya da dinler, port testi için', ex: [['netcat -zv 10.0.0.5 22', 'ssh portu açık mı'], ['netcat -l 9000', '9000 portunda dinle']] });
 EXPLAIN_DB.egrep = Object.assign({}, EXPLAIN_DB.grep, { d: 'grep -E ile aynı, extended regex ile arar. Eski yazım, yeni sürümler uyarı verir', ex: [['egrep "error|fail" app.log', 'İki kelimeden biri'], ['grep -E "error|fail" app.log', 'Önerilen modern yazım']] });
 EXPLAIN_DB.fgrep = Object.assign({}, EXPLAIN_DB.grep, { d: 'grep -F ile aynı, deseni düz metin olarak arar. Eski yazım', ex: [['fgrep "1.2.3.4" access.log', 'Noktalar regex sayılmaz'], ['grep -F "a.b*c" dosya', 'Önerilen modern yazım']] });
+
+/* ---------- git ---------- */
+const XPL_GIT_LOGO = {
+  '--oneline': { t: 'Her commit tek satır, kısa hash ve başlık' },
+  '--graph': { t: 'Branch ve merge yapısını solda ASCII çizgilerle göster' },
+  '--all': { t: 'Sadece HEAD değil tüm branch, tag ve remote ref\'ler' },
+  '--decorate': { t: 'Commit\'lerin yanında branch ve tag adlarını göster' },
+  '-n': { a: 'sayı', t: 'En fazla N commit' },
+  '-p': { t: 'Her commit\'in diff\'ini de göster, patch' },
+  '--stat': { t: 'Her commit\'te hangi dosyada kaç satır değişti' },
+  '--shortstat': { t: 'Sadece toplam değişiklik satırı' },
+  '--name-only': { t: 'Sadece değişen dosya adları' },
+  '--name-status': { t: 'Değişen dosyalar ve durumları, A eklendi M değişti D silindi' },
+  '--author': { a: 'desen', t: 'Bu yazara ait commit\'ler' },
+  '--committer': { a: 'desen', t: 'Bu kişinin commit ettikleri' },
+  '--since': { a: 'zaman', t: 'Bu tarihten sonraki commit\'ler, "2 weeks ago" ya da 2026-10-01' },
+  '--after': { a: 'zaman', t: '--since ile aynı' },
+  '--until': { a: 'zaman', t: 'Bu tarihe kadarki commit\'ler' },
+  '--before': { a: 'zaman', t: '--until ile aynı' },
+  '--grep': { a: 'desen', t: 'Commit mesajında ara' },
+  '-i': { t: '--grep ve --author aramalarında harf duyarsız' },
+  '-S': { a: 'metin', t: 'Pickaxe. Bu metnin eklendiği ya da silindiği commit\'ler, bir satır ne zaman girdi sorusu' },
+  '-G': { a: 'regex', t: 'Diff\'inde bu regex geçen commit\'ler' },
+  '--follow': { t: 'Tek dosyanın geçmişini adı değişse de takip et' },
+  '--format': { a: 'biçim', t: 'Çıktı biçimi. %h kısa hash, %an yazar, %ad tarih, %s başlık' },
+  '--pretty': { a: 'biçim', t: 'Hazır biçim, oneline short full fuller ya da format ile kendi biçimin' },
+  '--date': { a: 'biçim', t: 'Tarih biçimi, relative short iso' },
+  '--abbrev-commit': { t: 'Kısa hash göster' },
+  '--merges': { t: 'Sadece merge commit\'leri' },
+  '--no-merges': { t: 'Merge commit\'lerini gösterme' },
+  '--first-parent': { t: 'Merge\'lerde sadece ilk parent\'ı izle, ana branch\'in kendi geçmişi' },
+  '--reverse': { t: 'Eskiden yeniye sırala' },
+  '--left-right': { t: 'A...B karşılaştırmasında commit hangi taraftan, < ya da >' },
+  '--cherry-pick': { t: 'Simetrik farkta içeriği aynı olan commit\'leri gizle' },
+  '--no-walk': { t: 'Sadece verilen commit\'leri göster, geçmişte yürüme' },
+  '--color': { t: 'Renkli çıktı' },
+  '-L': { a: 'aralık', t: 'Satır aralığının ya da fonksiyonun geçmişi, 10,20 dosya gibi' },
+};
+const XPL_GIT_DIFFO = {
+  '--staged': { t: 'Stage edilmiş değişiklikler, index ile HEAD arası. Commit\'e girecek olan' },
+  '--cached': { t: '--staged ile aynı' },
+  '--stat': { t: 'Dosya başına değişen satır sayıları özeti' },
+  '--shortstat': { t: 'Sadece toplam satır' },
+  '--name-only': { t: 'Sadece değişen dosya adları' },
+  '--name-status': { t: 'Dosya adları ve durumları' },
+  '-w': { t: 'Boşluk farklarını yok say' },
+  '-b': { t: 'Boşluk miktarı farkını yok say' },
+  '--word-diff': { t: 'Satır yerine kelime bazında fark, config dosyalarında okunaklı' },
+  '--color-words': { t: 'Kelime bazında renkli fark' },
+  '--check': { t: 'Satır sonu boşluk ve conflict işareti gibi hataları bul' },
+  '-U': { a: 'satır', t: 'Bağlam satırı sayısı, varsayılan 3' },
+  '-R': { t: 'Farkı ters yönde göster' },
+  '--no-index': { t: 'Git dışındaki iki dosyayı karşılaştır' },
+  '--color': { t: 'Renkli çıktı' },
+  '--diff-filter': { a: 'harfler', t: 'Sadece bu durumdaki dosyalar, A M D R' },
+  '--ignore-space-at-eol': { t: 'Satır sonu boşluklarını yok say' },
+  '-p': { t: 'Patch göster, varsayılan' },
+};
+Object.assign(EXPLAIN_DB, {
+  git: {
+    d: 'Dağıtık versiyon kontrol sistemi. Config repo\'sunda kim neyi ne zaman neden değiştirdi, hepsi burada',
+    ddpos: 'dosya ya da dizin...',
+    o: {
+      '-C': { a: 'dizin', t: 'Komutu bu dizindeymiş gibi çalıştır, cd yapmadan' },
+      '-c': { a: 'anahtar=değer', t: 'Sadece bu komut için geçici config ayarı' },
+      '--no-pager': { t: 'Çıktıyı less ile sayfalama, doğrudan bas' },
+      '-P': { t: 'Sayfalama yapma, --no-pager ile aynı' },
+      '--git-dir': { a: 'dizin', t: '.git dizininin yeri' },
+      '--work-tree': { a: 'dizin', t: 'Çalışma dizininin yeri' },
+      '--version': { t: 'git sürümü' },
+      '--help': { t: 'Yardım, git komut --help man sayfasını açar' },
+      '--bare': { t: 'Bare repo olarak davran' },
+    },
+    sub: {
+      init: { d: 'Bulunduğun dizinde yeni boş repo oluşturur, .git dizinini açar', o: { '-b': { a: 'branch', t: 'İlk branch\'in adı, main gibi' }, '--initial-branch': { a: 'branch', t: 'İlk branch\'in adı' }, '--bare': { t: 'Çalışma dizini olmayan, sadece sunucuda paylaşım için repo' }, '-q': { t: 'Sessiz' } }, pos: ['dizin'] },
+      clone: { d: 'Uzak repoyu tüm geçmişiyle kopyalar ve origin remote\'unu ayarlar', o: { '--depth': { a: 'sayı', t: 'Sadece son N commit, shallow clone. Hızlı ama geçmiş eksik' }, '-b': { a: 'branch', t: 'Bu branch\'i checkout et' }, '--branch': { a: 'branch', t: 'Bu branch\'i checkout et' }, '--single-branch': { t: 'Sadece tek branch\'i indir' }, '--bare': { t: 'Çalışma dizini olmadan' }, '--mirror': { t: 'Tüm ref\'lerle birebir ayna' }, '--recurse-submodules': { t: 'Submodule\'leri de indir' }, '-o': { a: 'ad', t: 'Remote adı origin yerine bu olsun' }, '-q': { t: 'Sessiz' } }, pos: ['repo URL', 'hedef dizin'] },
+      status: { d: 'Çalışma dizininin durumu. Değişen, stage edilmiş ve takip edilmeyen dosyalar', o: { '-s': { t: 'Kısa format, solda iki harfli durum kodu' }, '--short': { t: 'Kısa format' }, '-b': { t: 'Kısa formatta branch ve upstream bilgisini de göster' }, '--branch': { t: 'Branch bilgisini göster' }, '--porcelain': { t: 'Script için kararlı biçim' }, '-u': { a: 'mod', ao: true, t: 'Takip edilmeyen dosyaları gösterme biçimi, no normal all' }, '--ignored': { t: '.gitignore ile gizlenenleri de göster' } }, pos: ['dosya ya da dizin...'] },
+      add: { d: 'Değişiklikleri stage alanına alır, bir sonraki commit\'e girecekleri seçer', o: { '-A': { t: 'Silinenler dahil tüm değişiklikler, tüm repo' }, '--all': { t: 'Tüm değişiklikler' }, '-u': { t: 'Sadece takip edilen dosyalardaki değişiklik ve silmeler, yeni dosyalar hariç' }, '-p': { t: 'Değişiklikleri parça parça sorarak stage et, commit\'i temiz tutmak için' }, '-n': { t: 'Dry run, neyin ekleneceğini göster' }, '-f': { t: '.gitignore\'daki dosyayı da zorla ekle' }, '-v': { t: 'Eklenen dosyaları yaz' }, '-i': { t: 'Etkileşimli mod' }, '-N': { t: 'Yeni dosyayı içeriksiz olarak takibe al' } }, pos: ['dosya ya da dizin...'] },
+      commit: { d: 'Stage edilmiş değişiklikleri mesajla birlikte kalıcı bir commit olarak kaydeder', o: { '-m': { a: 'mesaj', t: 'Commit mesajı. İlk satır kısa özet, neyi ve neden' }, '-a': { t: 'Takip edilen tüm değişiklikleri otomatik stage et, yeni dosyaları almaz' }, '--amend': { t: 'Son commit\'i düzelt, mesajı ya da içeriği. Push edilmiş commit\'te yapma' }, '--no-edit': { t: '--amend ile mesajı değiştirme' }, '-v': { t: 'Editörde diff\'i de göster' }, '-s': { t: 'Signed-off-by satırı ekle' }, '-S': { t: 'GPG ile imzala' }, '--allow-empty': { t: 'Değişiklik olmadan boş commit' }, '-F': { a: 'dosya', t: 'Mesajı dosyadan oku' }, '--author': { a: 'kişi', t: 'Yazarı değiştir, "Ad <e-posta>"' }, '--fixup': { a: 'commit', t: 'Bu commit\'i düzelten commit, rebase --autosquash ile birleşir' }, '-n': { t: 'pre-commit hook\'larını atla' }, '-q': { t: 'Sessiz' }, '-e': { t: 'Mesajı editörde düzenle' } }, pos: ['dosya ya da dizin...'] },
+      log: { d: 'Commit geçmişini listeler, en yeni üstte', num: 'Son kaç commit, -n ile aynı', o: XPL_GIT_LOGO, al: { '--max-count': '-n', '--patch': '-p', '--regexp-ignore-case': '-i' }, pos: ['revizyon ya da aralık...'] },
+      shortlog: { d: 'Commit\'leri yazara göre gruplayıp özetler, sürüm notu ve katkı sayımı için', num: 'Son kaç commit', o: { '-s': { t: 'Sadece commit sayıları' }, '-n': { t: 'Commit sayısına göre sırala' }, '-e': { t: 'E-posta adreslerini göster' }, '--all': { t: 'Tüm branch\'ler' }, '--since': { a: 'zaman', t: 'Bu tarihten sonra' }, '--no-merges': { t: 'Merge commit\'lerini sayma' } }, al: { '--summary': '-s', '--numbered': '-n', '--email': '-e' }, pos: ['revizyon ya da aralık...'] },
+      show: { d: 'Bir commit\'in mesajını ve diff\'ini gösterir. Tag ve dosya da gösterebilir, HEAD~2 iki nokta dosya yazımıyla eski sürüm', o: { '--stat': { t: 'Diff yerine dosya özeti' }, '--name-only': { t: 'Sadece dosya adları' }, '--name-status': { t: 'Dosya adları ve durumları' }, '--oneline': { t: 'Başlığı tek satır göster' }, '-s': { t: 'Diff\'i gösterme, sadece commit bilgisi' }, '--no-patch': { t: 'Diff\'i gösterme' }, '--format': { a: 'biçim', t: 'Çıktı biçimi' }, '--pretty': { a: 'biçim', t: 'Hazır biçim' }, '-w': { t: 'Boşluk farklarını yok say' }, '--word-diff': { t: 'Kelime bazında fark' } }, pos: ['commit, tag ya da revizyon ve path...'] },
+      diff: { d: 'İki durum arasındaki satır farkını unified diff olarak gösterir. Argümansız working tree ile index', o: XPL_GIT_DIFFO, pos: ['commit ya da aralık...'] },
+      blame: { d: 'Dosyanın her satırını en son hangi commit\'in, kimin, ne zaman değiştirdiğini gösterir', o: { '-L': { a: 'aralık', t: 'Sadece bu satır aralığı, 10,20 ya da 10,+5' }, '-w': { t: 'Boşluk değişikliklerini yok say' }, '-e': { t: 'Ad yerine e-posta göster' }, '-C': { t: 'Başka dosyadan kopyalanan satırların asıl kaynağını bul' }, '-M': { t: 'Dosya içinde taşınan satırları takip et' }, '-s': { t: 'Yazar ve tarihi gizle, kısa' }, '--since': { a: 'zaman', t: 'Bu tarihten eskisini sınır commit say' }, '-c': { t: 'annotate biçimi' }, '--date': { a: 'biçim', t: 'Tarih biçimi' } }, pos: ['revizyon', 'dosya'] },
+      branch: { d: 'Branch\'leri listeler, oluşturur, siler ve yeniden adlandırır', o: { '-a': { t: 'Local ve remote tüm branch\'ler' }, '-r': { t: 'Sadece remote tracking branch\'ler' }, '-d': { t: 'Merge edilmiş branch\'i sil' }, '-D': { t: 'Merge edilmemiş olsa da zorla sil' }, '-m': { t: 'Yeniden adlandır' }, '-M': { t: 'Zorla yeniden adlandır' }, '-c': { t: 'Kopyala' }, '-v': { t: 'Son commit ile birlikte' }, '-vv': { t: 'Son commit ve upstream ile ne kadar önde ya da geride' }, '-u': { a: 'upstream', t: 'Upstream ayarla, origin/main gibi' }, '--set-upstream-to': { a: 'upstream', t: 'Upstream ayarla' }, '--unset-upstream': { t: 'Upstream bağını kaldır' }, '--merged': { a: 'commit', ao: true, t: 'Bu commit\'e merge edilmiş branch\'ler, silinmeye hazır olanlar' }, '--no-merged': { a: 'commit', ao: true, t: 'Henüz merge edilmemiş branch\'ler' }, '--show-current': { t: 'Şu anki branch\'in adı' }, '--contains': { a: 'commit', t: 'Bu commit\'i içeren branch\'ler' }, '-l': { t: 'Desene uyan branch\'leri listele' }, '--list': { t: 'Listele' }, '-f': { t: 'Var olan branch\'i zorla taşı' }, '--sort': { a: 'alan', t: 'Sıralama, -committerdate en son kullanılan üstte' } }, al: { '--all': '-a', '--remotes': '-r', '--delete': '-d', '--move': '-m', '--copy': '-c', '--verbose': '-v', '--force': '-f' }, pos: ['branch adı', 'başlangıç noktası'] },
+      checkout: { d: 'Branch değiştirir ya da dosyaları geri yükler. Yeni sürümlerde bu iki iş switch ve restore\'a ayrıldı', o: { '-b': { a: 'yeni branch', t: 'Yeni branch oluştur ve ona geç' }, '-B': { a: 'branch', t: 'Branch varsa sıfırla, yoksa oluştur ve geç' }, '-f': { t: 'Yerel değişiklikleri atarak zorla geç' }, '-p': { t: 'Dosya değişikliklerini parça parça geri al' }, '--ours': { t: 'Conflict\'te kendi tarafının sürümünü al' }, '--theirs': { t: 'Conflict\'te diğer tarafın sürümünü al' }, '--detach': { t: 'Branch yerine commit\'e detached HEAD olarak geç' }, '-t': { t: 'Remote branch\'i takip eden local branch oluştur' }, '--track': { t: 'Upstream takibi kur' }, '-q': { t: 'Sessiz' } }, pos: ['branch, commit ya da dosya...'] },
+      switch: { d: 'Branch değiştirir. -c ile yeni branch açar, checkout\'un net hali', o: { '-c': { a: 'yeni branch', t: 'Yeni branch oluştur ve geç' }, '-C': { a: 'branch', t: 'Varsa sıfırla, yoksa oluştur ve geç' }, '--create': { a: 'yeni branch', t: 'Yeni branch oluştur ve geç' }, '-d': { t: 'Commit\'e detached HEAD olarak geç' }, '--detach': { t: 'Detached HEAD' }, '-f': { t: 'Yerel değişiklikleri atarak zorla geç' }, '--discard-changes': { t: 'Yerel değişiklikleri at' }, '-t': { t: 'Remote branch\'i takip et' }, '--track': { t: 'Upstream takibi kur' }, '--orphan': { a: 'branch', t: 'Geçmişi olmayan yeni branch' }, '-': { t: 'Bir önceki branch\'e dön' } }, pos: ['branch', 'başlangıç noktası'] },
+      restore: { d: 'Dosyaları geri yükler. Working tree\'deki değişikliği atar ya da --staged ile unstage eder', o: { '--staged': { t: 'Index\'i geri al, yani dosyayı unstage et. Working tree\'ye dokunmaz' }, '-S': { t: 'Index\'i geri al' }, '--worktree': { t: 'Working tree\'yi geri yükle, varsayılan' }, '-W': { t: 'Working tree\'yi geri yükle' }, '--source': { a: 'commit', t: 'Dosyayı bu commit\'teki haliyle getir' }, '-s': { a: 'commit', t: 'Kaynak commit' }, '-p': { t: 'Parça parça sorarak geri al' }, '--ours': { t: 'Conflict\'te kendi tarafını al' }, '--theirs': { t: 'Conflict\'te diğer tarafı al' } }, pos: ['dosya...'] },
+      merge: { d: 'Başka bir branch\'i bulunduğun branch\'e birleştirir', o: { '--no-ff': { t: 'Fast forward mümkün olsa da merge commit oluştur, branch geçmişi görünür kalsın' }, '--ff-only': { t: 'Sadece fast forward yapılabiliyorsa merge et, yoksa reddet' }, '--squash': { t: 'Tüm değişiklikleri tek değişiklik olarak stage et, commit\'i sen yaparsın' }, '--abort': { t: 'Conflict\'li merge\'den vazgeç, önceki duruma dön' }, '--continue': { t: 'Conflict\'leri çözüp add yaptıktan sonra merge\'i tamamla' }, '-m': { a: 'mesaj', t: 'Merge commit mesajı' }, '--no-edit': { t: 'Varsayılan mesajı kabul et' }, '-X': { a: 'strateji seçeneği', t: 'Conflict stratejisi, ours ya da theirs' }, '-s': { a: 'strateji', t: 'Merge stratejisi' }, '--no-commit': { t: 'Merge et ama commit etme, önce bak' }, '--stat': { t: 'Sonunda değişiklik özeti' }, '-q': { t: 'Sessiz' } }, pos: ['branch...'] },
+      rebase: { d: 'Branch\'in commit\'lerini başka bir base\'in üzerine yeniden oynatır, doğrusal geçmiş verir. Hash\'ler değişir', o: { '-i': { t: 'Etkileşimli. Commit\'leri sırala, birleştir, mesaj düzelt, sil' }, '--interactive': { t: 'Etkileşimli rebase' }, '--onto': { a: 'yeni base', t: 'Commit\'leri bu yeni base\'in üzerine taşı' }, '--continue': { t: 'Conflict çözüp add yaptıktan sonra devam et' }, '--abort': { t: 'Rebase\'den vazgeç, başlangıç durumuna dön' }, '--skip': { t: 'Bu commit\'i atla' }, '--autosquash': { t: 'fixup commit\'lerini otomatik birleştir' }, '--autostash': { t: 'Yerel değişiklikleri önce stash\'le, sonra geri koy' }, '-x': { a: 'komut', t: 'Her commit\'ten sonra bu komutu çalıştır, test için' }, '--root': { t: 'İlk commit dahil tüm geçmişi' }, '-q': { t: 'Sessiz' } }, pos: ['upstream', 'branch'] },
+      'cherry-pick': { d: 'Başka bir yerdeki commit\'i bulunduğun branch\'e yeni bir commit olarak uygular', o: { '-x': { t: 'Mesaja cherry picked from satırını ekle, izi kalsın' }, '-n': { t: 'Commit etme, sadece değişiklikleri uygula' }, '--no-commit': { t: 'Commit etme' }, '-e': { t: 'Mesajı düzenle' }, '-m': { a: 'parent', t: 'Merge commit için hangi parent\'a göre, genelde 1' }, '--continue': { t: 'Conflict çözüldükten sonra devam et' }, '--abort': { t: 'Vazgeç, önceki duruma dön' }, '--skip': { t: 'Bu commit\'i atla' }, '-s': { t: 'Signed-off-by ekle' } }, pos: ['commit...'] },
+      revert: { d: 'Bir commit\'in tersini yapan yeni commit oluşturur. Paylaşılmış geçmişi bozmadan geri almanın güvenli yolu', o: { '--no-edit': { t: 'Varsayılan mesajı kabul et' }, '-n': { t: 'Commit etme, sadece değişiklikleri uygula' }, '--no-commit': { t: 'Commit etme' }, '-m': { a: 'parent', t: 'Merge commit\'i geri alırken ana hat parent numarası, genelde 1' }, '--continue': { t: 'Conflict sonrası devam et' }, '--abort': { t: 'Vazgeç' }, '--skip': { t: 'Bu commit\'i atla' }, '-e': { t: 'Mesajı düzenle' } }, pos: ['commit...'] },
+      reset: { d: 'HEAD\'i ve branch\'i başka commit\'e taşır. --soft index\'i korur, --mixed index\'i sıfırlar, --hard working tree\'yi de siler', o: { '--soft': { t: 'Sadece HEAD taşınır, değişiklikler stage\'de kalır. Son commit\'i yeniden yapmak için' }, '--mixed': { t: 'HEAD ve index taşınır, değişiklikler dosyalarda durur. Varsayılan' }, '--hard': { t: 'HEAD, index ve working tree taşınır, commit edilmemiş değişiklikler kaybolur' }, '--keep': { t: 'Yerel değişiklikler korunabiliyorsa taşı' }, '--merge': { t: 'Merge\'i geri alırken yerel değişiklikleri koru' }, '-p': { t: 'Parça parça unstage et' }, '-q': { t: 'Sessiz' } }, pos: ['commit', 'path...'] },
+      reflog: { d: 'HEAD\'in uğradığı her commit\'in kaydı. reset ya da rebase ile kaybolan commit\'i geri bulmanın yolu', o: { '-n': { a: 'sayı', t: 'Son N kayıt' }, '--date': { a: 'biçim', t: 'Tarih biçimi, relative' }, '--all': { t: 'Tüm ref\'lerin kayıtları' } }, sub: { show: { d: 'Kayıtları göster, varsayılan', pos: ['ref'] }, expire: { d: 'Eski kayıtları temizle' }, delete: { d: 'Belirli kaydı sil', pos: ['kayıt'] } }, pos: ['ref'] },
+      stash: {
+        d: 'Commit etmeye hazır olmayan değişiklikleri kenara alır, working tree temizlenir. Sonra geri getirilir',
+        o: { '-u': { t: 'Takip edilmeyen yeni dosyaları da al' }, '--include-untracked': { t: 'Takip edilmeyenleri de al' }, '-a': { t: 'Ignore edilenler dahil her şeyi al' }, '-m': { a: 'mesaj', t: 'Stash\'e açıklama ver' }, '-k': { t: 'Stage edilmiş değişiklikleri yerinde bırak' }, '--keep-index': { t: 'Index\'i yerinde bırak' }, '-p': { t: 'Parça parça seç' }, '-q': { t: 'Sessiz' } },
+        sub: { push: { d: 'Değişiklikleri stash\'e al, varsayılan', pos: ['dosya ya da dizin...'] }, save: { d: 'Eski yazım, push ile aynı', pos: ['mesaj'] }, list: { d: 'Stash listesi, stash@{0} en yenisi' }, show: { d: 'Stash\'in içeriğini göster, -p ile tam diff', o: { '-p': { t: 'Tam diff göster' } }, pos: ['stash'] }, pop: { d: 'En son stash\'i geri uygula ve listeden sil', pos: ['stash'] }, apply: { d: 'Stash\'i uygula ama listede tut', pos: ['stash'] }, drop: { d: 'Stash\'i sil', pos: ['stash'] }, clear: { d: 'Tüm stash\'leri sil, geri dönüşü zor' }, branch: { d: 'Stash\'ten yeni branch oluştur', pos: ['branch', 'stash'] } },
+      },
+      tag: { d: 'Commit\'e kalıcı bir isim verir, sürüm numaraları için', o: { '-a': { t: 'Annotated tag, yazar, tarih ve mesajıyla. Sürümler için doğru seçim' }, '-m': { a: 'mesaj', t: 'Tag mesajı' }, '-l': { t: 'Tag\'leri listele, desen verilebilir' }, '--list': { t: 'Listele' }, '-d': { t: 'Tag\'i sil' }, '-f': { t: 'Var olan tag\'i taşı' }, '-s': { t: 'GPG ile imzalı tag' }, '-n': { a: 'satır', ao: true, t: 'Listelerken mesajın ilk N satırını da göster' }, '--contains': { a: 'commit', t: 'Bu commit\'i içeren tag\'ler' }, '--sort': { a: 'alan', t: 'Sıralama, eksi işaretli version refname en yeni sürüm üstte' } }, al: { '--annotate': '-a', '--message': '-m', '--delete': '-d', '--force': '-f', '--sign': '-s' }, pos: ['tag adı', 'commit'] },
+      describe: { d: 'Commit\'i en yakın tag\'e göre okunur adla anlatır, v1.2-3-gabc123 gibi', o: { '--tags': { t: 'Annotated olmayan tag\'leri de kullan' }, '--always': { t: 'Tag yoksa kısa hash göster' }, '--dirty': { t: 'Commit edilmemiş değişiklik varsa sonuna -dirty ekle' }, '--abbrev': { a: 'sayı', t: 'Hash uzunluğu, 0 sadece tag adı' }, '--long': { t: 'Tam tag üstünde olsa da uzun biçim' }, '--all': { t: 'Branch\'leri de kullan' } }, pos: ['commit'] },
+      remote: {
+        d: 'Uzak repo tanımlarını yönetir, origin gibi',
+        o: { '-v': { t: 'Remote\'ların fetch ve push URL\'leriyle listesi' }, '--verbose': { t: 'URL\'lerle listele' } },
+        sub: { add: { d: 'Yeni remote ekle', o: { '-f': { t: 'Ekledikten sonra fetch et' }, '-t': { a: 'branch', t: 'Sadece bu branch\'i takip et' } }, pos: ['ad', 'URL'] }, remove: { al2: ['rm'], d: 'Remote\'u sil', pos: ['ad'] }, rename: { d: 'Remote\'u yeniden adlandır', pos: ['eski ad', 'yeni ad'] }, 'get-url': { d: 'Remote\'un URL\'sini göster', pos: ['ad'] }, 'set-url': { d: 'Remote\'un URL\'sini değiştir, https\'ten ssh\'a geçmek için', o: { '--push': { t: 'Sadece push URL\'sini değiştir' }, '--add': { t: 'Ek URL ekle' } }, pos: ['ad', 'yeni URL'] }, show: { d: 'Remote ayrıntıları, branch\'ler ve takip durumu', pos: ['ad'] }, prune: { d: 'Uzakta silinmiş branch\'lerin yerel kopyalarını temizle', o: { '-n': { t: 'Dry run' } }, pos: ['ad'] }, update: { d: 'Tüm remote\'ları fetch et' } },
+      },
+      fetch: { d: 'Uzaktaki yeni commit\'leri indirir ama senin branch\'ine dokunmaz. Önce bak, sonra merge et', o: { '--all': { t: 'Tüm remote\'lardan' }, '-p': { t: 'Uzakta silinmiş branch\'lerin yerel kopyalarını sil' }, '--prune': { t: 'Silinmiş remote branch\'leri temizle' }, '-t': { t: 'Tüm tag\'leri de al' }, '--tags': { t: 'Tüm tag\'leri de al' }, '--depth': { a: 'sayı', t: 'Shallow fetch' }, '--unshallow': { t: 'Shallow clone\'u tam geçmişe çevir' }, '-v': { t: 'Ayrıntılı' }, '-q': { t: 'Sessiz' }, '--dry-run': { t: 'Ne indirileceğini göster' } }, pos: ['remote', 'refspec...'] },
+      pull: { d: 'fetch ve ardından merge ya da rebase. Uzaktaki değişiklikleri branch\'ine getirir', o: { '--rebase': { t: 'Merge yerine rebase et, gereksiz merge commit\'i oluşmaz' }, '-r': { t: 'Rebase ile çek' }, '--ff-only': { t: 'Sadece fast forward olabiliyorsa çek, yerelde ayrışma varsa dur' }, '--no-rebase': { t: 'Merge ile çek' }, '--autostash': { t: 'Yerel değişiklikleri önce stash\'le' }, '--all': { t: 'Tüm remote\'lardan fetch et' }, '-v': { t: 'Ayrıntılı' }, '-q': { t: 'Sessiz' }, '--no-edit': { t: 'Merge mesajını sorma' } }, pos: ['remote', 'branch'] },
+      push: { d: 'Yerel commit\'leri uzak repoya gönderir', o: { '-u': { t: 'Upstream ayarla, sonra sadece git push yetsin' }, '--set-upstream': { t: 'Upstream ayarla' }, '--force-with-lease': { t: 'Zorla gönder ama uzakta senin görmediğin commit varsa reddet. Rebase sonrası güvenli yol' }, '-f': { t: 'Zorla gönder, uzaktaki geçmişi ezer. Paylaşılan branch\'te tehlikeli' }, '--force': { t: 'Zorla gönder, tehlikeli' }, '--tags': { t: 'Tüm tag\'leri gönder' }, '--follow-tags': { t: 'Gönderilen commit\'lere ait annotated tag\'leri de gönder' }, '-d': { t: 'Uzaktaki branch ya da tag\'i sil' }, '--delete': { t: 'Uzaktaki ref\'i sil' }, '--all': { t: 'Tüm branch\'leri gönder' }, '-n': { t: 'Dry run' }, '--dry-run': { t: 'Ne gönderileceğini göster' }, '-v': { t: 'Ayrıntılı' }, '-q': { t: 'Sessiz' }, '--no-verify': { t: 'pre-push hook\'unu atla' } }, pos: ['remote', 'branch ya da refspec...'] },
+      bisect: {
+        d: 'İyi ve kötü commit arasında binary search yapıp hatayı getiren commit\'i bulur',
+        sub: { start: { d: 'Bisect oturumunu başlat', pos: ['kötü commit', 'iyi commit...'] }, bad: { al2: ['new'], d: 'Bu commit, verilmezse şu anki, hatalı', pos: ['commit'] }, good: { al2: ['old'], d: 'Bu commit, verilmezse şu anki, sağlam', pos: ['commit...'] }, skip: { d: 'Bu commit test edilemiyor, atla', pos: ['commit...'] }, reset: { d: 'Oturumu bitir, başladığın branch\'e dön', pos: ['commit'] }, run: { d: 'Her adımda bu script\'i otomatik çalıştır. Exit 0 iyi, diğerleri kötü', pos: ['komut', 'argüman...'] }, log: { d: 'Şu ana kadarki işaretlemeler' }, visualize: { d: 'Kalan aday commit\'leri göster' }, replay: { d: 'Kaydedilmiş bisect log\'unu tekrar oynat', pos: ['dosya'] } },
+      },
+      config: { d: 'git ayarlarını okur ve yazar. Ad, e-posta, editör, alias', o: { '--global': { t: 'Kullanıcının tüm repoları için, ~/.gitconfig' }, '--local': { t: 'Sadece bu repo, .git/config. Varsayılan' }, '--system': { t: 'Makinedeki herkes için' }, '-l': { t: 'Tüm ayarları listele' }, '--list': { t: 'Tüm ayarları listele' }, '--get': { t: 'Ayarın değerini oku' }, '--unset': { t: 'Ayarı sil' }, '-e': { t: 'Config dosyasını editörde aç' }, '--edit': { t: 'Editörde aç' }, '--show-origin': { t: 'Her ayarın hangi dosyadan geldiğini göster' }, '--add': { t: 'Var olanı ezmeden yeni değer ekle' }, '--get-all': { t: 'Çok değerli ayarın tüm değerleri' } }, pos: ['anahtar', 'değer'] },
+      mv: { d: 'Takip edilen dosyayı taşır ya da yeniden adlandırır ve değişikliği stage eder', o: { '-f': { t: 'Hedef varsa üzerine yaz' }, '-n': { t: 'Dry run' }, '-v': { t: 'Ayrıntılı' }, '-k': { t: 'Hataları atla' } }, pos: ['kaynak...', 'hedef'] },
+      rm: { d: 'Dosyayı repodan ve diskten siler, silmeyi stage eder', o: { '--cached': { t: 'Sadece takipten çıkar, dosya diskte kalsın. Yanlışlıkla commit edilmiş dosya için, sonra .gitignore' }, '-r': { t: 'Dizinleri recursive' }, '-f': { t: 'Değişmiş olsa da zorla sil' }, '-n': { t: 'Dry run' }, '-q': { t: 'Sessiz' } }, pos: ['dosya ya da dizin...'] },
+      clean: { d: 'Takip edilmeyen dosyaları siler. Geri dönüşü yoktur', o: { '-n': { t: 'Dry run, neyin silineceğini göster. Önce bunu çalıştır' }, '-f': { t: 'Gerçekten sil, güvenlik için zorunlu' }, '-d': { t: 'Takip edilmeyen dizinleri de sil' }, '-x': { t: '.gitignore ile gizlenenleri de sil, build çıktıları dahil' }, '-X': { t: 'Sadece ignore edilenleri sil' }, '-i': { t: 'Etkileşimli' } }, pos: ['dosya ya da dizin...'] },
+      grep: { d: 'Repodaki takip edilen dosyalarda arama yapar, grep -r\'den hızlı', o: { '-n': { t: 'Satır numaraları' }, '-i': { t: 'Harf duyarsız' }, '-w': { t: 'Tam kelime' }, '-l': { t: 'Sadece dosya adları' }, '-c': { t: 'Dosya başına sayı' }, '-E': { t: 'Extended regex' }, '-v': { t: 'Eşleşmeyen satırlar' } }, pos: ['desen', 'revizyon ya da path...'] },
+      'rev-parse': { d: 'Ref\'i hash\'e çevirir ve repo bilgisini verir, script\'ler için', o: { '--short': { a: 'uzunluk', ao: true, t: 'Kısa hash' }, '--abbrev-ref': { t: 'Hash yerine branch adı, HEAD için şu anki branch' }, '--show-toplevel': { t: 'Reponun kök dizini' }, '--git-dir': { t: '.git dizininin yolu' }, '--is-inside-work-tree': { t: 'Bir repo içinde miyiz, true ya da false' }, '--verify': { t: 'Tek bir geçerli nesne mi kontrol et' } }, pos: ['ref...'] },
+      'merge-base': { d: 'İki branch\'in ayrıldığı ortak atayı bulur', o: { '--is-ancestor': { t: 'Birincisi ikincinin atası mı, exit code ile' }, '-a': { t: 'Tüm ortak atalar' }, '--fork-point': { t: 'Branch\'in ayrıldığı noktayı reflog ile bul' } }, pos: ['commit', 'commit...'] },
+      'ls-files': { d: 'Index\'te takip edilen dosyaları listeler', o: { '-m': { t: 'Değişmiş dosyalar' }, '-d': { t: 'Silinmiş dosyalar' }, '-o': { t: 'Takip edilmeyen dosyalar' }, '-i': { t: 'Ignore edilenler, --exclude-standard ile' }, '--exclude-standard': { t: 'Standart ignore kurallarını uygula' }, '-s': { t: 'Mod ve hash ile' } }, pos: ['dosya ya da dizin...'] },
+      'cat-file': { d: 'Git nesnesinin ham içeriğini ya da tipini gösterir, git\'in iç yapısını görmek için', o: { '-p': { t: 'İçeriği okunur bas' }, '-t': { t: 'Nesne tipi, commit tree blob tag' }, '-s': { t: 'Nesne boyutu' }, '-e': { t: 'Nesne var mı, exit code ile' } }, pos: ['nesne'] },
+      'request-pull': { d: 'Değişikliklerin özetini e-posta ile pull request istemek için metin olarak üretir', o: { '-p': { t: 'Diff\'i de ekle' } }, pos: ['başlangıç', 'URL', 'bitiş'] },
+      archive: { d: 'Belirli bir commit\'in dosyalarını tar ya da zip arşivi olarak çıkarır, .git olmadan', o: { '--format': { a: 'biçim', t: 'tar, tar.gz ya da zip' }, '-o': { a: 'dosya', t: 'Çıktı dosyası' }, '--prefix': { a: 'dizin/', t: 'Arşivdeki dosyaların başına eklenecek dizin' } }, pos: ['commit', 'path...'] },
+      worktree: { d: 'Aynı repodan birden fazla çalışma dizini açar, stash\'lemeden başka branch\'te çalışmak için', sub: { add: { d: 'Yeni çalışma dizini ekle', o: { '-b': { a: 'branch', t: 'Yeni branch oluştur' } }, pos: ['dizin', 'branch'] }, list: { d: 'Çalışma dizinlerini listele' }, remove: { d: 'Çalışma dizinini kaldır', pos: ['dizin'] }, prune: { d: 'Silinmiş dizinlerin kayıtlarını temizle' } } },
+      submodule: { d: 'Repo içinde başka bir repoyu belirli commit\'e sabitlenmiş olarak tutar', sub: { add: { d: 'Submodule ekle', pos: ['URL', 'path'] }, update: { d: 'Submodule\'leri kayıtlı commit\'e getir', o: { '--init': { t: 'Henüz başlatılmamışları da başlat' }, '--recursive': { t: 'İç içe submodule\'ler dahil' }, '--remote': { t: 'Kayıtlı commit yerine uzaktaki son commit' } } }, status: { d: 'Submodule durumları' }, init: { d: 'Submodule\'leri yapılandır' }, foreach: { d: 'Her submodule içinde komut çalıştır', pos: ['komut...'] } } },
+      gc: { d: 'Repoyu toplar ve sıkıştırır, gereksiz nesneleri temizler', o: { '--aggressive': { t: 'Daha yavaş ama daha iyi sıkıştırma' }, '--prune': { a: 'zaman', ao: true, t: 'Bu tarihten eski sahipsiz nesneleri sil' } } },
+      help: { d: 'git komutunun yardım sayfasını açar', pos: ['komut'] },
+    },
+    ex: [['git log --oneline --graph --all', 'Tüm branch\'lerin geçmişi, ağaç halinde'], ['git diff --staged', 'Commit\'e girecek değişiklikler'], ['git commit -am "fix: restore WAN mtu 1500"', 'Takip edilen değişiklikleri stage edip commit et'], ['git push -u origin feature/bgp-parser', 'Yeni branch\'i gönder ve upstream ayarla']],
+    tip: 'Paylaşılmış branch\'te reset --hard, rebase ve push -f geçmişi başkalarının altından çeker. Geri almak için revert, kaybolan commit için reflog. Commit\'ten önce git status ve git diff --staged ile bak',
+  },
+});

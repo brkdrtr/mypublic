@@ -1078,3 +1078,13 @@ if (!EXPLAIN_DB.explain) EXPLAIN_DB.explain = {
   sp: 'wrap', wt: 'Açıklanacak komut satırı',
   ex: [['explain docker run -d -p 8081:8080 netauto:1.0.0', "Her seçeneği tek tek açıklar"], ['explain kubectl', "kubectl alt komutları ve seçenekleri"], ['explain', "Bir önceki komutu açıklar"]],
 };
+
+Object.assign(EXPLAIN_DB, {
+  show: {
+    d: 'Cisco IOS show komutu. Burada ssh ile cihaza gönderilen komut olarak geçer, cihazın durumunu okur, hiçbir şey değiştirmez',
+    noopt: true,
+    pos: ['ne gösterilecek...'],
+    ex: [['ssh admin@r1.lab "show ip interface brief"', 'Arayüzler, IP ve up down durumu'], ['ssh admin@r1.lab "show running-config | section interface"', 'Running config içinde sadece interface blokları']],
+    tip: 'show ve | include gibi filtreler cihazın kendi CLI sözdizimidir, Linux grep değildir',
+  },
+});

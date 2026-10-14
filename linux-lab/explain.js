@@ -49,6 +49,8 @@ const XP_KW = {
   '((': 'Aritmetik ifade',
   '[[': 'Gelişmiş test ifadesi, [ komutunun bash hali. Regex için =~ kullanılabilir',
 };
+/* yorumlayicilar, script adindan sonraki her sey script'in kendi argumani */
+const XP_STOP = new Set(['python', 'python3', 'bash', 'sh', 'zsh', 'node', 'perl', 'ruby', 'php']);
 const XP_WRAP = new Set(['sudo', 'env', 'nohup', 'time', 'nice', 'xargs', 'watch', 'timeout', 'exec', 'command', 'builtin', 'stdbuf', 'strace', 'ionice', 'doas', 'chroot']);
 
 /* ---------- tokenizer ---------- */
@@ -232,7 +234,8 @@ function xpMode(m) {
     const perm = mm[3].split('').map(c => ({ r: 'okuma', w: 'yazma', x: 'çalıştırma', X: 'dizinlerde çalıştırma', s: 'setuid ya da setgid', t: 'sticky' })[c]).join(' ');
     return `${who} için ${perm} ${op}`;
   });
-  return 'Sembolik izin. ' + parts.join(', ');
+  const txt = parts.join(', ');
+  return 'Sembolik izin. ' + txt.charAt(0).toUpperCase() + txt.slice(1);
 }
 
 const XP_FMT = {
@@ -240,14 +243,20 @@ const XP_FMT = {
   sortkey: v => { const m = /^(\d+)(?:\.(\d+))?([a-zA-Z]*)(?:,(\d+)(?:\.\d+)?([a-zA-Z]*))?$/.exec(v); if (!m) return 'sıralama anahtarı'; const fl = (m[3] + (m[5] || '')).split('').map(c => ({ n: 'sayısal', r: 'ters', h: 'insan okunur boyut', M: 'ay adı', V: 'versiyon', b: 'baştaki boşluğu yok say', f: 'harf duyarsız' })[c]).filter(Boolean); return `${m[1]}. alandan ${m[4] ? m[4] + '. alana kadar' : 'satır sonuna kadar'} sırala${fl.length ? ', ' + fl.join(' ') : ''}. Tek alan için ${m[1]},${m[1]} yaz yoksa satırın kalanı da karşılaştırılır`; },
   mode: xpMode,
   owner: v => { const [u, g] = v.split(':'); return g !== undefined ? `Sahip ${u || 'aynı kalır'}, grup ${g || 'kullanıcının ana grubu'}` : `Sahip ${u}`; },
-  size: v => { const m = /^([+-]?)(\d+)([ckMGb]?)$/.exec(v); if (!m) return 'boyut'; const unit = ({ c: 'byte', k: 'KB', M: 'MB', G: 'GB', b: '512 byte blok', '': '512 byte blok' })[m[3]]; return `${m[1] === '+' ? 'Büyük' : m[1] === '-' ? 'Küçük' : 'Tam olarak'} ${m[2]} ${unit}${m[1] === '+' ? ' üstü' : m[1] === '-' ? ' altı' : ''}`; },
+  size: v => { const m = /^([+-]?)(\d+)([ckMGb]?)$/.exec(v); if (!m) return 'boyut'; const unit = ({ c: 'byte', k: 'KB', M: 'MB', G: 'GB', b: '512 byte blok', '': '512 byte blok' })[m[3]]; return m[1] === '+' ? `${m[2]} ${unit} üstü` : m[1] === '-' ? `${m[2]} ${unit} altı` : `Tam olarak ${m[2]} ${unit}`; },
   time: v => { const m = /^([+-]?)(\d+)$/.exec(v); if (!m) return 'süre'; return m[1] === '-' ? `Son ${m[2]} birim içinde` : m[1] === '+' ? `${m[2]} birimden daha eski` : `Tam ${m[2]} birim önce`; },
-  signal: v => ({ 9: 'SIGKILL, süreci anında öldürür, temizlik yapamaz', 15: 'SIGTERM, kibarca kapan der, varsayılan', 1: 'SIGHUP, çoğu daemon config\'i yeniden okur', 2: 'SIGINT, Ctrl+C ile aynı', 19: 'SIGSTOP, süreci dondurur', 18: 'SIGCONT, donmuş süreci devam ettirir', KILL: 'SIGKILL', TERM: 'SIGTERM', HUP: 'SIGHUP', STOP: 'SIGSTOP', CONT: 'SIGCONT', INT: 'SIGINT', USR1: 'SIGUSR1, uygulamaya özel' })[String(v).replace(/^SIG/, '')] || 'sinyal',
+  signal: v => { const t = { 9: 'SIGKILL, süreci anında öldürür, temizlik yapamaz', 15: 'SIGTERM, kibarca kapan der, varsayılan', 1: 'SIGHUP, çoğu daemon config\'i yeniden okur', 2: 'SIGINT, Ctrl+C ile aynı', 3: 'SIGQUIT, çık ve core dump bırak', 19: 'SIGSTOP, süreci dondurur, yakalanamaz', 20: 'SIGTSTP, Ctrl+Z ile aynı', 18: 'SIGCONT, donmuş süreci devam ettirir', 10: 'SIGUSR1, uygulamaya özel', 12: 'SIGUSR2, uygulamaya özel', 0: 'Sinyal göndermez, süreç var mı ve yetkin yeter mi diye test eder' }; const n = { KILL: 9, TERM: 15, HUP: 1, INT: 2, QUIT: 3, STOP: 19, TSTP: 20, CONT: 18, USR1: 10, USR2: 12 }; const k = String(v).toUpperCase().replace(/^SIG/, ''); return t[k] || (n[k] !== undefined ? t[n[k]] : 'sinyal'); },
   regex: v => { const r = xpRegex(v, 'ext'); return 'Regex. ' + r.items.map(x => x.tok + ' ' + x.t.toLowerCase()).join(', '); },
   glob: v => /[*?[]/.test(v) ? `Glob deseni. * herhangi bir şey, ? tek karakter. Tırnak içinde yazılmalı yoksa shell önce kendisi genişletir` : `Tam ad ${v}`,
   dateFmt: v => 'Biçim ' + (v.replace(/^\+/, '').match(/%./g) || []).map(f => f + ' ' + ({ '%Y': 'yıl', '%m': 'ay', '%d': 'gün', '%H': 'saat', '%M': 'dakika', '%S': 'saniye', '%F': 'YYYY-MM-DD', '%T': 'HH:MM:SS', '%s': 'epoch saniye', '%A': 'gün adı', '%B': 'ay adı', '%j': 'yılın günü', '%u': 'haftanın günü', '%Z': 'saat dilimi', '%z': 'UTC farkı' })[f]).join(', '),
   type: v => ({ f: 'Normal dosya', d: 'Dizin', l: 'Symlink', b: 'Blok cihaz', c: 'Karakter cihaz', p: 'Named pipe', s: 'Socket' })[v] || 'tip',
-  perm: v => /^[0-7]+$/.test(v) ? xpMode(v) : /^[-/]/.test(v) ? 'İzin bitlerinden en az biri ya da hepsi eşleşsin' : xpMode(v),
+  perm: v => {
+    if (/^[0-7]+$/.test(v)) return 'Tam olarak bu izin. ' + xpMode(v);
+    const m = /^([-/])([0-7]+)$/.exec(v);
+    if (!m) return /^[-/]/.test(v) ? (v[0] === '-' ? 'Bu bitlerin hepsi set olmalı' : 'Bu bitlerden en az biri set olmalı') : xpMode(v);
+    const sp = { 4000: 'setuid', 2000: 'setgid', 1000: 'sticky', 6000: 'setuid ve setgid' }[m[2]];
+    return (m[1] === '-' ? 'Bu bitlerin hepsi set olmalı' : 'Bu bitlerden en az biri set olmalı') + (sp ? `, ${sp} biti` : `. ${xpMode(m[2].padStart(3, '0'))}`);
+  },
 };
 
 /* ---------- segment aciklama ---------- */
@@ -258,16 +267,35 @@ function xpEntry(name) { return xpOwn(EXPLAIN_DB, name) ? EXPLAIN_DB[name] : nul
 let xpLocal = new Map();
 /* Daha once gorulen alias tanimlari satirlar arasi kalir, alias logs='...' sonra logs. explain komutu shell'in alias'larini da ekler */
 const xpAliasSeen = new Map();
-function xpArgNote(v, label) {
+const XP_SPECIAL = { '$?': 'Son komutun exit code\'u. 0 başarılı, diğerleri hata', '$!': 'En son arka plana atılan sürecin PID\'i', '$$': 'Çalışan shell\'in kendi PID\'i', '$#': 'Script ya da fonksiyona verilen argüman sayısı', '$@': 'Tüm argümanlar, çift tırnak içinde her biri ayrı kelime kalır', '$*': 'Tüm argümanlar tek metin olarak', '$0': 'Script\'in ya da shell\'in adı', '$_': 'Önceki komutun son argümanı' };
+function xpArgNote(v, label, raw) {
   if (label) return label;
+  raw = raw === undefined ? v : raw;
+  if (/^'/.test(raw)) return /[$`\\*]/.test(v) ? 'Metin, tek tırnak içinde. $ ve diğer özel karakterler olduğu gibi kalır, değişken açılmaz' : 'Argüman';
+  if (XP_SPECIAL[v]) return XP_SPECIAL[v];
+  if (v === '{}') return 'Yer tutucu. find -exec ya da xargs -I ile gelen her öğe buraya konur';
+  if (/^%(\d+|[+%-])$/.test(v)) return v === '%+' || v === '%%' ? 'En son job' : v === '%-' ? 'Bir önceki job' : `Job numarası, jobs listesindeki ${v.slice(1)} numaralı iş`;
+  if (/^%\?./.test(v)) return `Komut satırında ${v.slice(2)} geçen job`;
+  if (/^%\w/.test(v)) return `Komutu ${v.slice(1)} ile başlayan job`;
+  if (/\$\{\w+:\?\}/.test(v)) return 'Değişken içeren path. Süslü parantez içindeki iki nokta soru işareti, değişken boşsa komutu hata ile durdurur, rm -rf için hayat kurtarır';
+  if (/^([0-9a-f]{2}[:-]){5}[0-9a-f]{2}$/i.test(v)) return 'MAC adresi';
+  if (/^\$[1-9]$/.test(v)) return `${v.slice(1)}. argüman, script ya da fonksiyona verilen`;
+  if (/^\$\(\(/.test(v)) return 'Aritmetik genişletme, içerisi sayı olarak hesaplanır';
   if (/^\$\(/.test(v) || /^`/.test(v)) return 'Command substitution. İçteki komutun çıktısı buraya yerleşir';
+  if (/^"/.test(raw) && /\$\(|`/.test(v)) return 'Metin, çift tırnak içinde. İçindeki komut çıktıları ve değişkenler yerine konur';
+  if (/^"/.test(raw) && /\$\{?\w/.test(v) && /\s|^\$\w+\W|\w\$/.test(v)) return 'Metin, çift tırnak içinde. İçindeki değişkenler değerleriyle değiştirilir';
   if (/^\$\w+$|^\$\{\w+\}$/.test(v)) return 'Değişken, shell değerini yerine koyar';
   if (/^https?:\/\//.test(v)) return 'URL';
-  if (/^[\w.-]+@[\w.-]+/.test(v)) return 'kullanıcı@host';
+  if (/^[\w.-]+@[\w.-]+/.test(v)) return /:/.test(v) ? 'Uzak path. kullanıcı@host, iki noktadan sonra o sunucudaki path' : 'Kullanıcı ve host, kullanıcı@host biçiminde';
   if (/^\d+\.\d+\.\d+\.\d+(\/\d+)?$/.test(v)) return /\//.test(v) ? 'IP adresi ve prefix' : 'IP adresi';
+  if (/\s/.test(v)) return 'Argüman';
+  if (/\$\{?\w/.test(v) && !/[*?]/.test(v.replace(/\$\{[^}]*\}/g, ''))) return 'Değişken içeren path ya da metin, shell değişkenin değerini yerine koyar';
   if (/[*?]/.test(v)) return 'Glob. Shell eşleşen dosya adlarına genişletir';
   if (/^~/.test(v)) return 'Home dizini altında path';
   if (/^\//.test(v)) return 'Absolute path, kökten başlar';
+  if (/^([\w.-]+@)?[\w.-]+:([~/.]|$)/.test(v) && !/^\w+:\/\//.test(v)) return 'Uzak path. Önce host, iki noktadan sonra o sunucudaki path';
+  if (/^[\w.\/-]+:[\w.-]+$/.test(v)) return 'Sürüm etiketli ad, iki noktadan sonrası tag';
+  if (!/\//.test(v) && /^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?$/i.test(v) && /\.(com|net|org|io|lab|local|corp|dev|lan|home|internal|arpa|edu|gov|tr|nl|de|uk|eu|cloud|app)(:\d+)?$/i.test(v)) return 'Host adı' + (/:\d+$/.test(v) ? ' ve port' : '');
   if (/\//.test(v) || /\.\w{1,5}$/.test(v)) return 'Relative path, bulunduğun dizine göre';
   if (/^\d+$/.test(v)) return 'Sayı';
   return 'Argüman';
@@ -278,7 +306,11 @@ function xpSegment(words, out, depth) {
   let i = 0;
   while (i < words.length && /^[A-Za-z_]\w*=/.test(words[i].raw)) {
     const w = words[i]; const k = w.raw.split('=')[0];
-    out.push({ kind: 'assign', tok: w.raw, depth, t: `Değişken ataması. ${k} sadece bu komut için ortama verilir${words.length === i + 1 ? ', komut yoksa shell değişkeni olur' : ''}` });
+    const alone = words.slice(i + 1).every(x => /^[A-Za-z_]\w*=/.test(x.raw));
+    let at = alone ? `Değişken ataması. ${k} shell değişkeni olur, $${k} ile okunur. Eşittirin etrafında boşluk olmaz` : `Değişken ataması. ${k} sadece arkasındaki komutun ortamına verilir`;
+    if (/=\$\(\(/.test(w.raw)) at += '. Çift parantezli $ ifadesi aritmetik olarak hesaplanır';
+    else if (/=\$\(|=`/.test(w.raw)) at += '. Değer, içteki komutun çıktısı olur';
+    out.push({ kind: 'assign', tok: w.raw, depth, t: at });
     i++;
   }
   if (i >= words.length) return;
@@ -293,15 +325,15 @@ function xpSegment(words, out, depth) {
       if (/^\(\(/.test(words[i].raw)) { out.push({ kind: 'arg', tok: words.slice(i).map(w => w.raw).join(' '), depth: depth + 1, t: 'C stili döngü, başlangıç, koşul, artış' }); return; }
       out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 1, t: 'Döngü değişkeni, her turda listedeki bir sonraki değeri alır, $' + words[i].raw + ' ile okunur' }); i++;
       if (words[i] && words[i].raw === 'in') { out.push({ kind: 'kw', tok: 'in', depth: depth + 1, t: 'Arkasından liste gelir' }); i++; }
-      for (; i < words.length; i++) out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 2, t: xpArgNote(words[i].val) === 'Argüman' ? 'Liste öğesi' : xpArgNote(words[i].val) });
+      for (; i < words.length; i++) out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 2, t: xpArgNote(words[i].val, null, words[i].raw) === 'Argüman' ? 'Liste öğesi' : xpArgNote(words[i].val, null, words[i].raw) });
       return;
     }
-    if (k === 'case' && i < words.length) { out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 1, t: 'Karşılaştırılacak değer' }); i++; if (words[i] && words[i].raw === 'in') { out.push({ kind: 'kw', tok: 'in', depth: depth + 1, t: XP_KW.in }); i++; } return; }
+    if (k === 'case' && i < words.length) { out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 1, t: 'Karşılaştırılacak değer' }); i++; if (words[i] && words[i].raw === 'in') { out.push({ kind: 'kw', tok: 'in', depth: depth + 1, t: 'Arkasından desenler gelir, her biri ) ile biter' }); i++; } if (i < words.length) xpSegment(words.slice(i), out, depth); return; }
     if (k === 'function' && i < words.length) { xpLocal.set(words[i].raw.replace(/\(\)$/, ''), 'fn'); out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 1, t: 'Fonksiyon adı' }); i++; continue; }
   }
   if (i >= words.length) return;
   if (/^\w+\(\)$/.test(words[i].raw)) { xpLocal.set(words[i].raw.slice(0, -2), 'fn'); out.push({ kind: 'kw', tok: words[i].raw, depth, t: 'Fonksiyon tanımı, adı ' + words[i].raw.slice(0, -2) }); i++; xpSegment(words.slice(i), out, depth + 1); return; }
-  if (/^[^\s()]+\)$/.test(words[i].raw)) { out.push({ kind: 'kw', tok: words[i].raw, depth, t: 'case deseni. Değer buna uyarsa arkasındaki komutlar çalışır, * hepsini yakalar' }); i++; if (i >= words.length) return; }
+  if (/^[^\s()]+\)$/.test(words[i].raw)) { out.push({ kind: 'kw', tok: words[i].raw, depth, t: 'case deseni. Değer buna uyarsa arkasındaki komutlar çalışır' + (words[i].raw.includes('|') ? ', | veya demek' : '') + (words[i].raw === '*)' ? ', * diğer her şeyi yakalar' : '') }); i++; if (i >= words.length) return; }
   /* anahtar kelimeden sonra gelen atama, while IFS=: read ... */
   if (i > 0 && /^[A-Za-z_]\w*=/.test(words[i].raw)) { xpSegment(words.slice(i), out, depth); return; }
   if (words[words.length - 1].raw === ';;') words = words.slice(0, -1);
@@ -316,7 +348,7 @@ function xpSegment(words, out, depth) {
   const localT = local === 'fn' ? 'Bu satırda tanımlanan fonksiyonu çağırır. Argümanlar fonksiyon içinde $1, $2 olur' : xpAliasSeen.get(name) ? `Alias. Shell bunu ${xpAliasSeen.get(name)} komutuyla değiştirir` : 'Alias, shell onu asıl komutla değiştirir';
   out.push({ kind: 'cmd', tok: words[i].raw, name, depth, t: e ? e.d : local ? localT : man ? man.d : isPath ? pathT : 'Bu komut için açıklama yok', unknown: !e && !local && !man && !isPath, nodb: !e && !local && !isPath });
   i++;
-  if (!e) { for (; i < words.length; i++) out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 1, t: xpArgNote(words[i].val) }); return; }
+  if (!e) { for (let n = 1; i < words.length; i++, n++) { const note = xpArgNote(words[i].val, null, words[i].raw); out.push({ kind: 'arg', tok: words[i].raw, depth: depth + 1, t: local && note === 'Argüman' ? `${n}. argüman, ${local === 'fn' ? 'fonksiyon' : 'komut'} içinde $${n} olarak okunur` : note }); } return; }
   /* alt komutlar, ip addr show, git log, systemctl restart */
   let opts = Object.assign({}, e.o || {}); let al = Object.assign({}, e.al || {}); let node = e; let pos = e.pos || []; let sp = e.sp || null; let single = !!e.single;
   const findSub = (nd, w) => { if (!nd.sub) return null; if (xpOwn(nd.sub, w)) return [w, nd.sub[w]]; for (const [k, v] of Object.entries(nd.sub)) if ((v.al2 || []).includes(w)) return [k, v]; return null; };
@@ -339,6 +371,8 @@ function xpSegment(words, out, depth) {
 function xpArgs(words, ctx, out, depth) {
   const { opts, al, sp, single, name } = ctx;
   /* a deger alir. ao ise deger istege bagli, sonraki kelime tire ile baslamiyorsa ya da -1 gibi sayiysa deger sayilir */
+  /* cmd, secenegin degeri bir komut satiri, bash -c '...', su -c '...'. Icini de acikla */
+  const nest = (spec, arg, d) => { if (!spec.cmd || !arg || !/\S/.test(arg)) return; const saved = xpLocal; explainLine(arg).items.forEach(x => out.push(Object.assign({}, x, { depth: x.depth + d + 1 }))); xpLocal = saved; };
   const takes = (spec, j) => spec.a && j < words.length && (!spec.ao || !words[j].val.startsWith('-') || /^-\d+$/.test(words[j].val));
   let pos = ctx.pos.slice();
   /* noopt, komut hic secenek almaz, tire ile baslayan kelime de arguman sayilir, submit -rw------- gibi */
@@ -357,7 +391,14 @@ function xpArgs(words, ctx, out, depth) {
   const hasOpt = k => words.some(w => w.val === k || w.val.startsWith(k));
   for (let i = 0; i < words.length; i++) {
     const w = words[i]; const v = w.val;
-    if (!endOpts && v === '--') { endOpts = true; out.push({ kind: 'op', tok: '--', depth, t: 'Seçeneklerin sonu. Bundan sonrası tire ile başlasa bile argüman sayılır' }); continue; }
+    if (!endOpts && v === '--') {
+      endOpts = true;
+      /* ddpos, -- sonrasi farkli bir argüman turu, git diff v1 HEAD -- dosya */
+      const dd = ctx.e.ddpos || ctx.root.ddpos;
+      if (dd) { pos = [dd]; posIdx = 0; }
+      out.push({ kind: 'op', tok: '--', depth, t: 'Seçeneklerin sonu. Bundan sonrası tire ile başlasa bile argüman sayılır' + (dd ? `. Burada arkasından ${dd.replace(/\.\.\.$/, '')} gelir` : '') });
+      continue;
+    }
     /* find -exec ... \; ve xargs gibi ic ice komutlar */
     if (!endOpts && sp === 'find' && (v === '-exec' || v === '-execdir' || v === '-ok')) {
       const j = words.findIndex((x, k) => k > i && (x.val === ';' || x.val === '+'));
@@ -371,7 +412,8 @@ function xpArgs(words, ctx, out, depth) {
       if (j >= 0) out.push({ kind: 'op', tok: words[j].raw, depth: depth + 1, t: words[j].val === '+' ? 'Komutu tüm dosyalarla tek seferde çalıştırır, xargs gibi, hızlıdır' : 'Komutun sonu. Her dosya için ayrı ayrı çalıştırır. Shell yemesin diye \\; yazılır' });
       i = end; continue;
     }
-    if (!endOpts && v.startsWith('-') && v.length > 1 && !(/^-\d/.test(v) && !ctx.e.num && !opts[v])) {
+    /* tirnak icinde bosluklu metin secenek olamaz, echo "- madde" */
+    if (!endOpts && v.startsWith('-') && v.length > 1 && !(w.quoted && /\s/.test(v)) && !(/^-\d/.test(v) && !ctx.e.num && !opts[v])) {
       /* uzun secenek */
       if (v.startsWith('--')) {
         const [k, val] = v.includes('=') ? [v.slice(0, v.indexOf('=')), v.slice(v.indexOf('=') + 1)] : [v, null];
@@ -381,7 +423,8 @@ function xpArgs(words, ctx, out, depth) {
         let arg = val;
         if (arg === null && takes(spec, i + 1)) arg = words[++i].val;
         out.push(xpOptItem(w.raw + (val === null && spec.a && arg !== null ? ' ' + words[i].raw : ''), key !== k ? `${k}, ${key} ile aynı` : k, spec, arg, depth));
-        seen[key] = true; continue;
+        nest(spec, arg, depth);
+        seen[key] = true; if (spec.ends || spec.end) { endOpts = true; if (spec.posAfter) { pos = spec.posAfter.slice(); posIdx = 0; } else posIdx = Math.max(posIdx, 1); } continue;
       }
       /* tam eslesme, find -name, -maxdepth, ya da db'de birlesik yazilmis bir secenek */
       if (opts[v] || al[v]) {
@@ -390,7 +433,8 @@ function xpArgs(words, ctx, out, depth) {
         let arg = null;
         if (takes(spec, i + 1)) arg = words[++i].val;
         out.push(xpOptItem(w.raw + (arg !== null ? ' ' + words[i].raw : ''), key, spec, arg, depth, ctx));
-        seen[key] = true; continue;
+        nest(spec, arg, depth);
+        seen[key] = true; if (spec.ends || spec.end) { endOpts = true; if (spec.posAfter) { pos = spec.posAfter.slice(); posIdx = 0; } else posIdx = Math.max(posIdx, 1); } continue;
       }
       /* tek tireli uzun secenek degerle, nslookup -type=mx, gcc -std=c11 */
       if (v.includes('=') && v.indexOf('=') > 2) {
@@ -415,7 +459,9 @@ function xpArgs(words, ctx, out, depth) {
           if (!arg && takes(spec, i + 1)) { arg = words[++i].val; shown = key + ' ' + words[i].raw; }
           if (!arg) arg = null;
           group.push(xpOptItem(shown, key, spec, arg, depth + 1, ctx));
+          if (spec.cmd && arg) { const before = out.length; nest(spec, arg, depth + 1); group.push(...out.splice(before)); }
           seen[key] = true;
+          if (spec.ends || spec.end) { endOpts = true; if (spec.posAfter) { pos = spec.posAfter.slice(); posIdx = 0; } else posIdx = Math.max(posIdx, 1); }
           break;
         }
         group.push(xpOptItem(key, key, spec, null, depth + 1, ctx));
@@ -472,15 +518,36 @@ function xpArgs(words, ctx, out, depth) {
     }
     const label = pos.length ? (posIdx < pos.length ? pos[posIdx] : (pos[pos.length - 1].endsWith('...') ? pos[pos.length - 1] : null)) : null;
     posIdx++;
-    out.push({ kind: 'arg', tok: w.raw, depth, t: label ? xpLabel(label, v) : xpArgNote(v) });
+    /* stop, ilk pozisyonel argumandan sonra secenekler biter, python3 script.py --verbose gibi script'in kendi secenekleri */
+    if (ctx.e.stop || ctx.root.stop || XP_STOP.has(name)) endOpts = true;
+    /* stopAt n, n pozisyonelden sonra secenekler biter, python3 script.py --script-secenegi */
+    const stopAt = ctx.e.stopAt !== undefined ? ctx.e.stopAt : ctx.root.stopAt;
+    if (stopAt !== undefined && posIdx >= stopAt) endOpts = true;
+    out.push({ kind: 'arg', tok: w.raw, depth, t: label ? xpLabel(label, v, w.raw) : xpArgNote(v, null, w.raw) });
+    /* tirnak icindeki ifade, tcpdump 'dst port 8443' gibi, anahtar kelimeleri tek tek acikla */
+    if (w.quoted && /\s/.test(v.trim()) && Object.keys(opts).some(k => !k.startsWith('-'))) {
+      const parts = v.trim().split(/\s+/);
+      for (let j = 0; j < parts.length; j++) {
+        const k = parts[j];
+        if (!xpOwn(opts, k) || k.startsWith('-')) continue;
+        const spec = opts[k]; let arg = null; let shown = k;
+        if (spec.a && j + 1 < parts.length) { arg = parts[++j]; shown += ' ' + arg; }
+        out.push(xpOptItem('  ' + shown, k, spec, arg, depth + 1, ctx));
+      }
+    }
   }
 }
 
-function xpLabel(label, v) {
+function xpLabel(label, v, raw) {
   const base = label.replace(/\.\.\.$/, '');
-  const note = xpArgNote(v);
+  const note = xpArgNote(v, null, raw);
   const low = s => (/^[A-Z]{2}/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
-  return note === 'Argüman' || note.startsWith('Relative') || note.startsWith('Absolute') ? base.charAt(0).toUpperCase() + base.slice(1) + (note !== 'Argüman' ? ', ' + low(note) : '') : base.charAt(0).toUpperCase() + base.slice(1) + ', ' + low(note);
+  const cap = base.charAt(0).toLocaleUpperCase('tr-TR') + base.slice(1);
+  if (note.startsWith(cap + ',')) return note;
+  if (note.toLowerCase() === base.toLowerCase()) return cap;
+  /* path notu sadece dosya ve dizin bekleyen etiketlerde anlamli, revizyon ya da cevap icin degil */
+  if (/^(Relative|Absolute|Home)/.test(note) && !/dosya|dizin|path|script|kaynak|hedef|arşiv|aygıt|bağlama|link|başlangıç|program|anahtar dosyası/i.test(base)) return cap;
+  return note === 'Argüman' ? cap : cap + ', ' + low(note);
 }
 
 function xpOptItem(tok, key, spec, arg, depth, ctx) {
@@ -488,14 +555,17 @@ function xpOptItem(tok, key, spec, arg, depth, ctx) {
   if (arg !== null && arg !== undefined) {
     const f = spec.f && XP_FMT[spec.f];
     let extra = f ? f(arg, spec.u) : '';
+    /* v, belirli degerlerin anlami, kubectl -o wide, gnmic --mode stream */
+    if (!extra && spec.v) { const k2 = xpOwn(spec.v, arg) ? arg : String(arg).split('=')[0]; if (xpOwn(spec.v, k2)) extra = `${arg}, ${spec.v[k2]}`; }
     if (!extra) {
       if (arg === ':') extra = 'Değer iki nokta';
       else if (arg === ',') extra = 'Değer virgül';
       else if (arg === ' ') extra = 'Değer boşluk';
       else if (arg === '\t' || arg === '\\t') extra = 'Değer Tab';
-      else extra = `Değer ${arg}`;
+      else if (XP_SPECIAL[arg]) extra = `${arg} ${XP_SPECIAL[arg].charAt(0).toLowerCase() + XP_SPECIAL[arg].slice(1)}`;
+      else if (!/\s/.test(tok.trim())) extra = `Değer ${arg}`;
     }
-    t += '. ' + extra;
+    if (extra) t += '. ' + extra;
   }
   return { kind: 'opt', tok, name: key, depth, t };
 }
@@ -508,8 +578,15 @@ function explainLine(line) {
   xpLocal = new Map();
   let seg = [];
   const flush = () => { if (seg.length) xpSegment(seg, items, 0); seg = []; };
+  const inCase = /\bcase\b/.test(String(line));
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i];
+    /* case icinde wan|mpls) deseni pipe degil, tek desen olarak birlestir */
+    if (inCase && t.op === '|' && seg.length && toks[i + 1] && toks[i + 1].raw && !toks[i + 1].op && !toks[i + 1].redir && /\)$|^[^\s()]+$/.test(toks[i + 1].raw) && toks.slice(i + 1).some(x => x.raw && /\)$/.test(x.raw))) {
+      const last = seg[seg.length - 1]; const nx = toks[++i];
+      seg[seg.length - 1] = { raw: last.raw + '|' + nx.raw, val: last.val + '|' + nx.val, quoted: false };
+      continue;
+    }
     if (t.op) { flush(); items.push({ kind: 'op', tok: t.op, depth: 0, t: XP_OPS[t.op] }); continue; }
     if (t.redir) {
       const target = /&\d$/.test(t.redir) ? null : toks[i + 1] && !toks[i + 1].op && !toks[i + 1].redir ? toks[++i] : null;
@@ -547,10 +624,19 @@ function explainHTML(line) {
 
 /* Komut referansi, tum secenekler ve ornekler. explain cut ya da sozlukte kullanilir */
 function explainRef(name, asHTML) {
-  const e = xpEntry(name);
+  /* alt komut referansi da olur, explainRef('git log') ya da explainRef('ip route') */
+  const path = String(name || '').trim().split(/\s+/);
+  let e = xpEntry(path[0]);
+  for (const w of path.slice(1)) {
+    if (!e || !e.sub) return null;
+    const hit = xpOwn(e.sub, w) ? e.sub[w] : Object.values(e.sub).find(v => (v.al2 || []).includes(w));
+    if (!hit) return null;
+    e = Object.assign({ ex: [] }, hit, { d: hit.d || w });
+  }
   if (!e) return null;
   const rows = [];
   const optRows = (o, al, prefix) => Object.entries(o || {}).forEach(([k, s]) => { const aliases = Object.entries(al || {}).filter(([, v]) => v === k).map(([a]) => a); rows.push({ k: prefix + k + (s.a ? ' ' + s.a : '') + (aliases.length ? ', ' + aliases.join(', ') : ''), t: s.t }); });
+  if (e.num) rows.push({ k: '-N', t: e.num + (e.numf === 'signal' ? '. -9 SIGKILL, -15 SIGTERM, -1 SIGHUP' : '. -5 gibi') });
   optRows(e.o, e.al, '');
   const subs = [];
   if (e.sub) Object.entries(e.sub).forEach(([k, s]) => { subs.push({ k, t: s.d || '' }); });
@@ -603,6 +689,8 @@ if (typeof registerExt === 'function') {
         }
         if (sh.aliases) Object.entries(sh.aliases).forEach(([k, v]) => xpAliasSeen.set(k, v));
         if (args.length === 1 && xpEntry(args[0])) return ok(explainRef(args[0]));
+        /* sadece komut ve alt komutlar verildiyse, docker run, git log, o alt komutun tum secenekleri */
+        if (args.length > 1 && args.every(a => /^[\w.-]+$/.test(a))) { const ref = explainRef(args.join(' ')); if (ref) return ok(ref); }
         return ok(`$ ${line}\n` + explainText(line));
       },
     },

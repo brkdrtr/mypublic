@@ -9,10 +9,12 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 - Sanal dosya sistemi, pipe, `>` `>>` `<` `2>` yönlendirme, `&&` `||` `;`, değişkenler, `$(komut)`, glob, script çalıştırma, alias
 - 100'e yakın komut. `ls grep awk sed sort uniq cut tr find chmod sudo ps kill systemctl journalctl ip ss ping dig curl tee nano` ve fazlası
 - Masaüstü ve iPad'de sol tarafta terminal, sağ panelde görev, adımlar, kısayollar, bölümler, quiz, sözlük ve profil. iPhone'da sekmeli tek sütun
-- Profiller. Birden fazla profil, her biri kendi filesystem ve ilerlemesiyle. Cihazlar arası senkron için GitHub Gist, sadece gist yetkili bir token yeter, token cihazda kalır
+- Profiller. Birden fazla profil, her biri kendi filesystem ve ilerlemesiyle. Cihazlar arası senkron için GitHub Gist, sadece gist yetkili bir token yeter, token cihazda kalır. Senkron ilerlemeyi birleştirir, yeni açılan tarayıcı uzaktaki ilerlemeyi ezmez. Profil sekmesindeki link ile diğer cihaz tek dokunuşla bağlanır
 - Görev bitince popup yok. Terminalde ✔ satırı, panelde tamamlandı kutusu ve 2 saniye sonra sıradaki görev. Profil'den kapatılabilir
 - Adımlar. Her görevin çözümü adım listesi olarak panelde, kullandığın komutlar otomatik işaretlenir, Göster ile açılır, yaz ile terminale yazılır
-- 22 bölüm, 204 görev. Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script, bash programlama, vim, git
+- 22 bölüm, 204 görev, her görevin 3 senaryosu. Baştan oynayınca, bölüm tekrar oynanınca ya da Farklı senaryoyla tekrar ile farklı dosya, kullanıcı ve log'larla gelir
+- Komut açıklamaları. Terminalde her komutun yanındaki ⓘ, explain komutu, ipucunda kullanılacak araçlar, çözümde satır satır açıklama. awk programı, sed script'i, grep regex'i, find koşulları, chmod modu dahil her parça açıklanır. 252 komutluk sözlük, Sözlük sekmesinde tüm seçenekler
+- Görev panelinde Önceki ve Sonraki ile serbest gezinme Navigasyon, dosyalar, pipe, permission, process, network, olay yeri incelemesi, script, bash programlama, vim, git
 - Gerçekçi senaryolar. Bozuk nginx config'ini bulup düzeltmek, cryptominer süreci, auth.log içinden ssh brute force analizi, /tmp altındaki backdoor
 - Bash bölümü. if, for, while, case, function, exit code ile gerçek script'ler, crontab ve `cron-tick` ile cron simülasyonu
 - Vim bölümü. Gerçek tuş sırasıyla çalışan vim modeli, `:wq` `dd` `yy` `p` `/` `:%s`
@@ -67,6 +69,7 @@ Modül sözleşmesi `netdevops-lab/CONTRACT.md` içinde. Test `tests/netdevops.t
 ```
 python3 -m http.server 8765 &
 node tests/linux.test.js
+node tests/explain.test.js
 NODE_PATH=$(npm root -g) node tests/linux.e2e.js
 NODE_PATH=$(npm root -g) node tests/netdevops.test.js
 NODE_PATH=$(npm root -g) node tests/netdevops.e2e.js
