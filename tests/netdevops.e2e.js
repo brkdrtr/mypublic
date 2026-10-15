@@ -51,6 +51,52 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   await d.click('#who'); await d.click('#whosheet .prof[data-p=burak]');
   ok((await text(d, '#who')).includes('Burak'), 'profil degisimi');
 
+  /* ---------- Ingilizce ---------- */
+  /* kod, lang="tr" ile isaretli cevrilmemis icerik, komut ornekleri ve explain motoru ciktisi disinda Turkce karakter kalmasin */
+  const turkish = (p, sel) => p.evaluate(sel => {
+    const root = document.querySelector(sel); if (!root) return 'yok ' + sel;
+    const c = root.cloneNode(true);
+    c.querySelectorAll('code, [lang=tr], .xp, .xp-ref, .hc > span, .hc li, .ex, textarea').forEach(e => e.remove());
+    c.querySelectorAll('.story, .task, .hint, .tt, .mis, .chap, .qcard, b').forEach(e => { e.textContent = e.textContent.replace(/\p{Lu}\p{L}*/gu, w => /[ğışçöüĞİŞÇÖÜ]/.test(w) ? '' : w); });
+    const t = c.textContent.replace(/\s+/g, ' '); const mm = t.match(/.{0,40}[ğışçöüĞİŞÇÖÜ].{0,40}/); return mm ? mm[0] : '';
+  }, sel);
+  await d.click('#tabs [data-v=me]');
+  await d.click('#v-me [data-lang=en]');
+  ok(await d.evaluate(() => st.lang === 'en' && LAB_LANG === 'en' && document.documentElement.lang === 'en'), 'English secimi');
+  ok((await text(d, '#tabs [data-v=mission]')).includes('Mission') && await turkish(d, '#tabs') === '', 'sekmeler Ingilizce', await turkish(d, '#tabs'));
+  ok((await text(d, '#pychip')).includes('ready') && await turkish(d, '#top') === '', 'python rozeti ve ust bar Ingilizce', await turkish(d, '#top'));
+  ok(await turkish(d, '#v-me') === '', 'profil ekraninda Turkce yok', await turkish(d, '#v-me'));
+  await d.click('#tabs [data-v=home]');
+  ok((await text(d, '#v-home')).includes('Chapters') && await turkish(d, '#v-home') === '', 'bolumler ekrani Ingilizce', await turkish(d, '#v-home'));
+  await d.click('.chap'); await d.waitForTimeout(50);
+  ok(await turkish(d, '#v-chapter') === '', 'bolum ekrani Ingilizce', await turkish(d, '#v-chapter'));
+  await d.click('#v-chapter .mis');
+  ok(await turkish(d, '#v-mission') === '', 'gorev panelinde Turkce yok', await turkish(d, '#v-mission'));
+  const enMis = await d.evaluate(() => { const m = curMission(); return I18N_EN.missions[m.id] ? locMission(m).title : null; });
+  if (enMis) ok((await text(d, '#v-mission .tt')).includes(enMis), 'gorev basligi overlay dan geliyor', enMis);
+  await d.click('#mp-hint'); await d.click('#mp-sol');
+  ok(await turkish(d, '#v-mission') === '', 'ipucu ve cozum kutusu Ingilizce', await turkish(d, '#v-mission'));
+  await d.click('#tabs [data-v=editor]');
+  ok((await text(d, '#v-editor')).includes('+ file') && await turkish(d, '#v-editor') === '', 'editor sekmesi Ingilizce', await turkish(d, '#v-editor'));
+  await d.click('#tabs [data-v=quiz]');
+  ok(await turkish(d, '#v-quiz') === '', 'quiz Ingilizce', await turkish(d, '#v-quiz'));
+  await d.click('#qstart');
+  ok(await count(d, '.opt') === 4 && await turkish(d, '#v-quiz') === '', 'quiz sorusu Ingilizce', await turkish(d, '#v-quiz'));
+  await d.click('#tabs [data-v=man]');
+  ok(await turkish(d, '#v-man') === '', 'sozlukte Turkce yok', await turkish(d, '#v-man'));
+  await d.fill('#msearch', 'kubectl');
+  const kEn = await d.evaluate(() => I18N_EN.x.kubectl ? locX(EXPLAIN_DB.kubectl, I18N_EN.x.kubectl).d : null);
+  if (kEn) ok((await text(d, '#mlist')).includes(kEn), 'sozlukte kubectl Ingilizce aciklama');
+  await d.reload(); await d.waitForTimeout(500);
+  ok(await d.evaluate(() => st.lang === 'en') && (await text(d, '#tabs [data-v=mission]')).includes('Mission'), 'yenilemeden sonra English kaliyor');
+  await d.click('#who'); await d.click('#whosheet .prof[data-p=test]');
+  ok(await d.evaluate(() => st.lang === 'tr' && LAB_LANG === 'tr') && (await text(d, '#tabs [data-v=mission]')).includes('Görev'), 'diger profil Turkce');
+  await d.click('#who'); await d.click('#whosheet .prof[data-p=burak]');
+  ok(await d.evaluate(() => st.lang === 'en') && (await text(d, '#tabs [data-v=home]')).includes('Chapters'), 'profile donunce English');
+  await d.click('#lang');
+  await d.click('#tabs [data-v=home]');
+  ok(await d.evaluate(() => st.lang === 'tr' && document.documentElement.lang === 'tr') && (await text(d, '#v-home')).includes('Bölümler') && (await text(d, '#tabs [data-v=mission]')).includes('Görev'), 'chip ile Turkceye donus');
+
   const m = await mk({ ...devices['iPhone 13'] });
   await m.goto(BASE); await m.waitForTimeout(400);
   ok(await vis(m, '#tabs [data-v=term]') && await vis(m, '#tabs [data-v=more]'), 'iPhone sekmeleri');
@@ -61,6 +107,12 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   await m.click('#tabs [data-v=editor]');
   ok(await vis(m, '#v-editor'), 'iPhone editor');
   ok(await m.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'yatay tasma yok');
+  await m.click('#lang');
+  ok(await m.evaluate(() => st.lang === 'en') && (await text(m, '#tabs [data-v=more]')).includes('More'), 'iPhone ust bar chipi ile English');
+  await m.click('#tabs [data-v=more]');
+  ok((await text(m, '#v-more')).includes('Dictionary') && await m.evaluate(() => !/[ğışçöüĞİŞÇÖÜ]/.test(document.querySelector('#v-more').textContent)), 'iPhone daha sekmesi Ingilizce');
+  const wb = await m.evaluate(() => { const r = document.querySelector('#who').getBoundingClientRect(); return r.right <= window.innerWidth + 1; });
+  ok(wb, 'iPhone ust barda profil chipi ekranda');
 
   ok(errors.length === 0, 'JS hatasi yok', errors.slice(0, 5).join(' | '));
   console.log(results.filter(r => r.startsWith('FAIL')).join('\n') || '');

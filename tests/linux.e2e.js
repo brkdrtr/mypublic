@@ -174,6 +174,74 @@ function ok(c, name, extra) { results.push((c ? 'PASS ' : 'FAIL ') + name + (ext
   await d.reload(); await d.waitForTimeout(400);
   ok(await d.evaluate(w => st.done.length > w && SYNC.token === 'ghp_test', want), 'yenilemede token ve ilerleme kaliyor');
 
+  /* ---------- Ingilizce ---------- */
+  /* kod, lang="tr" ile isaretli cevrilmemis icerik ve explain motoru ciktisi disinda Turkce karakter kalmasin.
+     Cevrilmis gorev metnindeki Ayse gibi ozel isimler sayilmaz */
+  const turkish = (p, sel) => p.evaluate(sel => {
+    const root = document.querySelector(sel); if (!root) return 'yok ' + sel;
+    const c = root.cloneNode(true);
+    c.querySelectorAll('code, [lang=tr], .xp, .xp-ref, .hc > span, .hc li, .ex').forEach(e => e.remove());
+    c.querySelectorAll('.story, .task, .hint, .tt, .mis, .chap, .qcard, b').forEach(e => { e.textContent = e.textContent.replace(/\p{Lu}\p{L}*/gu, w => /[ğışçöüĞİŞÇÖÜ]/.test(w) ? '' : w); });
+    const t = c.textContent.replace(/\s+/g, ' '); const mm = t.match(/.{0,40}[ğışçöüĞİŞÇÖÜ].{0,40}/); return mm ? mm[0] : '';
+  }, sel);
+  await d.click('#tabs [data-v=me]');
+  ok(await count(d, '#v-me [data-lang]') === 2 && (await text(d, '#v-me .lang-seg')).includes('Türkçe') && (await text(d, '#v-me .lang-seg')).includes('English'), 'profil ayarlarinda Turkce English secimi');
+  await d.click('#v-me [data-lang=en]');
+  ok(await d.evaluate(() => st.lang === 'en' && LAB_LANG === 'en' && document.documentElement.lang === 'en'), 'English secilince st.lang, LAB_LANG ve html lang en');
+  ok((await text(d, '#toast')).includes('English'), 'dil degisim bildirimi Ingilizce');
+  ok((await text(d, '#lang .on')) === 'EN', 'ust bardaki dil chipi EN gosteriyor');
+  ok((await text(d, '#tabs [data-v=mission]')).includes('Mission') && (await text(d, '#tabs [data-v=man]')).includes('Dictionary'), 'sekmeler Ingilizce');
+  ok(await turkish(d, '#tabs') === '', 'sekmelerde Turkce yok', await turkish(d, '#tabs'));
+  ok(await turkish(d, '#v-me') === '', 'profil ekraninda Turkce yok', await turkish(d, '#v-me'));
+  ok(await turkish(d, '#top') === '', 'ust barda Turkce yok', await turkish(d, '#top'));
+  await d.click('#tabs [data-v=home]');
+  ok((await text(d, '#v-home')).includes('Chapters') && await turkish(d, '#v-home') === '', 'bolumler ekrani Ingilizce', await turkish(d, '#v-home'));
+  await d.click('#go-next');
+  ok(await turkish(d, '#v-mission') === '', 'gorev panelinde Turkce yok', await turkish(d, '#v-mission'));
+  const enMis = await d.evaluate(() => { const m = curMission(); return I18N_EN.missions[m.id] ? locMission(m).title : null; });
+  if (enMis) ok((await text(d, '#v-mission .tt')).includes(enMis), 'gorev basligi overlay dan geliyor', enMis);
+  await d.click('#mp-hint');
+  ok((await text(d, '#v-mission')).includes('Tools you will use') && await turkish(d, '#v-mission') === '', 'ipucu kutusu Ingilizce', await turkish(d, '#v-mission'));
+  await d.click('#mp-steps');
+  await d.click('#v-mission [data-use]');
+  await d.press('#cmd', 'Enter'); await d.waitForTimeout(80);
+  ok(await turkish(d, '#v-mission') === '', 'komut sonrasi gorev paneli Ingilizce', await turkish(d, '#v-mission'));
+  await d.click('#tabs [data-v=quiz]');
+  ok(await turkish(d, '#v-quiz') === '', 'quiz giris ekrani Ingilizce', await turkish(d, '#v-quiz'));
+  await d.click('#qstart');
+  ok(await count(d, '.opt') === 4 && (await text(d, '.qhead')).includes('Question') && await turkish(d, '#v-quiz') === '', 'quiz sorusu Ingilizce', await turkish(d, '#v-quiz'));
+  await d.click('.opt');
+  ok(await count(d, '#qn') === 1 && await count(d, '.opt.right') === 1, 'quiz cevap tiklamasi calisiyor');
+  await d.click('#tabs [data-v=man]');
+  ok(await turkish(d, '#v-man') === '', 'sozlukte Turkce yok', await turkish(d, '#v-man'));
+  await d.fill('#msearch', 'cut');
+  const cutEn = await d.evaluate(() => I18N_EN.x.cut ? locX(EXPLAIN_DB.cut, I18N_EN.x.cut).d : null);
+  if (cutEn) ok((await text(d, '#mlist')).includes(cutEn) && await count(d, '#mlist .u:not(:empty)') === 0, 'sozlukte Ingilizce aciklama, Turkce kullanim notu yok');
+  await d.click('#v-man [data-mt=mine]');
+  ok((await text(d, '#v-man')).includes('My commands') && await turkish(d, '#v-man') === '', 'ogrendiklerim Ingilizce', await turkish(d, '#v-man'));
+  ok(await d.evaluate(() => !/[ğışçöüĞİŞÇÖÜ]/.test(cheatSheetText().split('\n').slice(0, 2).join(' '))), 'komut ozeti basligi Ingilizce');
+  await run(d, 'man cut');
+  if (cutEn) ok(!(await text(d, '#term')).split('$ man cut').pop().includes('SEÇENEKLER'), 'Ingilizce modda man sadece Ingilizce referansi basiyor');
+  /* kalicilik, profil bazli, senkron */
+  await d.evaluate(() => SYNC.push());
+  await d.reload(); await d.waitForTimeout(500);
+  ok(await d.evaluate(() => st.lang === 'en' && LAB_LANG === 'en') && (await text(d, '#tabs [data-v=mission]')).includes('Mission'), 'yenilemeden sonra dil English kaliyor');
+  await d.click('#who'); await d.click('#whosheet .prof[data-p=bahu]');
+  ok(await d.evaluate(() => st.lang === 'tr' && LAB_LANG === 'tr') && (await text(d, '#tabs [data-v=mission]')).includes('Görev'), 'diger profil kendi dilinde, Turkce');
+  await d.click('#who');
+  ok((await text(d, '#whosheet h2')).includes('Profil seç'), 'profil secici Turkce');
+  await d.click('#whosheet .prof[data-p=burak]');
+  ok(await d.evaluate(() => st.lang === 'en') && (await text(d, '#tabs [data-v=home]')).includes('Chapters'), 'profile donunce English geri geliyor');
+  await d2.evaluate(() => syncPullReload(true)); await d2.waitForTimeout(200);
+  ok(await d2.evaluate(() => st.lang === 'en' && LAB_LANG === 'en') && (await text(d2, '#tabs [data-v=mission]')).includes('Mission'), 'dil ayari senkronla diger cihaza gidiyor');
+  /* ust bar chipi ile Turkceye donus */
+  await d.click('#lang');
+  ok(await d.evaluate(() => st.lang === 'tr' && LAB_LANG === 'tr' && document.documentElement.lang === 'tr'), 'chip ile Turkceye donus');
+  await d.click('#tabs [data-v=home]');
+  ok((await text(d, '#tabs [data-v=mission]')).includes('Görev') && (await text(d, '#v-home')).includes('Bölümler') && (await text(d, '#v-home')).includes('Günün görevleri'), 'Turkce metinler geri geliyor');
+  await d.click('#tabs [data-v=me]');
+  ok((await text(d, '#v-me')).includes('Cihazlar arası senkron') && (await text(d, '#v-me')).includes('Zorluk'), 'profil ekrani Turkce');
+
   /* ---------- iPhone ---------- */
   const m = await mk({ ...devices['iPhone 13'] });
   await m.goto(BASE); await m.waitForTimeout(300);

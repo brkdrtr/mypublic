@@ -49,6 +49,10 @@ h3 { font-size: 11.5px; margin: 20px 0 8px; color: var(--muted); font-weight: 70
 .chip.sync.ok { color: var(--green); }
 .chip.sync.err { color: var(--red); }
 .chip.sync.busy { color: var(--amber); }
+.chip.lang { color: var(--dim); font-weight: 600; letter-spacing: .3px; }
+.chip.lang .on { color: var(--text); }
+.lang-seg { flex: 0 0 auto; }
+.lang-seg button { padding: 5px 12px; }
 .xpbar { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: transparent; }
 #xpfill { height: 100%; width: 0; background: linear-gradient(90deg, var(--green), var(--cyan)); transition: width .6s ease; }
 
@@ -269,6 +273,11 @@ body.kb .keys { padding-bottom: 6px; }
   .stats { justify-content: flex-end; gap: 5px; }
   .chip { font-size: 12px; padding: 3px 8px; }
   .chip .full { display: none; }
+  .chip.lang span:not(.on) { display: none; }
+  /* dar ekranda marka metni kisalir, chipler tasmaz */
+  #top { grid-template-columns: minmax(0, 1fr) auto; }
+  .brand { min-width: 0; }
+  .brand span:last-child { overflow: hidden; text-overflow: ellipsis; }
   .chip.sync:not(.ok):not(.err):not(.busy) { display: none; }
   .keys { padding-bottom: 6px; }
   body.kb .keys { padding-bottom: calc(6px + var(--safe-b)); }
@@ -327,3 +336,4 @@ details.opts summary { cursor: pointer; color: var(--blue); font-size: 13px; }
 .xp-tip { margin-top: 8px; font-size: 13px; color: var(--amber); }
 .steps .use + .use { margin-left: 4px; }
 .mstrip .mh .tg:disabled { opacity: .3; }
+@media (max-width: 430px) { #top { gap: 6px; } .stats { gap: 4px; } .chip { padding: 3px 5px; } .brand { gap: 6px; font-size: 14px; } }
