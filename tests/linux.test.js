@@ -15,6 +15,7 @@ for (const f of order) vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'
 const { Shell, CHAPTERS, QUIZ, BADGES, LAB_EXT, VimEditor, VAR_REG, variantOf } = vm.runInContext('({ Shell, CHAPTERS, QUIZ, BADGES, LAB_EXT, VimEditor, VAR_REG, variantOf })', ctx);
 const arg = (process.argv.find(a => a.startsWith('--pass=')) || '').slice(7);
 const verbose = process.argv.includes('-v');
+if (process.argv.includes('--lang=en')) vm.runInContext("LAB_LANG = 'en'", ctx);
 
 function runMission(sh, m) {
   if (m.setup) m.setup(sh);

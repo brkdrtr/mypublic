@@ -215,6 +215,9 @@ function lines(s) {
   return a;
 }
 function join(a) { return a.length ? a.join('\n') + '\n' : ''; }
+/* Arayuz dili. app.js profil ayarindan atar. lt Turkce ve Ingilizce metinden aktif olani doner, shell ve eklenti mesajlari icin */
+let LAB_LANG = 'tr';
+function lt(tr, en) { return LAB_LANG === 'en' && en != null ? en : tr; }
 function ok(out = '') { return { out, err: '', code: 0 }; }
 function fail(err, code = 1) { return { out: '', err: err.endsWith('\n') ? err : err + '\n', code }; }
 
