@@ -23,7 +23,7 @@ const { CHAPTERS, QUIZ, BADGES, EXPLAIN_DB, I18N_EN } = vm.runInContext('({ CHAP
 const missing = {}; const lint = [];
 const miss = (sec, id) => { (missing[sec] = missing[sec] || []).push(id); };
 /* yazim, ters tirnak disinda em dash, en dash, parantez, iki nokta, ** ve Turkce karakter olmasin */
-const bad = s => { const t = String(s).replace(/`[^`]*`/g, ''); const m = t.match(/[—–()]|\*\*|[ğışĞİŞçÇöÖüÜ]|:(?!\/\/)/); return m ? m[0] : null; };
+const bad = s => { const t = String(s).replace(/`[^`]*`/g, '').replace(/\b[A-ZÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ]*[çğıöşüÇĞİÖŞÜ][\wçğıöşü]*/g, 'Name'); const m = t.match(/[—–()]|\*\*|[ğışĞİŞçÇöÖüÜ]|:(?!\/\/)/); return m ? m[0] : null; };
 const check = (where, s, isCode) => { if (typeof s !== 'string' || isCode) return; const b = bad(s); if (b) lint.push(`${where} '${b}' ${s.slice(0, 90)}`); };
 const inCh = c => !chf.length || chf.includes(c.id);
 if (only.includes('chapters')) for (const c of CHAPTERS) { if (!inCh(c)) continue; const e = I18N_EN.chapters[c.id]; if (!e || !e.title || (c.sub && !e.sub)) miss('chapters', c.id); else { check('chapter ' + c.id, e.title); check('chapter ' + c.id, e.sub); } }
