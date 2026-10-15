@@ -446,14 +446,14 @@ COMMANDS.ip = function (args) {
   const rest = args.slice(1);
   const devOf = a => { const i = a.findIndex(x => x === 'dev' || x === 'show' || x === 'list' || x === 'ls' || x === 's'); const cand = a.filter((x, k) => k > i && !['dev', 'show', 'list', 'ls', 's'].includes(x))[0]; return cand || (i < 0 ? a[0] : null); };
   if (['a', 'addr', 'address'].includes(sub)) {
-    if (rest.some(x => ['add', 'del', 'flush'].includes(x))) return this.isRoot ? fail('ip: bu lab\'da adres değişikliği simüle edilmiyor, okuma komutlarına odaklan') : fail('RTNETLINK answers: Operation not permitted');
+    if (rest.some(x => ['add', 'del', 'flush'].includes(x))) return this.isRoot ? fail('ip: ' + lt('bu lab\'da adres değişikliği simüle edilmiyor, okuma komutlarına odaklan', 'address changes are not simulated in this lab, focus on the read commands')) : fail('RTNETLINK answers: Operation not permitted');
     const dev = devOf(rest);
     const ifs = dev ? NET_IFACES.filter(x => x.n === dev) : NET_IFACES;
     if (dev && !ifs.length) return fail(`Device "${dev}" does not exist.`);
     return netIpAddr(ifs, stats, brief);
   }
   if (['l', 'link'].includes(sub)) {
-    if (rest[0] === 'set') return this.isRoot ? fail('ip: bu lab\'da link değişikliği simüle edilmiyor') : fail('RTNETLINK answers: Operation not permitted');
+    if (rest[0] === 'set') return this.isRoot ? fail('ip: ' + lt('bu lab\'da link değişikliği simüle edilmiyor', 'link changes are not simulated in this lab')) : fail('RTNETLINK answers: Operation not permitted');
     const dev = devOf(rest);
     const ifs = dev ? NET_IFACES.filter(x => x.n === dev) : NET_IFACES;
     if (dev && !ifs.length) return fail(`Device "${dev}" does not exist.`);
@@ -461,7 +461,7 @@ COMMANDS.ip = function (args) {
   }
   if (['r', 'ro', 'route'].includes(sub)) {
     if (rest[0] === 'get' || rest[0] === 'g') return netRouteGet.call(this, rest.slice(1));
-    if (['add', 'del', 'delete', 'replace', 'flush', 'change'].includes(rest[0])) return this.isRoot ? fail('ip: bu lab\'da route değişikliği simüle edilmiyor') : fail('RTNETLINK answers: Operation not permitted');
+    if (['add', 'del', 'delete', 'replace', 'flush', 'change'].includes(rest[0])) return this.isRoot ? fail('ip: ' + lt('bu lab\'da route değişikliği simüle edilmiyor', 'route changes are not simulated in this lab')) : fail('RTNETLINK answers: Operation not permitted');
     const ti = rest.indexOf('table');
     let table = 'main';
     if (ti >= 0) {
@@ -478,11 +478,11 @@ COMMANDS.ip = function (args) {
     return ok(join(rs.map(r => r.t)));
   }
   if (['ru', 'rule'].includes(sub)) {
-    if (['add', 'del', 'delete', 'flush'].includes(rest[0])) return this.isRoot ? fail('ip: bu lab\'da rule değişikliği simüle edilmiyor') : fail('RTNETLINK answers: Operation not permitted');
+    if (['add', 'del', 'delete', 'flush'].includes(rest[0])) return this.isRoot ? fail('ip: ' + lt('bu lab\'da rule değişikliği simüle edilmiyor', 'rule changes are not simulated in this lab')) : fail('RTNETLINK answers: Operation not permitted');
     return ok(join(NET_RULES));
   }
   if (['n', 'neigh', 'neighbour', 'neighbor'].includes(sub)) {
-    if (['add', 'del', 'flush', 'replace'].includes(rest[0])) return this.isRoot ? fail('ip: bu lab\'da neighbour değişikliği simüle edilmiyor') : fail('RTNETLINK answers: Operation not permitted');
+    if (['add', 'del', 'flush', 'replace'].includes(rest[0])) return this.isRoot ? fail('ip: ' + lt('bu lab\'da neighbour değişikliği simüle edilmiyor', 'neighbour changes are not simulated in this lab')) : fail('RTNETLINK answers: Operation not permitted');
     const di = rest.indexOf('dev');
     const ns = di >= 0 ? NET_NEIGH.filter(n => n.dev === rest[di + 1]) : NET_NEIGH;
     return ok(join(ns.map(n => `${n.ip} dev ${n.dev} ${n.mac ? 'lladdr ' + n.mac + ' ' : ''}${n.st}`)));
@@ -523,7 +523,7 @@ COMMANDS.ping = function (args) {
   for (let i = 1; i <= count; i++) { const t = netJitter(base); times.push(t); out.push(`${size + 8} bytes from ${ip}: icmp_seq=${i} ttl=${netTtl(ip)} time=${t} ms`); }
   const min = Math.min(...times), max = Math.max(...times), avg = times.reduce((a, b) => a + b, 0) / times.length;
   out.push(...tail(count, count, 0), `rtt min/avg/max/mdev = ${min.toFixed(3)}/${avg.toFixed(3)}/${max.toFixed(3)}/${(max - min).toFixed(3)} ms`);
-  if (!vals.c) out.push('', "[Gerçek Linux'ta ping durmaz, Ctrl+C gerekir. Burada 4 paketle sınırlı. Bundan sonra -c kullan]");
+  if (!vals.c) out.push('', lt("[Gerçek Linux'ta ping durmaz, Ctrl+C gerekir. Burada 4 paketle sınırlı. Bundan sonra -c kullan]", '[On real Linux ping never stops, you need Ctrl+C. Here it is limited to 4 packets. Use -c from now on]'));
   void flags;
   return ok(join(out));
 };
@@ -575,7 +575,7 @@ COMMANDS.mtr = function (args) {
   const { flags, vals, rest } = parseOpts(args, 'cips');
   const host = rest[0];
   if (!host) return fail('mtr: usage: mtr -r -c N hedef');
-  if (!flags.has('r') && !flags.has('--report') && !flags.has('w') && !flags.has('--report-wide')) return fail('mtr: bu lab\'da interaktif ekran yok, report modu kullan: mtr -r -c 5 hedef');
+  if (!flags.has('r') && !flags.has('--report') && !flags.has('w') && !flags.has('--report-wide')) return fail('mtr: ' + lt('bu lab\'da interaktif ekran yok, report modu kullan: mtr -r -c 5 hedef', 'this lab has no interactive screen, use report mode, mtr -r -c 5 target'));
   const ip = netResolve(host, this);
   if (!ip) return fail(`mtr: Failed to resolve host: ${host}: Name or service not known`);
   const n = Math.min(parseInt(vals.c || '10', 10) || 10, 10);
@@ -642,7 +642,7 @@ function netTcpdump(args) {
   const { flags, vals, rest } = parseOpts(args, 'rciwsFG');
   const num = flags.has('n');
   const count = vals.c ? parseInt(vals.c, 10) : Infinity;
-  if (vals.w) return fail('tcpdump: -w ile dosyaya yazma bu lab\'da yok, hazır capture\'lar /var/log/captures altında');
+  if (vals.w) return fail('tcpdump: ' + lt('-w ile dosyaya yazma bu lab\'da yok, hazır capture\'lar /var/log/captures altında', 'writing to a file with -w is not available in this lab, ready captures are under /var/log/captures'));
   let fn;
   try { fn = netFilter(rest.join(' '), this); } catch (e) { return fail('tcpdump: ' + e.message); }
   if (vals.r) {
@@ -651,23 +651,23 @@ function netTcpdump(args) {
     if (!n) return fail(`tcpdump: ${vals.r}: No such file or directory`);
     if (!this.canRead(n)) return fail(`tcpdump: ${vals.r}: Permission denied`);
     const cap = NET_CAPS[abs];
-    if (!cap) return fail(`tcpdump: unknown file format\n💡 Bu dosya bir capture değil. Hazır capture\'lar: ${Object.keys(NET_CAPS).join(' ')}`);
+    if (!cap) return fail(`tcpdump: unknown file format\n💡 ` + lt(`Bu dosya bir capture değil. Hazır capture\'lar: ${Object.keys(NET_CAPS).join(' ')}`, `This file is not a capture. Ready captures are ${Object.keys(NET_CAPS).join(' ')}`));
     const pk = cap.pk.filter(fn).slice(0, count);
     return { out: join(pk.map(p => netPktLine(p, num))), err: `reading from file ${vals.r}, link-type ${cap.link}, snapshot length 262144\n`, code: 0 };
   }
   const dev = vals.i || 'eth0';
-  if (!this.isRoot) return fail(`tcpdump: ${dev}: You don't have permission to capture on that device\n(socket: Operation not permitted)\n💡 Canlı capture root ister. Bu lab'da asıl iş hazır capture okumak, tcpdump -n -r /var/log/captures/dosya.pcap`);
+  if (!this.isRoot) return fail(`tcpdump: ${dev}: You don't have permission to capture on that device\n(socket: Operation not permitted)\n💡 ` + lt("Canlı capture root ister. Bu lab'da asıl iş hazır capture okumak, tcpdump -n -r /var/log/captures/dosya.pcap", 'Live capture needs root. The real work in this lab is reading ready captures, tcpdump -n -r /var/log/captures/file.pcap'));
   if (!NET_IFACES.some(x => x.n === dev) && dev !== 'any') return fail(`tcpdump: ${dev}: No such device exists\n(SIOCGIFHWADDR: No such device)`);
   const src = NET_LIVE[dev] || NET_LIVE.eth0;
   const pk = src.filter(fn).slice(0, count);
-  const trailer = `\n^C\n${pk.length} packets captured\n${pk.length} packets received by filter\n0 packets dropped by kernel\n[Canlı capture bu lab'da ${src.length} paketle sınırlı, Ctrl+C simüle edildi. Hazır capture'lar /var/log/captures altında]\n`;
+  const trailer = `\n^C\n${pk.length} packets captured\n${pk.length} packets received by filter\n0 packets dropped by kernel\n${lt(`[Canlı capture bu lab'da ${src.length} paketle sınırlı, Ctrl+C simüle edildi. Hazır capture'lar /var/log/captures altında]`, `[Live capture in this lab is limited to ${src.length} packets, Ctrl+C was simulated. Ready captures are under /var/log/captures]`)}\n`;
   return { out: join(pk.map(p => netPktLine(p, num))) + trailer, err: `tcpdump: verbose output suppressed, use -v[v]... for full protocol decode\nlistening on ${dev}, link-type EN10MB (Ethernet), snapshot length 262144 bytes\n`, code: 0 };
 }
 
 /* ---------- iptables, nft ---------- */
 
 function netIptables(args) {
-  if (!this.isRoot) return fail('iptables v1.8.10 (nf_tables): Permission denied (you must be root)\n💡 Firewall okumak bile root ister, sudo iptables -L -n -v');
+  if (!this.isRoot) return fail('iptables v1.8.10 (nf_tables): Permission denied (you must be root)\n💡 ' + lt('Firewall okumak bile root ister, sudo iptables -L -n -v', 'Even reading the firewall needs root, sudo iptables -L -n -v'));
   const ti = args.indexOf('-t');
   const table = ti >= 0 ? args[ti + 1] : 'filter';
   const a = ti < 0 ? args.slice() : args.filter((x, k) => !(k === ti || k === ti + 1));
@@ -716,7 +716,7 @@ function netIptables(args) {
     const di = a.indexOf('-D'); const chain = a[di + 1]; const spec = a.slice(di + 2);
     if (!chain || chain.startsWith('-')) return fail('iptables v1.8.10 (nf_tables): -D requires a chain and a rule number or specification');
     if (!['INPUT', 'FORWARD', 'OUTPUT', 'HUB-BLOCK'].includes(chain)) return fail('iptables: No chain/target/match by that name.');
-    if (chain !== 'HUB-BLOCK') return fail(`iptables: Bad rule (does a matching rule exist in that chain?).\n💡 DROP rule'u HUB-BLOCK chain'inde, OUTPUT ve FORWARD sadece oraya jump ediyor`);
+    if (chain !== 'HUB-BLOCK') return fail(`iptables: Bad rule (does a matching rule exist in that chain?).\n💡 ` + lt("DROP rule'u HUB-BLOCK chain'inde, OUTPUT ve FORWARD sadece oraya jump ediyor", 'The DROP rule is in the HUB-BLOCK chain, OUTPUT and FORWARD only jump there'));
     if (!st.hubblock) return fail(spec.length === 1 && /^\d+$/.test(spec[0]) ? 'iptables: Index of deletion too big.' : 'iptables: Bad rule (does a matching rule exist in that chain?).');
     if (spec.length === 1 && /^\d+$/.test(spec[0])) { if (spec[0] !== '1') return fail('iptables: Index of deletion too big.'); st.hubblock = false; netSetState(this, st); return ok(''); }
     const s = spec.join(' ');
@@ -724,11 +724,11 @@ function netIptables(args) {
     if (!okSpec) return fail('iptables: Bad rule (does a matching rule exist in that chain?).');
     st.hubblock = false; netSetState(this, st); return ok('');
   }
-  if (a.some(x => ['-A', '-I', '-N', '-P', '-R'].includes(x))) return fail('iptables: bu lab\'da sadece -L, -S, -D, -F destekleniyor');
+  if (a.some(x => ['-A', '-I', '-N', '-P', '-R'].includes(x))) return fail('iptables: ' + lt('bu lab\'da sadece -L, -S, -D, -F destekleniyor', 'only -L, -S, -D, -F are supported in this lab'));
   return fail('iptables v1.8.10 (nf_tables): no command specified\nTry `iptables -h\' or \'iptables --help\' for more information.', 2);
 }
 function netNft(args) {
-  if (!this.isRoot) return fail('nft: Operation not permitted\n💡 nft list ruleset root ister, sudo kullan');
+  if (!this.isRoot) return fail('nft: Operation not permitted\n💡 ' + lt('nft list ruleset root ister, sudo kullan', 'nft list ruleset needs root, use sudo'));
   const a = args.filter(x => x !== '-a' && x !== '--handle');
   const handles = args.includes('-a') || args.includes('--handle');
   const st = netState(this);
@@ -746,13 +746,13 @@ function netNft(args) {
   }
   if (a[0] === 'delete' && a[1] === 'rule') {
     const m = /^ip filter HUB-BLOCK handle (\d+)$/.exec(a.slice(2).join(' '));
-    if (!m) return fail('Error: Could not process rule: No such file or directory\n💡 Sözdizimi: nft delete rule ip filter HUB-BLOCK handle N, handle için nft -a list ruleset');
+    if (!m) return fail('Error: Could not process rule: No such file or directory\n💡 ' + lt('Sözdizimi: nft delete rule ip filter HUB-BLOCK handle N, handle için nft -a list ruleset', 'The syntax is nft delete rule ip filter HUB-BLOCK handle N, find the handle with nft -a list ruleset'));
     if (m[1] !== '7' || !st.hubblock) return fail('Error: Could not process rule: No such file or directory');
     st.hubblock = false; netSetState(this, st); return ok('');
   }
   if (a[0] === 'flush' && a[1] === 'chain' && a.slice(2).join(' ') === 'ip filter HUB-BLOCK') { st.hubblock = false; netSetState(this, st); return ok(''); }
-  if (a[0] === 'list') return fail('Error: syntax error, unexpected end of file\n💡 nft list ruleset ya da nft list table ip filter');
-  return fail('nft: bu lab\'da list ruleset, list table, delete rule ve flush chain destekleniyor');
+  if (a[0] === 'list') return fail('Error: syntax error, unexpected end of file\n💡 ' + lt('nft list ruleset ya da nft list table ip filter', 'nft list ruleset or nft list table ip filter'));
+  return fail('nft: ' + lt('bu lab\'da list ruleset, list table, delete rule ve flush chain destekleniyor', 'this lab supports list ruleset, list table, delete rule and flush chain'));
 }
 
 /* ---------- nc, telnet ---------- */
@@ -773,7 +773,7 @@ function netNc(args) {
   if (s === 'refused') return fail(`nc: connect to ${ip} port ${port} (tcp) failed: Connection refused`);
   const line = `Connection to ${host} ${port} port [tcp/${svc}] succeeded!\n`;
   if (flags.has('z')) return ok(line);
-  return ok(line + '[interaktif oturum bu lab\'da yok, port taraması için -z kullan]\n');
+  return ok(line + lt('[interaktif oturum bu lab\'da yok, port taraması için -z kullan]\n', '[no interactive session in this lab, use -z for a port scan]\n'));
 }
 function netTelnet(args) {
   const rest = args.filter(a => !a.startsWith('-'));
@@ -783,7 +783,7 @@ function netTelnet(args) {
   if (!ip) return fail(`telnet: could not resolve ${host}/${port}: Name or service not known`);
   const s = netPortState(this, ip, port);
   const head = `Trying ${ip}...\n`;
-  if (s === 'open') return ok(head + `Connected to ${host}.\nEscape character is '^]'.\nConnection closed by foreign host.\n[bağlantı açıldı ve kapandı, bu lab'da interaktif oturum yok]\n`);
+  if (s === 'open') return ok(head + `Connected to ${host}.\nEscape character is '^]'.\nConnection closed by foreign host.\n` + lt("[bağlantı açıldı ve kapandı, bu lab'da interaktif oturum yok]\n", '[the connection opened and closed, there is no interactive session in this lab]\n'));
   const why = s === 'refused' ? 'Connection refused' : s === 'unreach' ? 'No route to host' : 'Connection timed out';
   return { out: head, err: `telnet: Unable to connect to remote host: ${why}\n`, code: 1 };
 }
@@ -793,7 +793,7 @@ function netTelnet(args) {
 function netConntrack(args) {
   if (!this.isRoot) return fail('conntrack v1.4.7 (conntrack-tools): Operation failed: sorry, you must be root or get CAP_NET_ADMIN capability to do this');
   const { vals, rest } = parseOpts(args, 'pdsL');
-  if (!args.includes('-L') && !args.includes('--dump') && !args.includes('-C')) return fail('conntrack: bu lab\'da conntrack -L [-p proto] [-d ip] [-s ip] ve conntrack -C destekleniyor');
+  if (!args.includes('-L') && !args.includes('--dump') && !args.includes('-C')) return fail('conntrack: ' + lt('bu lab\'da conntrack -L [-p proto] [-d ip] [-s ip] ve conntrack -C destekleniyor', 'this lab supports conntrack -L [-p proto] [-d ip] [-s ip] and conntrack -C'));
   if (args.includes('-C')) return ok('7\n');
   const rows = [
     ['tcp', 6, 431999, 'ESTABLISHED', '192.168.1.10', '192.168.1.42', 51000, 2222, '192.168.1.42', '192.168.1.10', 2222, 51000, '[ASSURED]'],
@@ -815,7 +815,7 @@ function netConntrack(args) {
 function netArp(args) {
   const { flags, vals } = parseOpts(args, 'i');
   const ns = vals.i ? NET_NEIGH.filter(n => n.dev === vals.i) : NET_NEIGH;
-  if (flags.has('d') || flags.has('s')) return this.isRoot ? fail('arp: bu lab\'da ARP tablosu değişikliği simüle edilmiyor') : fail('SIOCDARP(dontpub): Operation not permitted');
+  if (flags.has('d') || flags.has('s')) return this.isRoot ? fail('arp: ' + lt('bu lab\'da ARP tablosu değişikliği simüle edilmiyor', 'ARP table changes are not simulated in this lab')) : fail('SIOCDARP(dontpub): Operation not permitted');
   const nm = n => flags.has('n') ? '?' : (NET_NAMES[n.ip] && NET_NAMES[n.ip] !== 'linuxlab' ? NET_NAMES[n.ip].split('.')[0] : '?');
   if (flags.has('a')) return ok(join(ns.map(n => `${nm(n)} (${n.ip}) at ${n.mac ? n.mac + ' [ether]' : '<incomplete>'} on ${n.dev}`)));
   const out = ['Address                  HWtype  HWaddress           Flags Mask            Iface'];
@@ -868,7 +868,7 @@ function netEthtool(args) {
   if (!e) return fail(NET_IFACES.some(x => x.n === dev) ? `ethtool: ${dev}: Operation not supported` : `Cannot get device settings: No such device`);
   if (flags.has('S')) return ok(`NIC statistics:\n` + join(Object.entries(e.st).map(([k, v]) => `     ${k}: ${v}`)));
   if (flags.has('i')) return ok(`driver: igb\nversion: 6.8.0-45-generic\nfirmware-version: 1.63, 0x80000f0a\nexpansion-rom-version: \nbus-info: ${e.bus}\nsupports-statistics: yes\nsupports-test: yes\nsupports-eeprom-access: yes\nsupports-register-dump: yes\nsupports-priv-flags: yes\n`);
-  if (flags.has('s')) return this.isRoot ? fail('ethtool: bu lab\'da link ayarı değişikliği simüle edilmiyor, gerçekte ethtool -s eth1 speed 100 duplex full autoneg off') : fail('Cannot set new settings: Operation not permitted\n  not setting speed\n  not setting duplex');
+  if (flags.has('s')) return this.isRoot ? fail('ethtool: ' + lt('bu lab\'da link ayarı değişikliği simüle edilmiyor, gerçekte ethtool -s eth1 speed 100 duplex full autoneg off', 'link setting changes are not simulated in this lab, on a real system ethtool -s eth1 speed 100 duplex full autoneg off')) : fail('Cannot set new settings: Operation not permitted\n  not setting speed\n  not setting duplex');
   return ok([`Settings for ${dev}:`, '\tSupported ports: [ TP ]', '\tSupported link modes:   10baseT/Half 10baseT/Full', '\t                        100baseT/Half 100baseT/Full', '\t                        1000baseT/Full', '\tSupported pause frame use: Symmetric', '\tSupports auto-negotiation: Yes', '\tSupported FEC modes: Not reported',
     '\tAdvertised link modes:  10baseT/Half 10baseT/Full', '\t                        100baseT/Half 100baseT/Full', '\t                        1000baseT/Full', '\tAdvertised pause frame use: Symmetric', '\tAdvertised auto-negotiation: Yes', '\tAdvertised FEC modes: Not reported',
     `\tLink partner advertised auto-negotiation: ${e.partner}`, `\tSpeed: ${e.speed}`, `\tDuplex: ${e.duplex}`, '\tAuto-negotiation: on', '\tPort: Twisted Pair', '\tPHYAD: 1', '\tTransceiver: internal', '\tMDI-X: off (auto)', '\tSupports Wake-on: pumbg', '\tWake-on: d', '\tCurrent message level: 0x00000007 (7)', '\t\t\t       drv probe link', '\tLink detected: yes'].join('\n') + '\n');
@@ -884,7 +884,7 @@ function netDmesg(args) {
 function netIpsec(args) {
   const sub = args[0];
   if (!sub || sub === '--help') return ok('Usage: ipsec command [arguments]\n  status | statusall | up conn | down conn | restart\n');
-  if (this.services.strongswan !== 'active') return fail('connecting to \'unix:///var/run/charon.ctl\' failed: No such file or directory\nfailed to connect to stroke socket \'unix:///var/run/charon.ctl\'\n💡 strongswan servisi çalışmıyor, systemctl status strongswan');
+  if (this.services.strongswan !== 'active') return fail('connecting to \'unix:///var/run/charon.ctl\' failed: No such file or directory\nfailed to connect to stroke socket \'unix:///var/run/charon.ctl\'\n💡 ' + lt('strongswan servisi çalışmıyor, systemctl status strongswan', 'the strongswan service is not running, systemctl status strongswan'));
   if (!this.isRoot) return fail('connecting to \'unix:///var/run/charon.ctl\' failed: Permission denied\nfailed to connect to stroke socket \'unix:///var/run/charon.ctl\'\n💡 charon socket\'i root ister, sudo ipsec statusall');
   if (sub === 'status' || sub === 'statusall') {
     const all = sub === 'statusall';
@@ -917,7 +917,7 @@ function netSwanctl(args) {
   if (this.services.strongswan !== 'active') return fail('connecting to \'unix:///var/run/charon.vici\' failed: No such file or directory');
   if (args.includes('-l') || args.includes('--list-sas')) return ok(['partner-ext: #1, ESTABLISHED, IKEv2, 3f9a2b7c1d4e5f60_i* 9c0d1e2f3a4b5c6d_r', '  local  \'branch-ist07.example.net\' @ 192.168.1.42[4500]', '  remote \'vpn.partner.example\' @ 203.0.113.10[4500]', '  AES_GCM_16-256/PRF_HMAC_SHA2_256/ECP_256', '  established 14402s ago, reauth in 7198s', '  partner-ext: #1, reqid 1, INSTALLED, TUNNEL-in-UDP, ESP:AES_GCM_16-256', '    installed 1402s ago, rekeying in 1860s, expires in 2198s', '    in  c1a2b3d4,  1203456 bytes,  9120 packets,     3s ago', '    out e5f6a7b8,  2210880 bytes, 10120 packets,     3s ago', '    local  192.168.2.0/24', '    remote 172.31.10.0/24', 'cloud-lab: #9, CONNECTING, IKEv2, 7a1c3e5f90b2d4e6_i* 0000000000000000_r', '  local  \'%any\' @ 192.168.1.42[500]', '  remote \'%any\' @ 203.0.113.20[500]', '  established 0s ago'].join('\n') + '\n');
   if (args.includes('-L') || args.includes('--list-conns')) return ok('partner-ext: IKEv2, no reauthentication, rekeying every 14400s\n  local:  192.168.1.42\n  remote: 203.0.113.10\n  local pre-shared key authentication:\n    id: branch-ist07.example.net\n  remote pre-shared key authentication:\n    id: vpn.partner.example\n  partner-ext: TUNNEL, rekeying every 3600s\n    local:  192.168.2.0/24\n    remote: 172.31.10.0/24\ncloud-lab: IKEv2, no reauthentication, rekeying every 14400s\n  local:  192.168.1.42\n  remote: 203.0.113.20\n  cloud-lab: TUNNEL, rekeying every 3600s\n    local:  192.168.2.0/24\n    remote: 10.70.0.0/16\n');
-  return fail('swanctl: bu lab\'da -l ve -L destekleniyor');
+  return fail('swanctl: ' + lt('bu lab\'da -l ve -L destekleniyor', 'this lab supports -l and -L'));
 }
 
 /* ---------- openssl ---------- */
@@ -948,14 +948,14 @@ function netOpenssl(args) {
     if (code === 10) out.push('verify error:num=10:certificate has expired', `notAfter=${c.na}`, 'verify return:1');
     if (code === 62) out.push('verify error:num=62:hostname mismatch', 'verify return:1');
     out.push('---', 'Certificate chain', ` 0 s:${c.subject}`, `   i:${c.issuer}`, '   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256', `   v:NotBefore: ${c.nb}; NotAfter: ${c.na}`, '---', 'Server certificate');
-    out.push(...lines(netPem(id)).slice(0, 2), '...(kısaltıldı)', '-----END CERTIFICATE-----');
-    out.push(`subject=${c.subject}`, `issuer=${c.issuer}`, '---', 'No client certificate CA names sent', 'Peer signing digest: SHA256', 'Peer signature type: RSA-PSS', 'Server Temp Key: X25519, 253 bits', '---', 'SSL handshake has read 1823 bytes and written 393 bytes', `Verification${code ? ' error' : ''}: ${msg === 'ok' ? 'OK' : msg}`, '---', 'New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384', 'Server public key is 2048 bit', 'Secure Renegotiation IS NOT supported', 'No ALPN negotiated', 'Early data was not sent', `Verify return code: ${code} (${msg})`, '---', '[s_client stdin bekler, bu lab\'da oturum kapatıldı]');
+    out.push(...lines(netPem(id)).slice(0, 2), lt('...(kısaltıldı)', '...truncated'), '-----END CERTIFICATE-----');
+    out.push(`subject=${c.subject}`, `issuer=${c.issuer}`, '---', 'No client certificate CA names sent', 'Peer signing digest: SHA256', 'Peer signature type: RSA-PSS', 'Server Temp Key: X25519, 253 bits', '---', 'SSL handshake has read 1823 bytes and written 393 bytes', `Verification${code ? ' error' : ''}: ${msg === 'ok' ? 'OK' : msg}`, '---', 'New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384', 'Server public key is 2048 bit', 'Secure Renegotiation IS NOT supported', 'No ALPN negotiated', 'Early data was not sent', `Verify return code: ${code} (${msg})`, '---', lt('[s_client stdin bekler, bu lab\'da oturum kapatıldı]', '[s_client waits on stdin, the session was closed in this lab]'));
     return ok(join(out));
   }
   if (sub === 'x509') {
     const ii = args.indexOf('-in');
     const f = ii >= 0 ? args[ii + 1] : null;
-    if (!f) return fail('x509: bu lab\'da stdin yok, -in dosya kullan');
+    if (!f) return fail('x509: ' + lt('bu lab\'da stdin yok, -in dosya kullan', 'no stdin in this lab, use -in file'));
     const r = this.readFile(f, 'openssl');
     if (r.err) return fail(`Could not open file or uri for loading certificate from ${f}: No such file or directory\nUnable to load certificate`);
     const id = netCertByContent(r.data);
@@ -984,7 +984,7 @@ function netOpenssl(args) {
     return ok(join(out));
   }
   if (sub === 'rand') return ok(Array.from({ length: parseInt(args[args.length - 1], 10) || 16 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('') + '\n');
-  return fail(`openssl: bu lab'da s_client, x509, version destekleniyor${sub ? ', ' + sub + ' yok' : ''}`);
+  return fail(lt(`openssl: bu lab'da s_client, x509, version destekleniyor${sub ? ', ' + sub + ' yok' : ''}`, `openssl: this lab supports s_client, x509, version${sub ? ', ' + sub + ' is not available' : ''}`));
 }
 
 /* ---------- dig ---------- */
@@ -1028,7 +1028,7 @@ COMMANDS.dig = function (args) {
   if (trace) {
     const out = [`; <<>> DiG 9.18.28 <<>> +trace ${q}`, ';; global options: +cmd', '.\t\t\t86400\tIN\tNS\ta.root-servers.net.', '.\t\t\t86400\tIN\tNS\tb.root-servers.net.', '.\t\t\t86400\tIN\tNS\tk.root-servers.net.', `;; Received 525 bytes from ${server}#53(${server}) in 2 ms`, ''];
     if (corp) {
-      out.push('lab.\t\t\t86400\tIN\tSOA\ta.root-servers.net. nstld.verisign-grs.com. 2026101001 1800 900 604800 86400', ';; Received 123 bytes from 198.41.0.4#53(a.root-servers.net) in 30 ms', '', `;; Not: corp.lab root'tan delegate edilmiş bir zone değil. Internal zone, sadece ns1.corp.lab (10.50.0.53) ve onu forward eden ION (${NET_ION}) bilir. dig @${NET_ION} ${q}`);
+      out.push('lab.\t\t\t86400\tIN\tSOA\ta.root-servers.net. nstld.verisign-grs.com. 2026101001 1800 900 604800 86400', ';; Received 123 bytes from 198.41.0.4#53(a.root-servers.net) in 30 ms', '', lt(`;; Not: corp.lab root'tan delegate edilmiş bir zone değil. Internal zone, sadece ns1.corp.lab (10.50.0.53) ve onu forward eden ION (${NET_ION}) bilir. dig @${NET_ION} ${q}`, `;; Note, corp.lab is not a zone delegated from the root. It is an internal zone, only ns1.corp.lab at 10.50.0.53 and the ION that forwards to it at ${NET_ION} know it. dig @${NET_ION} ${q}`));
       return ok(join(out));
     }
     const tld = q.split('.').pop(); const ip = netResolve(q, this) || '93.184.215.14';
@@ -1055,8 +1055,8 @@ COMMANDS.dig = function (args) {
   if (answers.length) out.push(';; ANSWER SECTION:', ...answers, '');
   if (extra.length) out.push(';; ADDITIONAL SECTION:', ...extra, '');
   if (status === 'NXDOMAIN') out.push(';; AUTHORITY SECTION:', corp ? 'corp.lab.\t\t300\tIN\tSOA\tns1.corp.lab. hostmaster.corp.lab. 2026100901 3600 900 1209600 300' : '.\t\t\t86400\tIN\tSOA\ta.root-servers.net. nstld.verisign-grs.com. 2026101001 1800 900 604800 86400', '');
-  if (q.endsWith('.local')) out.push(`;; Not: dig /etc/hosts dosyasina bakmaz, DNS sunucusuna sorar. getent hosts ${q} dene.`);
-  if (corp && !knowsCorp) out.push(`;; Not: ${server} public bir resolver, corp.lab internal zone'unu bilmez. dig @${NET_ION} ${q}`);
+  if (q.endsWith('.local')) out.push(lt(`;; Not: dig /etc/hosts dosyasina bakmaz, DNS sunucusuna sorar. getent hosts ${q} dene.`, `;; Note, dig does not read /etc/hosts, it asks the DNS server. Try getent hosts ${q}.`));
+  if (corp && !knowsCorp) out.push(lt(`;; Not: ${server} public bir resolver, corp.lab internal zone'unu bilmez. dig @${NET_ION} ${q}`, `;; Note, ${server} is a public resolver and does not know the internal corp.lab zone. dig @${NET_ION} ${q}`));
   out.push(`;; Query time: ${server === NET_ION ? 2 : server === '10.50.0.53' ? 44 : 12} msec`, `;; SERVER: ${server}#53(${server}) (UDP)`, ';; WHEN: Fri Oct 10 09:14:02 CEST 2026', `;; MSG SIZE  rcvd: ${40 + q.length + answers.length * 16}`);
   return ok(join(out));
 };
@@ -1095,7 +1095,7 @@ COMMANDS.curl = function (args) {
     return ok(head ? 'HTTP/1.1 200 OK\nServer: nginx/1.24.0\nContent-Type: text/html\nStrict-Transport-Security: max-age=31536000\n' : '<html><head><title>ACME Portal</title></head><body><h1>Welcome to ACME portal</h1></body></html>\n');
   }
   if (port === 8443) return ok(head ? 'HTTP/1.1 400 Bad Request\nServer: nginx/1.24.0\n' : '<html><head><title>400 The plain HTTP request was sent to HTTPS port</title></head></html>\n');
-  if (ip === '10.50.0.20') return ok(head ? 'HTTP/1.1 200 OK\nServer: Apache/2.4.58\nContent-Type: text/html\n' : (path.startsWith('/upload') ? 'HTTP/1.1 201 Created\n' : '<html><head><title>files.corp.lab</title></head><body><h1>ACME file drop</h1><p>POST /upload/&lt;dosya&gt;</p></body></html>\n'));
+  if (ip === '10.50.0.20') return ok(head ? 'HTTP/1.1 200 OK\nServer: Apache/2.4.58\nContent-Type: text/html\n' : (path.startsWith('/upload') ? 'HTTP/1.1 201 Created\n' : '<html><head><title>files.corp.lab</title></head><body><h1>ACME file drop</h1><p>POST /upload/&lt;' + lt('dosya', 'file') + '&gt;</p></body></html>\n'));
   return ok(head ? 'HTTP/1.1 301 Moved Permanently\nLocation: https://portal.corp.lab/\n' : '<html><head><title>301 Moved Permanently</title></head><body>Moved to https://portal.corp.lab/</body></html>\n');
 };
 

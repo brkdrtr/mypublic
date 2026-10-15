@@ -553,9 +553,9 @@ function simdkBuild(sh, st, o) {
   for (const t of tagRefs) { st.images.forEach(i => { if (i !== img) i.repoTags = i.repoTags.filter(x => x !== t); }); if (!img.repoTags.includes(t)) img.repoTags.push(t); }
   st.lastBuild = { tags: tagRefs, imageId, size: img.size, steps: stepLogs.filter(x => !x.internal).map(x => ({ inst: x.inst || x.text, cached: !!x.cached, size: x.size || 0 })), hints: hints.slice(), target: o.target || null, file: dfPath, context: ctxDir, dockerignore: !!igNode, multistage: stages.length > 1, at: new Date().toISOString() };
   let out = o.quiet ? `sha256:${imageId}\n` : header + '\n' + log.join('\n') + '\n';
-  const H = { pipcache: '💡 pip install --no-cache-dir kullan, pip cache katmana giriyor ve imaj buyuyor', aptrec: '💡 apt-get install --no-install-recommends ile onerilen paketleri disarida birak, imaj kucuk kalir', aptlists: '💡 apt-get install sonrasi ayni RUN icinde rm -rf /var/lib/apt/lists/* yap, paket listeleri katmana girmesin' };
+  const H = { pipcache: lt('💡 pip install --no-cache-dir kullan, pip cache katmana giriyor ve imaj buyuyor', '💡 Use pip install --no-cache-dir, the pip cache goes into the layer and the image grows'), aptrec: lt('💡 apt-get install --no-install-recommends ile onerilen paketleri disarida birak, imaj kucuk kalir', '💡 Leave out recommended packages with apt-get install --no-install-recommends, the image stays small'), aptlists: lt('💡 apt-get install sonrasi ayni RUN icinde rm -rf /var/lib/apt/lists/* yap, paket listeleri katmana girmesin', '💡 After apt-get install run rm -rf /var/lib/apt/lists/* in the same RUN, so package lists stay out of the layer') };
   if (!o.quiet && hints.length) out += hints.map(h => H[h]).join('\n') + '\n';
-  if (!o.quiet) { const ignored = Object.keys(simdkContext(sh, ctxDir, [])).filter(k => !ctx[k] && k !== '.dockerignore' && k !== 'Dockerfile'); if (!igNode && Object.keys(ctx).some(k => /^(\.git|tests?|__pycache__|\.venv|venv|node_modules)(\/|$)/.test(k))) out += '💡 Build context icinde .git, tests ya da __pycache__ var, .dockerignore ile disarida birak\n'; void ignored; }
+  if (!o.quiet) { const ignored = Object.keys(simdkContext(sh, ctxDir, [])).filter(k => !ctx[k] && k !== '.dockerignore' && k !== 'Dockerfile'); if (!igNode && Object.keys(ctx).some(k => /^(\.git|tests?|__pycache__|\.venv|venv|node_modules)(\/|$)/.test(k))) out += lt('💡 Build context icinde .git, tests ya da __pycache__ var, .dockerignore ile disarida birak\n', '💡 The build context has .git, tests or __pycache__, leave them out with .dockerignore\n'); void ignored; }
   return ok(out);
 }
 
@@ -766,7 +766,7 @@ function simdkStartProgram(sh, st, c) {
   } else if (base === 'crash') { push('panic: simulated crash', 'err'); exit = 1; }
   else if (base === 'sleep' || base === 'tail' || base === 'yes' || base === 'top' || (base === 'sh' && !c.tty && a.length === 1 && false)) { longRunning = !/^\d+$/.test(a[1] || 'x') || parseInt(a[1], 10) > 30; if (!longRunning) exit = 0; }
   else if ((base === 'sh' || base === 'bash' || base === 'ash' || base === 'zsh') && a.length === 1) {
-    if (c.tty) { longRunning = true; push(`lab: etkileşimli TTY simüle edilmiyor, container açık kaldı. docker exec -it ${c.name} ${base} -c "komut" ya da docker exec ${c.name} ls ile çalış`, 'err'); }
+    if (c.tty) { longRunning = true; push(lt(`lab: etkileşimli TTY simüle edilmiyor, container açık kaldı. docker exec -it ${c.name} ${base} -c "komut" ya da docker exec ${c.name} ls ile çalış`, `lab: an interactive TTY is not simulated, the container stays up. Work with docker exec -it ${c.name} ${base} -c "command" or docker exec ${c.name} ls`), 'err'); }
     else exit = 0;
   } else if (/^\/hello$/.test(a[0]) || (img && img.repoTags.some(t => /^hello-world/.test(t)))) {
     push('\nHello from Docker!\nThis message shows that your installation appears to be working correctly.\n\nTo generate this message, Docker took the following steps:\n 1. The Docker client contacted the Docker daemon.\n 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.\n    (amd64)\n 3. The Docker daemon created a new container from that image which runs the\n    executable that produces the output you are currently reading.\n 4. The Docker daemon streamed that output to the Docker client, which sent it\n    to your terminal.\n\nTo try something more ambitious, you can run an Ubuntu container with:\n $ docker run -it ubuntu bash\n\nFor more examples and ideas, visit:\n https://docs.docker.com/get-started/\n'); exit = 0;
@@ -819,7 +819,7 @@ function simdkExecIn(sh, st, c, img, argv, opt = {}) {
       for (const seg of segs) { if (seg === '&&' || seg === ';') { prevOp = seg; continue; } if (prevOp === '&&' && code !== 0) continue; const r = simdkExecIn(sh, st, c, img, simdkSplit(seg), opt); out += r.out; err += r.err; code = r.code; }
       return { out, err, code };
     }
-    if (/\||>|<|\$\(/.test(script)) { const r = simdkHostRun(sh, ['sh', '-c', script], img); if (!opt.silentNote) r.err = `lab: pipe ve yönlendirme içeren komut host shell'inde çalıştı\n` + r.err; return r; }
+    if (/\||>|<|\$\(/.test(script)) { const r = simdkHostRun(sh, ['sh', '-c', script], img); if (!opt.silentNote) r.err = lt(`lab: pipe ve yönlendirme içeren komut host shell'inde çalıştı\n`, `lab: a command with pipes or redirects ran in the host shell\n`) + r.err; return r; }
     a = simdkSplit(script);
   }
   const base = (a[0] || '').replace(/^.*\//, '');
@@ -886,7 +886,7 @@ function simdkExecIn(sh, st, c, img, argv, opt = {}) {
   if (base === 'touch' || (base === 'sh' && false)) {
     const target = a[1]; if (target) { const abs = (target.startsWith('/') ? target : wd.replace(/\/$/, '') + '/' + target).replace(/\/+/g, '/'); const mnt = (c.mounts || []).find(m => abs.startsWith(m.Destination + '/')); if (mnt && mnt.Type === 'volume') { const vol = st.volumes.find(v => v.name === mnt.Name); if (vol) { vol.files = vol.files || {}; vol.files[abs.slice(mnt.Destination.length + 1)] = ''; return okr(''); } } if (mnt && mnt.Type === 'bind') { sh.writeFile(mnt.Source + abs.slice(mnt.Destination.length), '', false, 'touch'); return okr(''); } }
   }
-  if (base === 'apt-get' || base === 'apt' || base === 'apk' || base === 'yum') return { out: '', err: `lab: container içinde paket kurulumu simüle edilmiyor, ${base} satırını Dockerfile RUN içine yaz\n`, code: 1 };
+  if (base === 'apt-get' || base === 'apt' || base === 'apk' || base === 'yum') return { out: '', err: lt(`lab: container içinde paket kurulumu simüle edilmiyor, ${base} satırını Dockerfile RUN içine yaz\n`, `lab: package installs inside a container are not simulated, put the ${base} line in a Dockerfile RUN\n`), code: 1 };
   if (base === 'exit') return okr('');
   if (base === 'true') return okr('');
   if (base === 'false') return { out: '', err: '', code: 1 };
@@ -894,7 +894,7 @@ function simdkExecIn(sh, st, c, img, argv, opt = {}) {
   /* host shell'e dus */
   const r = simdkHostRun(sh, a, img);
   if (r.notFound) return { out: '', err: `OCI runtime exec failed: exec failed: unable to start container process: exec: "${a[0]}": executable file not found in $PATH: unknown\n`, code: 126, notFound: true };
-  if (!opt.silentNote) r.err = `lab: container filesystem simüle ediliyor, ${a[0]} host shell'inde ${img && img.context ? img.context + ' içinde' : ''} çalıştı\n` + r.err;
+  if (!opt.silentNote) r.err = lt(`lab: container filesystem simüle ediliyor, ${a[0]} host shell'inde ${img && img.context ? img.context + ' içinde' : ''} çalıştı\n`, `lab: the container filesystem is simulated, ${a[0]} ran in the host shell${img && img.context ? ' in ' + img.context : ''}\n`) + r.err;
   return r;
 }
 
@@ -1249,7 +1249,7 @@ function simdkRunCmd(sh, st, args, create) {
   const logs = c.logs.map(l => ({ s: l.s, t: l.t }));
   const o2 = logs.filter(l => l.s === 'out').map(l => l.t + '\n').join('');
   const e2 = logs.filter(l => l.s === 'err').map(l => l.t + '\n').join('');
-  if (c.longRunning) { err += e2; out += o2; err += `lab: container ${c.name} ön planda çalışıyor gibi görünür, burada arka planda kaldı. docker logs ${c.name}, docker stop ${c.name} kullan, bir dahaki sefere -d ile başlat\n`; return { out, err, code: 0 }; }
+  if (c.longRunning) { err += e2; out += o2; err += lt(`lab: container ${c.name} ön planda çalışıyor gibi görünür, burada arka planda kaldı. docker logs ${c.name}, docker stop ${c.name} kullan, bir dahaki sefere -d ile başlat\n`, `lab: container ${c.name} looks like it runs in the foreground, here it stays in the background. Use docker logs ${c.name}, docker stop ${c.name}, and next time start it with -d\n`); return { out, err, code: 0 }; }
   if (c.rm && c.status === 'exited') st.containers.splice(st.containers.indexOf(c), 1);
   return { out: out + o2, err: err + e2, code: c.exitCode };
 }
@@ -1328,7 +1328,7 @@ function simdkCompose(sh, st, args) {
     }
     const w = Math.max(...items.map(i => (i[0] + ' ' + i[1]).length));
     out += `[+] Running ${items.length}/${items.length}\n` + items.map(i => ` ✔ ${(i[0] + ' ' + i[1]).padEnd(w)}  ${i[2].padEnd(9)} ${(0.1 + Math.random() * 0.6).toFixed(1)}s`).join('\n') + '\n';
-    if (!up.has('d', 'detach')) out += 'lab: compose up ön planda log akışı simüle edilmiyor, servisler arka planda çalışıyor. docker compose logs ile bak, bir dahaki sefere -d kullan\n';
+    if (!up.has('d', 'detach')) out += lt('lab: compose up ön planda log akışı simüle edilmiyor, servisler arka planda çalışıyor. docker compose logs ile bak, bir dahaki sefere -d kullan\n', 'lab: the foreground log stream of compose up is not simulated, the services run in the background. Check with docker compose logs, next time use -d\n');
     const failed = projContainers().filter(c => c.status === 'exited' && c.exitCode !== 0);
     if (failed.length) out += failed.map(c => `container ${c.name} exited (${c.exitCode})`).join('\n') + '\n';
     return ok(out);
@@ -1360,7 +1360,7 @@ function simdkCompose(sh, st, args) {
     let out = '';
     list.forEach(c => { let logs = c.logs; const t = lg.val('tail', 'n'); if (t && t !== 'all') logs = logs.slice(-parseInt(t, 10)); logs.forEach(l => { out += `${c.name.padEnd(w)}  | ${l.t}\n`; }); });
     st.audit.logs.push(...list.map(c => c.name));
-    if (lg.has('f', 'follow')) out += 'lab: canlı log takibi simüle edilmiyor, son loglar gösterildi\n';
+    if (lg.has('f', 'follow')) out += lt('lab: canlı log takibi simüle edilmiyor, son loglar gösterildi\n', 'lab: live log following is not simulated, the latest logs are shown\n');
     return ok(out);
   }
   if (sub === 'stop' || sub === 'start' || sub === 'restart' || sub === 'kill' || sub === 'rm') {
@@ -1403,7 +1403,7 @@ function simdkCommand(args, stdin) {
   const st = SIMDK_load(sh);
   simdkTick(sh, st);
   let r;
-  try { r = simdkDispatch(sh, st, args, stdin); } catch (e) { r = fail(`docker: lab iç hata, ${e.message}`); if (typeof console !== 'undefined' && console.error) console.error(e); }
+  try { r = simdkDispatch(sh, st, args, stdin); } catch (e) { r = fail(lt(`docker: lab iç hata, ${e.message}`, `docker: internal lab error, ${e.message}`)); if (typeof console !== 'undefined' && console.error) console.error(e); }
   SIMDK_save(sh, st);
   return r || ok();
 }
@@ -1507,9 +1507,9 @@ function simdkDispatch(sh, st, args, stdin) {
       const img = simdkFindImage(st, key);
       const head = `The push refers to repository [${r.registry === 'docker.io' ? r.full : `${r.registry}/${r.path}`}]\n`;
       if (!img) return { out: '', err: pre + head + `An image does not exist locally with the tag: ${r.registry === 'docker.io' ? r.repo : `${r.registry}/${r.path}`}\n`, code: 1 };
-      if (r.registry === 'docker.io') return { out: '', err: pre + head + (st.auth['docker.io'] ? `denied: requested access to the resource is denied\n` : `denied: requested access to the resource is denied\n💡 Bu lab'da Docker Hub'a push yok, imajı registry.lab/${r.repo.replace(/^library\//, '')}:${r.tag} olarak tag'le ve oraya push et\n`), code: 1 };
+      if (r.registry === 'docker.io') return { out: '', err: pre + head + (st.auth['docker.io'] ? `denied: requested access to the resource is denied\n` : `denied: requested access to the resource is denied\n💡 ` + lt(`Bu lab'da Docker Hub'a push yok, imajı registry.lab/${r.repo.replace(/^library\//, '')}:${r.tag} olarak tag'le ve oraya push et\n`, `There is no push to Docker Hub in this lab, tag the image as registry.lab/${r.repo.replace(/^library\//, '')}:${r.tag} and push it there\n`)), code: 1 };
       if (r.registry !== SIMDK_REGISTRY) return { out: '', err: pre + head + `Get "https://${r.registry}/v2/": dial tcp: lookup ${r.registry}: no such host\n`, code: 1 };
-      if (!st.auth[SIMDK_REGISTRY]) return { out: '', err: pre + head + `no basic auth credentials\n💡 Önce docker login registry.lab -u burak -p <parola>\n`, code: 1 };
+      if (!st.auth[SIMDK_REGISTRY]) return { out: '', err: pre + head + `no basic auth credentials\n💡 ` + lt('Önce docker login registry.lab -u burak -p <parola>\n', 'First run docker login registry.lab -u burak -p <password>\n'), code: 1 };
       const layers = (img.layers || []).filter(l => l.size > 0);
       const already = st.registry[key] && st.registry[key].id === img.id;
       const pushedBefore = Object.values(st.registry).some(x => x.id === img.id);
@@ -1526,10 +1526,10 @@ function simdkDispatch(sh, st, args, stdin) {
       const reg = o.rest[0] || 'docker.io';
       let user = o.val('u', 'username'); let pass = o.val('p', 'password');
       if (o.has('password-stdin')) pass = (stdin || '').trim();
-      if (!user) return fail(`Error: Cannot perform an interactive login from a non TTY device\n💡 docker login ${reg} -u burak --password-stdin ya da -p ile parola ver`);
+      if (!user) return fail(`Error: Cannot perform an interactive login from a non TTY device\n💡 ` + lt(`docker login ${reg} -u burak --password-stdin ya da -p ile parola ver`, `docker login ${reg} -u burak --password-stdin, or pass the password with -p`));
       if (!pass) return fail('Error: Cannot perform an interactive login from a non TTY device');
       if (reg !== SIMDK_REGISTRY && reg !== 'docker.io' && !reg.startsWith('registry.lab')) return fail(`Error response from daemon: Get "https://${reg}/v2/": dial tcp: lookup ${reg}: no such host`);
-      if (reg === 'docker.io') return fail('Error response from daemon: Get "https://registry-1.docker.io/v2/": dial tcp: lookup registry-1.docker.io: no such host\n💡 Bu lab çevrimdışı, registry.lab kullan');
+      if (reg === 'docker.io') return fail('Error response from daemon: Get "https://registry-1.docker.io/v2/": dial tcp: lookup registry-1.docker.io: no such host\n💡 ' + lt('Bu lab çevrimdışı, registry.lab kullan', 'This lab is offline, use registry.lab'));
       if (pass.length < 4) return fail('Error response from daemon: login attempt to https://registry.lab/v2/ failed with status: 401 Unauthorized');
       st.auth[SIMDK_REGISTRY] = user;
       return ok((o.val('p', 'password') ? 'WARNING! Using --password via the CLI is insecure. Use --password-stdin.\n' : '') + '\nWARNING! Your credentials are stored unencrypted in \'/home/burak/.docker/config.json\'.\nConfigure a credential helper to remove this warning. See\nhttps://docs.docker.com/go/credential-store/\n\nLogin Succeeded\n');
@@ -1556,7 +1556,7 @@ function simdkDispatch(sh, st, args, stdin) {
       st.audit.logs.push(c.name);
       const fmt = l => (o.has('t', 'timestamps') ? l.ts.replace(/Z$/, '000000Z') + ' ' : '') + l.t + '\n';
       const out = logs.filter(l => l.s === 'out').map(fmt).join(''); const err = logs.filter(l => l.s === 'err').map(fmt).join('');
-      if (o.has('f', 'follow') && c.status === 'running') return { out, err: err + `lab: canlı takip simüle edilmiyor, ${c.name} çalışmaya devam ediyor, son loglar gösterildi\n`, code: 0 };
+      if (o.has('f', 'follow') && c.status === 'running') return { out, err: err + lt(`lab: canlı takip simüle edilmiyor, ${c.name} çalışmaya devam ediyor, son loglar gösterildi\n`, `lab: live following is not simulated, ${c.name} keeps running, the latest logs are shown\n`), code: 0 };
       return { out, err, code: 0 };
     }
     case 'exec': {
@@ -1570,9 +1570,9 @@ function simdkDispatch(sh, st, args, stdin) {
       const img = st.images.find(i => i.id === c.imageId);
       st.audit.exec.push(c.name);
       if ((o.has('i') || o.has('t')) && cmd.length === 1 && /^(sh|bash|\/bin\/sh|\/bin\/bash|ash|python3?|redis-cli|psql)$/.test(cmd[0])) {
-        if (/python/.test(cmd[0])) return ok('Python 3.12.7 (main, Oct  2 2026, 10:30:11) [GCC 12.2.0] on linux\nlab: etkileşimli REPL yok, docker exec ' + c.name + ' python -c "kod" kullan\n');
-        if (/redis-cli/.test(cmd[0])) return ok('lab: etkileşimli redis-cli yok, docker exec ' + c.name + ' redis-cli ping kullan\n');
-        return ok(`lab: etkileşimli shell simüle edilmiyor. Tek komut çalıştır, örnek docker exec ${c.name} ${cmd[0]} -c "ls /app && env" ya da docker exec ${c.name} ls /app\n`);
+        if (/python/.test(cmd[0])) return ok('Python 3.12.7 (main, Oct  2 2026, 10:30:11) [GCC 12.2.0] on linux\n' + lt('lab: etkileşimli REPL yok, docker exec ' + c.name + ' python -c "kod" kullan\n', 'lab: no interactive REPL, use docker exec ' + c.name + ' python -c "code"\n'));
+        if (/redis-cli/.test(cmd[0])) return ok(lt('lab: etkileşimli redis-cli yok, docker exec ' + c.name + ' redis-cli ping kullan\n', 'lab: no interactive redis-cli, use docker exec ' + c.name + ' redis-cli ping\n'));
+        return ok(lt(`lab: etkileşimli shell simüle edilmiyor. Tek komut çalıştır, örnek docker exec ${c.name} ${cmd[0]} -c "ls /app && env" ya da docker exec ${c.name} ls /app\n`, `lab: an interactive shell is not simulated. Run a single command, for example docker exec ${c.name} ${cmd[0]} -c "ls /app && env" or docker exec ${c.name} ls /app\n`));
       }
       const tmp = Object.assign({}, c, { env: c.env.concat([].concat(o.vals.e || [], o.vals.env || [])), workdir: o.val('w', 'workdir') || c.workdir });
       return simdkExecIn(sh, st, tmp, img, cmd);
@@ -1631,24 +1631,24 @@ function simdkDispatch(sh, st, args, stdin) {
       let list = st.containers.filter(c => c.status === 'running'); if (o.rest.length) { list = o.rest.map(r => C(r)).filter(Boolean); if (list.length !== o.rest.length) return fail(`Error response from daemon: No such container: ${o.rest.find(r => !C(r))}`); }
       const rows = [['CONTAINER ID', 'NAME', 'CPU %', 'MEM USAGE / LIMIT', 'MEM %', 'NET I/O', 'BLOCK I/O', 'PIDS']];
       list.forEach(c => { const img = st.images.find(i => i.id === c.imageId); const isPy = img && img.lab; const mem = isPy ? 18.4 + (parseInt(c.id.slice(0, 2), 16) % 20) / 10 : (/nginx/.test(c.image) ? 3.6 : (/redis/.test(c.image) ? 8.2 : (/postgres/.test(c.image) ? 38.5 : 1.1))); const cpu = c.status === 'running' ? ((parseInt(c.id.slice(2, 4), 16) % 30) / 100).toFixed(2) : '0.00'; rows.push([c.id.slice(0, 12), c.name, `${cpu}%`, `${mem.toFixed(1)}MiB / 7.75GiB`, `${(mem / 7936 * 100).toFixed(2)}%`, `${(1.2 + c.logs.length * 0.1).toFixed(1)}kB / ${(0.4 + c.logs.length * 0.05).toFixed(1)}kB`, `${/postgres/.test(c.image) ? '31.2MB' : '0B'} / ${/postgres/.test(c.image) ? '45.1MB' : '0B'}`, String(isPy ? 1 : (/nginx/.test(c.image) ? 5 : (/postgres/.test(c.image) ? 7 : 1)))]); });
-      return ok(simdkTable(rows) + (o.has('no-stream') ? '' : 'lab: canlı stats akışı simüle edilmiyor, tek kare gösterildi, --no-stream ile aynı\n'));
+      return ok(simdkTable(rows) + (o.has('no-stream') ? '' : lt('lab: canlı stats akışı simüle edilmiyor, tek kare gösterildi, --no-stream ile aynı\n', 'lab: the live stats stream is not simulated, a single frame is shown, same as --no-stream\n')));
     }
     case 'cp': { if (rest.length < 2) return fail('"docker cp" requires exactly 2 arguments.'); const [src, dst] = rest; const m = /^([^:]+):(.+)$/.exec(src) || /^([^:]+):(.+)$/.exec(dst); if (!m) return fail('docker cp: must specify at least one container source'); const c = C(m[1]); if (!c) return simdkNoContainer(m[1]); const img = st.images.find(i => i.id === c.imageId); if (/^[^:]+:/.test(src)) { const rel = m[2].replace(/^\//, ''); const f = img && img.files[rel]; if (f === undefined) return fail(`Error response from daemon: Could not find the file ${m[2]} in container ${m[1]}`); const target = sh.resolve(dst); const tn = sh.node(target); const e = sh.writeFile(tn && tn.t === 'd' ? target + '/' + rel.split('/').pop() : dst, f, false, 'docker'); return e ? fail(e) : ok('Successfully copied ' + simdkSize(simdkBytes(f) + 1536) + ' to ' + target + '\n'); } const r = sh.readFile(src, 'docker'); if (r.err) return fail(`lstat ${sh.resolve(src)}: no such file or directory`); if (img) { img.files = img.files || {}; img.files[m[2].replace(/^\//, '').replace(/\/$/, '') + (m[2].endsWith('/') ? '/' + src.split('/').pop() : '')] = r.data; } return ok(`Successfully copied ${simdkSize(simdkBytes(r.data) + 1536)} to ${m[1]}:${m[2]}\n`); }
     case 'wait': { const c = C(rest[0]); if (!c) return simdkNoContainer(rest[0]); return ok(String(c.exitCode) + '\n'); }
     case 'diff': { const c = C(rest[0]); if (!c) return simdkNoContainer(rest[0]); return ok('C /root\nA /root/.bash_history\nC /tmp\n'); }
-    case 'commit': case 'save': case 'load': case 'export': case 'import': return fail(`lab: docker ${sub} bu lab'da simüle edilmiyor. Imaj değişikliği için Dockerfile düzenleyip docker build çalıştır`);
+    case 'commit': case 'save': case 'load': case 'export': case 'import': return fail(lt(`lab: docker ${sub} bu lab'da simüle edilmiyor. Imaj değişikliği için Dockerfile düzenleyip docker build çalıştır`, `lab: docker ${sub} is not simulated in this lab. To change an image edit the Dockerfile and run docker build`));
     case 'network': return simdkNetworkCmd(sh, st, rest);
     case 'volume': return simdkVolumeCmd(sh, st, rest);
     case 'system': return simdkSystemCmd(sh, st, rest, stdin);
-    case 'container-prune': { const gone = st.containers.filter(c => c.status === 'exited' || c.status === 'created'); if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove all stopped containers.\nAre you sure you want to continue? [y/N] \nlab: onay istemi yok, docker container prune -f kullan\n`); gone.forEach(c => st.containers.splice(st.containers.indexOf(c), 1)); return ok((gone.length ? 'Deleted Containers:\n' + gone.map(c => c.id).join('\n') + '\n\n' : '') + `Total reclaimed space: ${simdkSize(gone.length * 1200)}\n`); }
-    case 'image-prune': { const all = rest.includes('-a') || rest.includes('--all'); const gone = st.images.filter(i => (!i.repoTags.length || all) && !st.containers.some(c => c.imageId === i.id)); if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove all ${all ? 'images without at least one container associated to them' : 'dangling images'}.\nAre you sure you want to continue? [y/N] \nlab: onay istemi yok, docker image prune -f kullan\n`); gone.forEach(i => st.images.splice(st.images.indexOf(i), 1)); return ok((gone.length ? 'Deleted Images:\n' + gone.map(i => (i.repoTags.length ? i.repoTags.map(t => `untagged: ${t}`).join('\n') + '\n' : '') + `deleted: sha256:${i.id}`).join('\n') + '\n\n' : '') + `Total reclaimed space: ${simdkSize(gone.reduce((n, i) => n + i.size, 0))}\n`); }
-    case 'builder-prune': { const n = Object.keys(st.cache).length; const sz = Object.values(st.cache).reduce((a, c) => a + c.size, 0); if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove all dangling build cache. Are you sure you want to continue? [y/N] \nlab: onay istemi yok, docker builder prune -f kullan\n`); st.cache = {}; return ok(`Total:\t${simdkSize(sz)}\n` + (n ? '' : '')); }
+    case 'container-prune': { const gone = st.containers.filter(c => c.status === 'exited' || c.status === 'created'); if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove all stopped containers.\nAre you sure you want to continue? [y/N] \n` + lt('lab: onay istemi yok, docker container prune -f kullan\n', 'lab: there is no confirmation prompt, use docker container prune -f\n')); gone.forEach(c => st.containers.splice(st.containers.indexOf(c), 1)); return ok((gone.length ? 'Deleted Containers:\n' + gone.map(c => c.id).join('\n') + '\n\n' : '') + `Total reclaimed space: ${simdkSize(gone.length * 1200)}\n`); }
+    case 'image-prune': { const all = rest.includes('-a') || rest.includes('--all'); const gone = st.images.filter(i => (!i.repoTags.length || all) && !st.containers.some(c => c.imageId === i.id)); if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove all ${all ? 'images without at least one container associated to them' : 'dangling images'}.\nAre you sure you want to continue? [y/N] \n` + lt('lab: onay istemi yok, docker image prune -f kullan\n', 'lab: there is no confirmation prompt, use docker image prune -f\n')); gone.forEach(i => st.images.splice(st.images.indexOf(i), 1)); return ok((gone.length ? 'Deleted Images:\n' + gone.map(i => (i.repoTags.length ? i.repoTags.map(t => `untagged: ${t}`).join('\n') + '\n' : '') + `deleted: sha256:${i.id}`).join('\n') + '\n\n' : '') + `Total reclaimed space: ${simdkSize(gone.reduce((n, i) => n + i.size, 0))}\n`); }
+    case 'builder-prune': { const n = Object.keys(st.cache).length; const sz = Object.values(st.cache).reduce((a, c) => a + c.size, 0); if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove all dangling build cache. Are you sure you want to continue? [y/N] \n` + lt('lab: onay istemi yok, docker builder prune -f kullan\n', 'lab: there is no confirmation prompt, use docker builder prune -f\n')); st.cache = {}; return ok(`Total:\t${simdkSize(sz)}\n` + (n ? '' : '')); }
     case 'compose': return simdkCompose(sh, st, rest);
     case 'context': return ok(rest[0] === 'ls' ? 'NAME        DESCRIPTION                               DOCKER ENDPOINT               ERROR\ndefault *   Current DOCKER_HOST based configuration   unix:///var/run/docker.sock\n' : 'default\n');
-    case 'search': return fail('Error response from daemon: Get "https://index.docker.io/v1/search?q=' + (rest[0] || '') + '&n=25": dial tcp: lookup index.docker.io: no such host\n💡 Bu lab çevrimdışı, bilinen imajlar: ' + Object.keys(SIMDK_PUBLIC).join(', '));
-    case 'swarm': case 'service': case 'stack': case 'node': return fail(`Error response from daemon: This node is not a swarm manager. Use "docker swarm init" or "docker swarm join" to connect this node to swarm and try again.\n💡 Bu lab'da swarm yok, orkestrasyon için kubectl bölümüne geç`);
-    case 'events': return ok('lab: docker events canlı akışı simüle edilmiyor\n');
-    case 'manifest': case 'trust': case 'plugin': case 'checkpoint': return fail(`lab: docker ${sub} bu lab'da yok`);
+    case 'search': return fail('Error response from daemon: Get "https://index.docker.io/v1/search?q=' + (rest[0] || '') + '&n=25": dial tcp: lookup index.docker.io: no such host\n💡 ' + lt('Bu lab çevrimdışı, bilinen imajlar: ', 'This lab is offline, the known images are ') + Object.keys(SIMDK_PUBLIC).join(', '));
+    case 'swarm': case 'service': case 'stack': case 'node': return fail(`Error response from daemon: This node is not a swarm manager. Use "docker swarm init" or "docker swarm join" to connect this node to swarm and try again.\n💡 ` + lt("Bu lab'da swarm yok, orkestrasyon için kubectl bölümüne geç", 'There is no swarm in this lab, for orchestration move on to the kubectl chapter'));
+    case 'events': return ok(lt('lab: docker events canlı akışı simüle edilmiyor\n', 'lab: the live docker events stream is not simulated\n'));
+    case 'manifest': case 'trust': case 'plugin': case 'checkpoint': return fail(lt(`lab: docker ${sub} bu lab'da yok`, `lab: docker ${sub} is not available in this lab`));
     default: return fail(`docker: unknown command: docker ${sub}\n\nRun 'docker --help' for more information`);
   }
 }
@@ -1668,7 +1668,7 @@ function simdkNetworkCmd(sh, st, args) {
   if (sub === 'inspect') { const objs = []; let err = ''; for (const ref of o.rest) { const n = simdkNet(st, ref); if (!n) { err += `Error response from daemon: network ${ref} not found\n`; continue; } objs.push(simdkInspectNetwork(st, n)); } if (o.val('format', 'f')) return { out: objs.map(x => simdkFormat(o.val('format', 'f'), x)).join('\n') + '\n', err, code: err ? 1 : 0 }; return { out: objs.length ? simdkJson(objs) : '[]\n', err, code: err ? 1 : 0 }; }
   if (sub === 'connect') { const n = simdkNet(st, o.rest[0]); const c = simdkCont(st, o.rest[1]); if (!n) return fail(`Error response from daemon: network ${o.rest[0]} not found`); if (!c) return fail(`Error response from daemon: No such container: ${o.rest[1]}`); if (c.network === n.name || (c.networks || []).includes(n.name)) return fail(`Error response from daemon: endpoint with name ${c.name} already exists in network ${n.name}`); c.networks = (c.networks || [c.network]).concat(n.name); if (c.network === 'bridge' && n.name !== 'bridge') { c.network = n.name; c.ip = simdkAllocIp(st, n); c.gateway = n.gateway; } if (o.vals.alias) c.aliases = (c.aliases || []).concat(o.vals.alias); return ok(); }
   if (sub === 'disconnect') { const n = simdkNet(st, o.rest[0]); const c = simdkCont(st, o.rest[1]); if (!n) return fail(`Error response from daemon: network ${o.rest[0]} not found`); if (!c) return fail(`Error response from daemon: No such container: ${o.rest[1]}`); if (!(c.networks || [c.network]).includes(n.name)) return fail(`Error response from daemon: container ${c.id} is not connected to network ${n.name}`); c.networks = (c.networks || [c.network]).filter(x => x !== n.name); if (c.network === n.name) { c.network = c.networks[0] || 'none'; const nn = simdkNet(st, c.network); c.ip = nn ? simdkAllocIp(st, nn) : ''; } return ok(); }
-  if (sub === 'prune') { const gone = st.networks.filter(n => !n.builtin && !st.containers.some(c => c.network === n.name || (c.networks || []).includes(n.name))); if (!o.has('f', 'force')) return ok('WARNING! This will remove all custom networks not used by at least one container.\nAre you sure you want to continue? [y/N] \nlab: onay istemi yok, docker network prune -f kullan\n'); gone.forEach(n => st.networks.splice(st.networks.indexOf(n), 1)); return ok(gone.length ? 'Deleted Networks:\n' + gone.map(n => n.name).join('\n') + '\n\n' : ''); }
+  if (sub === 'prune') { const gone = st.networks.filter(n => !n.builtin && !st.containers.some(c => c.network === n.name || (c.networks || []).includes(n.name))); if (!o.has('f', 'force')) return ok('WARNING! This will remove all custom networks not used by at least one container.\nAre you sure you want to continue? [y/N] \n' + lt('lab: onay istemi yok, docker network prune -f kullan\n', 'lab: there is no confirmation prompt, use docker network prune -f\n')); gone.forEach(n => st.networks.splice(st.networks.indexOf(n), 1)); return ok(gone.length ? 'Deleted Networks:\n' + gone.map(n => n.name).join('\n') + '\n\n' : ''); }
   return fail(`docker: unknown command: docker network ${sub}\n\nRun 'docker network --help' for more information`);
 }
 function simdkVolumeCmd(sh, st, args) {
@@ -1679,7 +1679,7 @@ function simdkVolumeCmd(sh, st, args) {
   if (sub === 'create') { const name = o.rest[0] || o.vals.name || simdkRand(64); if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(name)) return fail(`Error response from daemon: create ${name}: "${name}" includes invalid characters for a local volume name, only "[a-zA-Z0-9][a-zA-Z0-9_.-]" are allowed. If you intended to pass a host directory, use absolute path`); simdkEnsureVolume(st, name); return ok(name + '\n'); }
   if (sub === 'rm' || sub === 'remove') { let out = ''; let err = ''; for (const ref of o.rest) { const v = simdkVolume(st, ref); if (!v) { err += `Error response from daemon: get ${ref}: no such volume\n`; continue; } const u = st.containers.find(c => c.mounts.some(m => m.Type === 'volume' && m.Name === v.name)); if (u && !o.has('f', 'force')) { err += `Error response from daemon: remove ${v.name}: volume is in use - [${u.id}]\n`; continue; } st.volumes.splice(st.volumes.indexOf(v), 1); out += ref + '\n'; } return { out, err, code: err ? 1 : 0 }; }
   if (sub === 'inspect') { const objs = []; let err = ''; for (const ref of o.rest) { const v = simdkVolume(st, ref); if (!v) { err += `Error response from daemon: get ${ref}: no such volume\n`; continue; } objs.push(simdkInspectVolume(st, v)); } if (o.val('format', 'f')) return { out: objs.map(x => simdkFormat(o.val('format', 'f'), x)).join('\n') + '\n', err, code: err ? 1 : 0 }; return { out: objs.length ? simdkJson(objs) : '[]\n', err, code: err ? 1 : 0 }; }
-  if (sub === 'prune') { const gone = st.volumes.filter(v => !st.containers.some(c => c.mounts.some(m => m.Name === v.name)) && (o.has('a', 'all') || /^[0-9a-f]{64}$/.test(v.name))); if (!o.has('f', 'force')) return ok('WARNING! This will remove anonymous local volumes not used by at least one container.\nAre you sure you want to continue? [y/N] \nlab: onay istemi yok, docker volume prune -f kullan\n'); gone.forEach(v => st.volumes.splice(st.volumes.indexOf(v), 1)); return ok((gone.length ? 'Deleted Volumes:\n' + gone.map(v => v.name).join('\n') + '\n\n' : '') + 'Total reclaimed space: 0B\n'); }
+  if (sub === 'prune') { const gone = st.volumes.filter(v => !st.containers.some(c => c.mounts.some(m => m.Name === v.name)) && (o.has('a', 'all') || /^[0-9a-f]{64}$/.test(v.name))); if (!o.has('f', 'force')) return ok('WARNING! This will remove anonymous local volumes not used by at least one container.\nAre you sure you want to continue? [y/N] \n' + lt('lab: onay istemi yok, docker volume prune -f kullan\n', 'lab: there is no confirmation prompt, use docker volume prune -f\n')); gone.forEach(v => st.volumes.splice(st.volumes.indexOf(v), 1)); return ok((gone.length ? 'Deleted Volumes:\n' + gone.map(v => v.name).join('\n') + '\n\n' : '') + 'Total reclaimed space: 0B\n'); }
   return fail(`docker: unknown command: docker volume ${sub}\n\nRun 'docker volume --help' for more information`);
 }
 function simdkSystemCmd(sh, st, args, stdin) {
@@ -1694,7 +1694,7 @@ function simdkSystemCmd(sh, st, args, stdin) {
   }
   if (sub === 'prune') {
     const all = rest.includes('-a') || rest.includes('--all'); const vols = rest.includes('--volumes');
-    if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove:\n  - all stopped containers\n  - all networks not used by at least one container\n${vols ? '  - all anonymous volumes not used by at least one container\n' : ''}  - all ${all ? 'images without at least one container associated to them' : 'dangling images'}\n  - ${all ? 'unused' : 'dangling'} build cache\n\nAre you sure you want to continue? [y/N] \nlab: onay istemi yok, docker system prune -f kullan\n`);
+    if (!rest.includes('-f') && !rest.includes('--force') && !/^y/i.test((stdin || '').trim())) return ok(`WARNING! This will remove:\n  - all stopped containers\n  - all networks not used by at least one container\n${vols ? '  - all anonymous volumes not used by at least one container\n' : ''}  - all ${all ? 'images without at least one container associated to them' : 'dangling images'}\n  - ${all ? 'unused' : 'dangling'} build cache\n\nAre you sure you want to continue? [y/N] \n` + lt('lab: onay istemi yok, docker system prune -f kullan\n', 'lab: there is no confirmation prompt, use docker system prune -f\n'));
     let out = ''; let total = 0;
     const gc = st.containers.filter(c => c.status === 'exited' || c.status === 'created'); if (gc.length) { out += 'Deleted Containers:\n' + gc.map(c => c.id).join('\n') + '\n\n'; gc.forEach(c => st.containers.splice(st.containers.indexOf(c), 1)); }
     const gn = st.networks.filter(n => !n.builtin && !st.containers.some(c => c.network === n.name || (c.networks || []).includes(n.name))); if (gn.length) { out += 'Deleted Networks:\n' + gn.map(n => n.name).join('\n') + '\n\n'; gn.forEach(n => st.networks.splice(st.networks.indexOf(n), 1)); }
@@ -1704,7 +1704,7 @@ function simdkSystemCmd(sh, st, args, stdin) {
     return ok(out + `Total reclaimed space: ${simdkSize(total)}\n`);
   }
   if (sub === 'info') return simdkDispatch(sh, st, ['info'], stdin);
-  if (sub === 'events') return ok('lab: docker events canlı akışı simüle edilmiyor\n');
+  if (sub === 'events') return ok(lt('lab: docker events canlı akışı simüle edilmiyor\n', 'lab: the live docker events stream is not simulated\n'));
   return fail(`docker: unknown command: docker system ${sub || ''}\n\nRun 'docker system --help' for more information`);
 }
 function simdkComposeV1(args, stdin) { return simdkCommand.call(this, ['compose'].concat(args), stdin); }

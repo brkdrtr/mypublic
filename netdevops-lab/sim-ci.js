@@ -67,7 +67,7 @@ LAB.ci = SIMC_STATE;
   const MARK = { success: '✓', failure: '✗', skipped: '⊘', waiting: '⏸', manual: '⏸', cancelled: '⊘' };
 
   function loadYaml(text) {
-    if (typeof jsyaml === 'undefined') throw new Error('jsyaml yuklu degil, vendor/js-yaml.min.js eksik');
+    if (typeof jsyaml === 'undefined') throw new Error(lt('jsyaml yuklu degil, vendor/js-yaml.min.js eksik', 'jsyaml is not loaded, vendor/js-yaml.min.js is missing'));
     return jsyaml.load(text, { schema: jsyaml.DEFAULT_SCHEMA });
   }
   function loadSecrets(sh) {
@@ -380,9 +380,9 @@ LAB.ci = SIMC_STATE;
     const root = findRoot(sh, file) || H;
     const abs = sh.resolve(file);
     const text = readText(sh, abs);
-    if (text === null) throw new Error(`workflow dosyasi yok, ${file}`);
+    if (text === null) throw new Error(lt(`workflow dosyasi yok, ${file}`, `workflow file not found, ${file}`));
     let wf; try { wf = loadYaml(text); } catch (e) { throw new Error(`YAML parse error in ${file}: ${e.message.split('\n')[0]}`); }
-    if (!wf || typeof wf !== 'object') throw new Error(`${file} bos ya da gecersiz`);
+    if (!wf || typeof wf !== 'object') throw new Error(lt(`${file} bos ya da gecersiz`, `${file} is empty or invalid`));
     if (wf.stages || (!wf.jobs && Object.values(wf).some(v => v && typeof v === 'object' && v.script))) return runGitlabPipeline(sh, abs, wf, opts);
     const out = [];
     const W = l => out.push(l);
@@ -723,10 +723,10 @@ LAB.ci = SIMC_STATE;
   }
   function runAll(sh, o) {
     const root = findRoot(sh, o.file);
-    if (!root) return fail(`ci: repo bulunamadi. /home/burak/<repo> altinda .github/workflows ya da .gitlab-ci.yml olmali, ya da workflow dosyasini ver`);
+    if (!root) return fail(lt(`ci: repo bulunamadi. /home/burak/<repo> altinda .github/workflows ya da .gitlab-ci.yml olmali, ya da workflow dosyasini ver`, `ci: repo not found. /home/burak/<repo> needs .github/workflows or .gitlab-ci.yml, or give the workflow file`));
     let files = o.file ? [sh.resolve(o.file)] : findWorkflows(sh, root);
-    if (o.file && !sh.node(files[0])) return fail(`ci: workflow dosyasi yok, ${o.file}`);
-    if (!files.length) return fail(`ci: ${root}/.github/workflows altinda workflow yok. Ornek, nano ${root}/.github/workflows/ci.yml`);
+    if (o.file && !sh.node(files[0])) return fail(lt(`ci: workflow dosyasi yok, ${o.file}`, `ci: workflow file not found, ${o.file}`));
+    if (!files.length) return fail(lt(`ci: ${root}/.github/workflows altinda workflow yok. Ornek, nano ${root}/.github/workflows/ci.yml`, `ci: no workflow under ${root}/.github/workflows. For example nano ${root}/.github/workflows/ci.yml`));
     if (!o.file && files.length > 1 && files.some(f => f.endsWith('.gitlab-ci.yml'))) files = files.filter(f => !f.endsWith('.gitlab-ci.yml'));
     const texts = []; let code = 0; let lastRun = null; let lastReal = null;
     for (const f of files) {
@@ -740,40 +740,40 @@ LAB.ci = SIMC_STATE;
   function ciCmd(args) {
     const sh = this;
     const sub = args[0];
-    if (!sub || sub === 'help' || sub === '--help' || sub === '-h') return ok(['ci, lab icinde CI kosucusu. GitHub Actions workflow\'larini ve .gitlab-ci.yml\'i sanal shell\'de calistirir.', '', '  ci run [workflow.yml] [--job ad] [--event push|pull_request|workflow_dispatch] [--ref refs/heads/main] [--input k=v]', '  ci list            workflow ve job listesi', '  ci last            son kosumun ozeti', '  ci secrets         ~/.ci/secrets.env icindeki secret adlari', '  ci runs            kosum gecmisi', '  ci cache clear     actions/cache onbellegini sil', '', 'Varsayilan event push, ref refs/heads/main. secrets.X degerleri ~/.ci/secrets.env dosyasindan okunur, logda *** olarak maskelenir.'].join('\n') + '\n');
+    if (!sub || sub === 'help' || sub === '--help' || sub === '-h') return ok(lt(['ci, lab icinde CI kosucusu. GitHub Actions workflow\'larini ve .gitlab-ci.yml\'i sanal shell\'de calistirir.', '', '  ci run [workflow.yml] [--job ad] [--event push|pull_request|workflow_dispatch] [--ref refs/heads/main] [--input k=v]', '  ci list            workflow ve job listesi', '  ci last            son kosumun ozeti', '  ci secrets         ~/.ci/secrets.env icindeki secret adlari', '  ci runs            kosum gecmisi', '  ci cache clear     actions/cache onbellegini sil', '', 'Varsayilan event push, ref refs/heads/main. secrets.X degerleri ~/.ci/secrets.env dosyasindan okunur, logda *** olarak maskelenir.'].join('\n'), ['ci, the CI runner inside the lab. It runs GitHub Actions workflows and .gitlab-ci.yml in the virtual shell.', '', '  ci run [workflow.yml] [--job name] [--event push|pull_request|workflow_dispatch] [--ref refs/heads/main] [--input k=v]', '  ci list            workflows and jobs', '  ci last            summary of the last run', '  ci secrets         secret names in ~/.ci/secrets.env', '  ci runs            run history', '  ci cache clear     clear the actions/cache store', '', 'The default event is push, the ref refs/heads/main. secrets.X values are read from ~/.ci/secrets.env and masked as *** in the log.'].join('\n')) + '\n');
     if (sub === 'run') return runAll(sh, parseRunArgs(args.slice(1), 'ci'));
     if (sub === 'list') {
-      const root = findRoot(sh, null); if (!root) return fail('ci list: repo bulunamadi, cd /home/burak/<repo>');
-      const files = findWorkflows(sh, root); if (!files.length) return ok(`${root} icinde workflow yok\n`);
+      const root = findRoot(sh, null); if (!root) return fail(lt('ci list: repo bulunamadi, cd /home/burak/<repo>', 'ci list: repo not found, cd /home/burak/<repo>'));
+      const files = findWorkflows(sh, root); if (!files.length) return ok(lt(`${root} icinde workflow yok\n`, `no workflow in ${root}\n`));
       const lines = [];
       for (const f of files) { try { const wf = loadYaml(readText(sh, f)); if (f.endsWith('.gitlab-ci.yml')) lines.push(`${f.slice(root.length + 1)}  gitlab  stages [${(wf.stages || []).join(', ')}]  jobs [${glJobs(wf).map(([k]) => k).join(', ')}]`); else lines.push(`${f.slice(root.length + 1)}  "${wf.name || ''}"  on [${Object.keys(triggers(wf)).join(', ')}]  jobs [${Object.keys(wf.jobs || {}).join(', ')}]`); } catch (e) { lines.push(`${f.slice(root.length + 1)}  YAML error, ${e.message.split('\n')[0]}`); } }
       return ok(lines.join('\n') + '\n');
     }
     if (sub === 'last') {
-      const r = SIMC_STATE.last; if (!r) return ok('henuz kosum yok, ci run\n');
+      const r = SIMC_STATE.last; if (!r) return ok(lt('henuz kosum yok, ci run\n', 'no runs yet, ci run\n'));
       return ok([`${r.workflow} (${r.file}) run #${r.runNumber} ${r.event} ${r.ref} ${r.status}`].concat(r.jobs.map(j => `  ${MARK[j.status] || '•'} ${pad(j.name, 26)} ${pad(j.status, 8)} ${j.steps.map(s => (MARK[s.status] || '•') + ' ' + s.name).join(' | ')}${j.reason ? '  ' + j.reason : ''}`)).join('\n') + '\n');
     }
-    if (sub === 'runs') return ok(SIMC_STATE.runs.length ? SIMC_STATE.runs.map(r => `#${r.runNumber}  ${pad(r.workflow, 22)} ${pad(r.event, 18)} ${pad(r.ref, 24)} ${r.status}`).join('\n') + '\n' : 'kosum yok\n');
+    if (sub === 'runs') return ok(SIMC_STATE.runs.length ? SIMC_STATE.runs.map(r => `#${r.runNumber}  ${pad(r.workflow, 22)} ${pad(r.event, 18)} ${pad(r.ref, 24)} ${r.status}`).join('\n') + '\n' : lt('kosum yok\n', 'no runs\n'));
     if (sub === 'secrets') { const s = loadSecrets(sh); return ok(Object.keys(s).map(k => `${k}=${'*'.repeat(Math.min(8, s[k].length))}`).join('\n') + '\n'); }
-    if (sub === 'cache') { if (args[1] === 'clear') { SIMC_STATE.cache = {}; return ok('cache temizlendi\n'); } return ok(Object.keys(SIMC_STATE.cache).length ? Object.entries(SIMC_STATE.cache).map(([k, v]) => `${k}  ${v.paths.join(',')}  ${v.saved}`).join('\n') + '\n' : 'cache bos\n'); }
-    return fail(`ci: bilinmeyen alt komut ${sub}, ci help`);
+    if (sub === 'cache') { if (args[1] === 'clear') { SIMC_STATE.cache = {}; return ok(lt('cache temizlendi\n', 'cache cleared\n')); } return ok(Object.keys(SIMC_STATE.cache).length ? Object.entries(SIMC_STATE.cache).map(([k, v]) => `${k}  ${v.paths.join(',')}  ${v.saved}`).join('\n') + '\n' : lt('cache bos\n', 'cache is empty\n')); }
+    return fail(lt(`ci: bilinmeyen alt komut ${sub}, ci help`, `ci: unknown subcommand ${sub}, ci help`));
   }
   function actCmd(args) {
     const sh = this;
     const o = parseRunArgs(args, 'act');
-    if (o.help) return ok('act [event] [-j job] [-W workflow] [-l]\nGitHub Actions workflow\'larini yerelde kosar, lab icinde ci run ile aynidir.\n');
-    if (o.list) { const root = findRoot(sh, null); if (!root) return fail('act: repo bulunamadi'); const rows = []; for (const f of findWorkflows(sh, root).filter(f => !f.endsWith('.gitlab-ci.yml'))) { try { const wf = loadYaml(readText(sh, f)); Object.entries(wf.jobs || {}).forEach(([id, j]) => rows.push(`${pad(id, 12)} ${pad(j.name || id, 20)} ${pad(wf.name || '', 16)} ${pad(f.split('/').pop(), 16)} ${Object.keys(triggers(wf)).join(',')}`)); } catch (e) { rows.push(`${f} YAML error`); } } return ok(`${pad('Job ID', 12)} ${pad('Job name', 20)} ${pad('Workflow name', 16)} ${pad('Workflow file', 16)} Events\n` + rows.join('\n') + '\n'); }
+    if (o.help) return ok('act [event] [-j job] [-W workflow] [-l]\n' + lt('GitHub Actions workflow\'larini yerelde kosar, lab icinde ci run ile aynidir.\n', 'Runs GitHub Actions workflows locally, inside the lab it is the same as ci run.\n'));
+    if (o.list) { const root = findRoot(sh, null); if (!root) return fail(lt('act: repo bulunamadi', 'act: repo not found')); const rows = []; for (const f of findWorkflows(sh, root).filter(f => !f.endsWith('.gitlab-ci.yml'))) { try { const wf = loadYaml(readText(sh, f)); Object.entries(wf.jobs || {}).forEach(([id, j]) => rows.push(`${pad(id, 12)} ${pad(j.name || id, 20)} ${pad(wf.name || '', 16)} ${pad(f.split('/').pop(), 16)} ${Object.keys(triggers(wf)).join(',')}`)); } catch (e) { rows.push(`${f} YAML error`); } } return ok(`${pad('Job ID', 12)} ${pad('Job name', 20)} ${pad('Workflow name', 16)} ${pad('Workflow file', 16)} Events\n` + rows.join('\n') + '\n'); }
     return runAll(sh, o);
   }
   function gitlabRunnerCmd(args) {
     const sh = this;
     if (args[0] === '--version' || args[0] === '-v') return ok('Version:      17.4.0 (lab)\nGit revision: netlab\nGO version:   go1.22\nOS/Arch:      linux/amd64\n');
-    if (args[0] !== 'exec') return fail('gitlab-runner: kullanim, gitlab-runner exec shell <job> [--ref branch] [--env K=V]. Butun pipeline icin ci run .gitlab-ci.yml');
-    if (args[1] !== 'shell') return fail(`gitlab-runner: executor '${args[1] || ''}' yok, lab'da yalniz shell var`);
+    if (args[0] !== 'exec') return fail(lt('gitlab-runner: kullanim, gitlab-runner exec shell <job> [--ref branch] [--env K=V]. Butun pipeline icin ci run .gitlab-ci.yml', 'gitlab-runner: usage, gitlab-runner exec shell <job> [--ref branch] [--env K=V]. For the whole pipeline use ci run .gitlab-ci.yml'));
+    if (args[1] !== 'shell') return fail(lt(`gitlab-runner: executor '${args[1] || ''}' yok, lab'da yalniz shell var`, `gitlab-runner: no executor '${args[1] || ''}', the lab only has shell`));
     const o = parseRunArgs(args.slice(2), 'gl');
-    if (!o.file) return fail('gitlab-runner exec shell: job adi ver');
+    if (!o.file) return fail(lt('gitlab-runner exec shell: job adi ver', 'gitlab-runner exec shell: give a job name'));
     const root = findRoot(sh, null); const abs = root ? root + '/.gitlab-ci.yml' : null;
-    if (!abs || !sh.node(abs)) return fail(`gitlab-runner: .gitlab-ci.yml bulunamadi${root ? ' in ' + root : ', cd /home/burak/<repo>'}`);
+    if (!abs || !sh.node(abs)) return fail(lt(`gitlab-runner: .gitlab-ci.yml bulunamadi${root ? ' in ' + root : ', cd /home/burak/<repo>'}`, `gitlab-runner: .gitlab-ci.yml not found${root ? ' in ' + root : ', cd /home/burak/<repo>'}`));
     let cfg; try { cfg = loadYaml(readText(sh, abs)); } catch (e) { return fail('gitlab-runner: YAML error, ' + e.message.split('\n')[0]); }
     const job = (cfg || {})[o.file];
     if (!job || typeof job !== 'object' || !job.script) return fail(`gitlab-runner: job '${o.file}' not found in .gitlab-ci.yml, jobs are [${glJobs(cfg || {}).map(([k]) => k).join(', ')}]`);

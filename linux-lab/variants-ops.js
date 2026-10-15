@@ -778,7 +778,7 @@ const VOP_CUSTOM = {
       if (a.includes('-D')) {
         const di = a.indexOf('-D'); const chain = a[di + 1]; const spec = a.slice(di + 2);
         if (chain !== F.chain) {
-          if (['INPUT', 'FORWARD', 'OUTPUT'].includes(chain)) return fail(`iptables: Bad rule (does a matching rule exist in that chain?).\n💡 DROP rule'u ${F.chain} chain'inde, OUTPUT ve FORWARD sadece oraya jump ediyor`);
+          if (['INPUT', 'FORWARD', 'OUTPUT'].includes(chain)) return fail(`iptables: Bad rule (does a matching rule exist in that chain?).\n💡 ` + lt(`DROP rule'u ${F.chain} chain'inde, OUTPUT ve FORWARD sadece oraya jump ediyor`, `The DROP rule is in the ${F.chain} chain, OUTPUT and FORWARD only jump there`));
           return orig.call(this, args, stdin);
         }
         const numeric = spec.length === 1 && /^\d+$/.test(spec[0]);
@@ -826,7 +826,7 @@ const VOP_CUSTOM = {
     }
     if (a[0] === 'delete' && a[1] === 'rule') {
       const m = /^ip filter (\S+) handle (\d+)$/.exec(a.slice(2).join(' '));
-      if (!m || m[1] !== F.chain) return fail(`Error: Could not process rule: No such file or directory\n💡 Sözdizimi nft delete rule ip filter ${F.chain} handle N, handle numarası için nft -a list ruleset`);
+      if (!m || m[1] !== F.chain) return fail(`Error: Could not process rule: No such file or directory\n💡 ` + lt(`Sözdizimi nft delete rule ip filter ${F.chain} handle N, handle numarası için nft -a list ruleset`, `The syntax is nft delete rule ip filter ${F.chain} handle N, find the handle number with nft -a list ruleset`));
       if (m[2] !== '7' || !on) return fail('Error: Could not process rule: No such file or directory');
       return vopFwOff(this, w);
     }

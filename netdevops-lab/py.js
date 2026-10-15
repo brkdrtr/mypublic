@@ -8,12 +8,12 @@ const PY = {
     if (this.promise) return this.promise;
     this.promise = (async () => {
       try {
-        this.set('loading', 'Python runtime yükleniyor');
+        this.set('loading', lt('Python runtime yükleniyor', 'Loading the Python runtime'));
         if (typeof loadPyodide !== 'function') {
-          await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'pyodide/pyodide.js'; s.onload = res; s.onerror = () => rej(new Error('pyodide.js yüklenemedi')); document.head.appendChild(s); });
+          await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'pyodide/pyodide.js'; s.onload = res; s.onerror = () => rej(new Error(lt('pyodide.js yüklenemedi', 'could not load pyodide.js'))); document.head.appendChild(s); });
         }
         const py = await loadPyodide({ indexURL: 'pyodide/' });
-        this.set('loading', 'Paketler yükleniyor, pytest, pyyaml, jinja2, lxml');
+        this.set('loading', lt('Paketler yükleniyor, pytest, pyyaml, jinja2, lxml', 'Loading packages, pytest, pyyaml, jinja2, lxml'));
         await py.loadPackage(['pytest', 'pyyaml', 'jinja2', 'lxml']);
         py.FS.mkdirTree('/lib/ndlab');
         py.FS.mkdirTree('/home/burak');
@@ -104,7 +104,7 @@ def _nd_pytest(args, cwd, env):
     return (int(code), out.getvalue(), '')
 `);
         this.pyodide = py;
-        this.set('ready', 'Python 3.14 hazır');
+        this.set('ready', lt('Python 3.14 hazır', 'Python 3.14 ready'));
       } catch (e) { this.set('error', String(e.message || e)); throw e; }
     })();
     return this.promise;
@@ -186,10 +186,10 @@ def _nd_pytest(args, cwd, env):
 
 /* Shell komutlari. Pyodide hazir degilse kullaniciya bekle der */
 (function () {
-  const notReady = () => PY.status === 'error' ? fail(`python3: Python runtime yüklenemedi, ${PY.msg}\n`) : fail('python3: Python runtime hâlâ yükleniyor, birkaç saniye sonra tekrar dene\n');
+  const notReady = () => PY.status === 'error' ? fail(lt(`python3: Python runtime yüklenemedi, ${PY.msg}\n`, `python3: the Python runtime failed to load, ${PY.msg}\n`)) : fail(lt('python3: Python runtime hâlâ yükleniyor, birkaç saniye sonra tekrar dene\n', 'python3: the Python runtime is still loading, try again in a few seconds\n'));
   const pyCmd = function (args, stdin) { const sh = this;
     if (!PY.pyodide) { PY.load().catch(() => {}); return notReady(); }
-    if (!args.length) return fail('python3: etkileşimli REPL bu lab\'da yok. python3 dosya.py, python3 -c "kod" ya da python3 -m modul kullan\n');
+    if (!args.length) return fail(lt('python3: etkileşimli REPL bu lab\'da yok. python3 dosya.py, python3 -c "kod" ya da python3 -m modul kullan\n', 'python3: there is no interactive REPL in this lab. Use python3 file.py, python3 -c "code" or python3 -m module\n'));
     if (args[0] === '--version' || args[0] === '-V') return ok('Python 3.14.2\n');
     if (args[0] === '-m' && args[1] === 'pytest') { const r = PY.run(sh, args.slice(2), stdin, 'pytest'); return { out: r.stdout, err: r.stderr, code: r.code }; }
     if (args[0] !== '-c' && args[0] !== '-m') {
@@ -210,7 +210,7 @@ def _nd_pytest(args, cwd, env):
     if (args[0] === 'install') {
       let p = args.slice(1).filter(a => !a.startsWith('-'));
       const ri = args.indexOf('-r'); if (ri >= 0 && args[ri + 1]) { const rf = this.readFile(args[ri + 1], 'pip'); const txt = rf && rf.data; if (txt == null) return fail(`ERROR: Could not open requirements file: [Errno 2] No such file or directory: '${args[ri + 1]}'\n`); p = p.filter(x => x !== args[ri + 1]).concat(txt.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))); }
-      return ok(p.map(x => have.includes(x.toLowerCase().split(/[=<>]/)[0]) ? `Requirement already satisfied: ${x}` : `ERROR: Bu lab çevrimdışı, ${x} paketi kurulamaz. Hazır paketler ${have.join(', ')}`).join('\n') + '\n'); }
+      return ok(p.map(x => have.includes(x.toLowerCase().split(/[=<>]/)[0]) ? `Requirement already satisfied: ${x}` : lt(`ERROR: Bu lab çevrimdışı, ${x} paketi kurulamaz. Hazır paketler ${have.join(', ')}`, `ERROR: This lab is offline, the package ${x} cannot be installed. Available packages are ${have.join(', ')}`)).join('\n') + '\n'); }
     if (args[0] === 'list' || args[0] === 'freeze') return ok(have.map(x => x + '==lab').join('\n') + '\n');
     return ok('Usage: pip install <paket>, pip list\n');
   };

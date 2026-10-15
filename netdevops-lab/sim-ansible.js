@@ -26,7 +26,7 @@ function simanYamlSchema() {
 }
 function simanYamlLoad(text, file) {
   const Y = LAB.util.yaml();
-  if (!Y) throw new SimanError('YAML kutuphanesi yuklenmedi');
+  if (!Y) throw new SimanError(lt('YAML kutuphanesi yuklenmedi', 'the YAML library is not loaded'));
   try { return simanDates(Y.load(text, { schema: simanYamlSchema(), filename: file })); }
   catch (e) {
     const line = e.mark ? e.mark.line + 1 : null; const col = e.mark ? e.mark.column + 1 : null;
@@ -510,7 +510,7 @@ function simanFilter(name, v, args, kw, env) {
     case 'map': { if (kw.attribute) { const path = String(kw.attribute).split('.'); return v.map(x => path.reduce((o, k) => simanGetAttr(o, k), x)).map(x => (simanIsUndef(x) ? (kw.default !== undefined ? kw.default : (() => { throw new SimanError(`'${x.name}' is undefined`); })()) : x)); } return v.map(x => simanFilter(args[0], x, args.slice(1), {}, env)); }
     case 'select': case 'reject': { const keep = name === 'select'; return v.filter(x => { const r = args.length ? simanTest(args[0], x, args.slice(1), env) : simanTruthy(x); return keep ? r : !r; }); }
     case 'selectattr': case 'rejectattr': { const keep = name === 'selectattr'; const path = String(args[0]).split('.'); return v.filter(x => { const val = path.reduce((o, k) => simanGetAttr(o, k), x); const r = args.length > 1 ? simanTest(args[1], val, args.slice(2), env) : simanTruthy(val); return keep ? r : !r; }); }
-    case 'json_query': throw new SimanError('json_query filtresi bu lab\'da yok, selectattr ve map kullan');
+    case 'json_query': throw new SimanError(lt('json_query filtresi bu lab\'da yok, selectattr ve map kullan', 'the json_query filter is not available in this lab, use selectattr and map'));
     case 'ipaddr': case 'ipv4': { const r = simanIpaddr(v, args[0]); return r; }
     case 'ipmath': { const [ip, p] = S().split('/'); return simanN2ip((simanIp2n(ip) + args[0]) >>> 0) + (p ? '/' + p : ''); }
     case 'ipsubnet': return S();
@@ -944,7 +944,7 @@ const SIMAN_MODULES = {};
 function simanModFail(msg, extra) { return Object.assign({ failed: true, changed: false, msg }, extra || {}); }
 function simanListArg(v) { if (v === undefined || v === null) return []; if (Array.isArray(v)) return v; if (typeof v === 'string') return v.split(/\n/).map(s => s.trim()).filter(Boolean).length > 1 ? v.split(/\n/).map(s => s.trim()).filter(Boolean) : [v]; return [v]; }
 function simanNeedDev(ctx, modname) {
-  if (ctx.host === 'localhost' || !ctx.dev) return simanModFail(`${modname} modulu bir network cihazi ister, hedef ${ctx.host} bir cihaz degil. inventory'de ansible_host ya da host adi r1, r2 olmali`);
+  if (ctx.host === 'localhost' || !ctx.dev) return simanModFail(lt(`${modname} modulu bir network cihazi ister, hedef ${ctx.host} bir cihaz degil. inventory'de ansible_host ya da host adi r1, r2 olmali`, `the ${modname} module needs a network device, the target ${ctx.host} is not a device. In the inventory ansible_host or the host name must be r1, r2`));
   if (!simanIsNetworkCli(ctx.conn)) return simanModFail(`Connection type ${ctx.conn || 'ssh'} is not valid for this module`);
   return null;
 }
@@ -1014,7 +1014,7 @@ SIMAN_MODULES.file = (ctx, a) => {
   if (state === 'directory') { if (!n) { changed = true; if (!ctx.check) { const r = sh.run ? null : null; const parts = abs.split('/').filter(Boolean); let cur = sh.root; for (const p of parts) { if (!cur.c[p]) cur.c[p] = mkdir({}, 0o755, sh.user); cur = cur.c[p]; } } } else if (n.t !== 'd') return simanModFail(`${abs} already exists as a file`); }
   else if (state === 'touch') { if (!n) { changed = true; if (!ctx.check) sh.writeFile(abs, '', false, 'file'); } else { n.ts = Date.now(); changed = true; } }
   else if (state === 'file') { if (!n) return simanModFail(`file (${abs}) is absent, cannot continue`, { path: abs }); }
-  else if (state === 'link' || state === 'hard') return simanModFail('symlink bu lab\'da desteklenmiyor');
+  else if (state === 'link' || state === 'hard') return simanModFail(lt('symlink bu lab\'da desteklenmiyor', 'symlinks are not supported in this lab'));
   const node = sh.node(abs);
   if (a.mode && node) { const want = simanModeOf(a.mode); if ((node.m & 0o777) !== want) { changed = true; if (!ctx.check) node.m = want; } }
   return { changed, path: abs, state, mode: '0' + (((node && node.m) || 0o644) & 0o777).toString(8), owner: 'burak', group: 'burak', size: node ? (node.t === 'd' ? 4096 : node.d.length) : 0 };
@@ -1095,7 +1095,7 @@ SIMAN_MODULES.uri = (ctx, a) => {
   return res;
 };
 SIMAN_MODULES.get_url = (ctx, a) => { const r = LAB.http({ method: 'GET', url: a.url, headers: a.headers || {} }); if (r.error || r.status >= 400) return simanModFail(`Request failed: ${r.error || 'HTTP Error ' + r.status}`, { status_code: r.status }); const abs = ctx.resolvePath(a.dest); const n = ctx.sh.node(abs); const changed = !n || n.d !== r.body; if (changed && !ctx.check) ctx.sh.writeFile(abs, r.body, false, 'get_url'); return { changed, dest: abs, status_code: r.status, url: a.url, size: r.body.length }; };
-SIMAN_MODULES.pause = (ctx, a) => { if (a.seconds !== undefined || a.minutes !== undefined) { ctx.out.push(`Pausing for ${a.seconds !== undefined ? a.seconds + ' seconds' : a.minutes + ' minutes'}\n(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)`); return { changed: false, delta: 0, echo: true, rc: 0, start: LAB.util.now(), stop: LAB.util.now(), stdout: 'Paused for 0.0 seconds', user_input: '' }; } return { skipped: true, changed: false, msg: 'pause prompt bu lab\'da atlanir, terminal interaktif degil' }; };
+SIMAN_MODULES.pause = (ctx, a) => { if (a.seconds !== undefined || a.minutes !== undefined) { ctx.out.push(`Pausing for ${a.seconds !== undefined ? a.seconds + ' seconds' : a.minutes + ' minutes'}\n(ctrl+C then 'C' = continue early, ctrl+C then 'A' = abort)`); return { changed: false, delta: 0, echo: true, rc: 0, start: LAB.util.now(), stop: LAB.util.now(), stdout: 'Paused for 0.0 seconds', user_input: '' }; } return { skipped: true, changed: false, msg: lt('pause prompt bu lab\'da atlanir, terminal interaktif degil', 'the pause prompt is skipped in this lab, the terminal is not interactive') }; };
 SIMAN_MODULES.setup = (ctx, a) => ({ changed: false, ansible_facts: simanLocalFacts(ctx), _facts: simanLocalFacts(ctx) });
 SIMAN_MODULES.gather_facts = SIMAN_MODULES.setup;
 SIMAN_MODULES.include_vars = (ctx, a) => {
@@ -1199,7 +1199,7 @@ SIMAN_MODULES.ios_interfaces = (ctx, a) => {
   const cmds = [];
   for (const w of want) {
     const h = have.find(x => x.name === w.name); const sub = [];
-    if (!h && !st.interfaces[w.name]) return simanModFail(`interface ${w.name} cihazda yok`);
+    if (!h && !st.interfaces[w.name]) return simanModFail(lt(`interface ${w.name} cihazda yok`, `interface ${w.name} does not exist on the device`));
     if (state === 'deleted') { if (h && h.description) sub.push('no description'); if (h && !h.enabled) sub.push('no shutdown'); }
     else {
       if (w.description !== undefined && (!h || h.description !== w.description)) sub.push(`description ${w.description}`);
@@ -1447,7 +1447,7 @@ class SimanRun {
       if (!this.inv.parsed && !Object.keys(this.inv.hosts).length) this.warn("provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match 'all'");
       this.print('skipping: no hosts matched'); return;
     }
-    if (play.vars_prompt) this.warn('vars_prompt bu lab\'da interaktif calismaz, default degerler kullanildi');
+    if (play.vars_prompt) this.warn(lt('vars_prompt bu lab\'da interaktif calismaz, default degerler kullanildi', 'vars_prompt is not interactive in this lab, the default values were used'));
     if (play.vars_prompt) { play.vars = Object.assign({}, play.vars || {}); simanListArg(play.vars_prompt).forEach(p => { if (p && p.name && play.vars[p.name] === undefined) play.vars[p.name] = p.default === undefined ? '' : p.default; }); }
     hosts.forEach(h => this.touch(h));
     const gf = play.gather_facts === undefined ? true : simanBool(play.gather_facts);
@@ -1613,7 +1613,7 @@ class SimanRun {
     let cvErr = null;
     const cv = n => { try { const v = simanLookup(tenv, n); return simanIsUndef(v) ? undefined : v; } catch (e) { if (/vault|Decryption/.test(e.message)) throw e; cvErr = e; return undefined; } };
     const cvars = { ansible_connection: cv('ansible_connection'), ansible_host: cv('ansible_host'), ansible_user: cv('ansible_user'), ansible_password: cv('ansible_password'), ansible_ssh_pass: cv('ansible_ssh_pass') };
-    if (cvErr) return this.report(h, t, { changed: false, failed: true, msg: `baglanti degiskeni cozulemedi: ${cvErr.message}` }, itemLabel, opts, env, display);
+    if (cvErr) return this.report(h, t, { changed: false, failed: true, msg: lt(`baglanti degiskeni cozulemedi: ${cvErr.message}`, `could not resolve a connection variable, ${cvErr.message}`) }, itemLabel, opts, env, display);
     Object.keys(cvars).forEach(k => { if (cvars[k] !== undefined) tvars[k] = cvars[k]; });
     const conn = target === 'localhost' || target === '127.0.0.1' ? 'local' : this.conn(target, play, t, tvars);
     const isLocal = conn === 'local' || target === 'localhost';
@@ -1622,11 +1622,11 @@ class SimanRun {
     const needsConn = !SIMAN_NO_CONN.has(modName);
     if (needsConn && !isLocal && !dev) { return this.report(h, t, { changed: false, unreachable: true, msg: `Failed to connect to the host via ssh: ssh: Could not resolve hostname ${tvars.ansible_host || target}: Name or service not known` }, itemLabel, opts, env, display); }
     if (needsConn && dev && !simanIsNetworkCli(conn) && !/^ios_|^cli_/.test(modName) && modName !== 'raw' && modName !== 'gather_facts') {
-      return this.report(h, t, { changed: false, failed: true, module_stderr: `Shared connection to ${tvars.ansible_host || target} closed.\r\n`, module_stdout: `\r\nLine has invalid autocommand "/bin/sh -c 'echo ~${tvars.ansible_user || 'burak'} && sleep 0'"\r\n`, msg: 'MODULE FAILURE: cihaz bir Linux degil, ansible_connection=ansible.netcommon.network_cli ve ansible_network_os=cisco.ios.ios ayarla\nSee stdout/stderr for the exact error', rc: 0 }, itemLabel, opts, env, display);
+      return this.report(h, t, { changed: false, failed: true, module_stderr: `Shared connection to ${tvars.ansible_host || target} closed.\r\n`, module_stdout: `\r\nLine has invalid autocommand "/bin/sh -c 'echo ~${tvars.ansible_user || 'burak'} && sleep 0'"\r\n`, msg: 'MODULE FAILURE: ' + lt('cihaz bir Linux degil, ansible_connection=ansible.netcommon.network_cli ve ansible_network_os=cisco.ios.ios ayarla', 'the device is not Linux, set ansible_connection=ansible.netcommon.network_cli and ansible_network_os=cisco.ios.ios') + '\nSee stdout/stderr for the exact error', rc: 0 }, itemLabel, opts, env, display);
     }
     if (needsConn && dev && simanIsNetworkCli(conn)) {
       const user = tvars.ansible_user, pw = tvars.ansible_password !== undefined ? tvars.ansible_password : tvars.ansible_ssh_pass;
-      if (!simanDeviceAuth(dev, user, pw)) return this.report(h, t, { changed: false, failed: true, msg: user === undefined || pw === undefined ? `Failed to authenticate: ansible_user ve ansible_password tanimli degil. inventory ya da group_vars icinde ver (vault ile sifrele)` : 'Failed to authenticate: Authentication failed.' }, itemLabel, opts, env, display);
+      if (!simanDeviceAuth(dev, user, pw)) return this.report(h, t, { changed: false, failed: true, msg: user === undefined || pw === undefined ? 'Failed to authenticate: ' + lt('ansible_user ve ansible_password tanimli degil. inventory ya da group_vars icinde ver (vault ile sifrele)', 'ansible_user and ansible_password are not defined. Set them in the inventory or group_vars and encrypt them with vault') : 'Failed to authenticate: Authentication failed.' }, itemLabel, opts, env, display);
     }
     const run = this;
     const dirs = [].concat(t._role ? [t._role.path] : [], [t._dir, play._dir]).filter((d, i, a) => a.indexOf(d) === i);
@@ -1766,7 +1766,7 @@ function simanParseCli(args, spec) {
   return o;
 }
 function simanVaultPw(sh, o, cfg) {
-  if (o.flags.has('--ask-vault-pass') || o.flags.has('-J') || o.flags.has('--ask-vault-password')) throw new SimanError('--ask-vault-pass bu lab\'da calismaz, terminal interaktif prompt desteklemiyor. Parolayi bir dosyaya yaz ve --vault-password-file dosya kullan');
+  if (o.flags.has('--ask-vault-pass') || o.flags.has('-J') || o.flags.has('--ask-vault-password')) throw new SimanError(lt('--ask-vault-pass bu lab\'da calismaz, terminal interaktif prompt desteklemiyor. Parolayi bir dosyaya yaz ve --vault-password-file dosya kullan', '--ask-vault-pass does not work in this lab, the terminal has no interactive prompt. Write the password to a file and use --vault-password-file file'));
   let f = o.vals.vaultFile || sh.env.ANSIBLE_VAULT_PASSWORD_FILE || simanCfgGet(cfg, 'defaults', 'vault_password_file');
   if (!f) return null;
   if (!f.startsWith('/') && !f.startsWith('~') && cfg && simanCfgGet(cfg, 'defaults', 'vault_password_file') === f && !o.vals.vaultFile) f = cfg.dir + '/' + f;
@@ -1789,7 +1789,7 @@ function simanPrep(sh, o) {
   const inv = simanLoadInventory(sh, o.inv, cfg, warn);
   const vaultPw = simanVaultPw(sh, o, cfg);
   const extra = simanExtraVars(sh, o.extra);
-  if (o.flags.has('-k') || o.flags.has('--ask-pass') || o.flags.has('-K') || o.flags.has('--ask-become-pass')) throw new SimanError('-k ve -K bu lab\'da calismaz, parola prompt\'u yok. ansible_password degiskenini inventory ya da vault ile ver');
+  if (o.flags.has('-k') || o.flags.has('--ask-pass') || o.flags.has('-K') || o.flags.has('--ask-become-pass')) throw new SimanError(lt('-k ve -K bu lab\'da calismaz, parola prompt\'u yok. ansible_password degiskenini inventory ya da vault ile ver', '-k and -K do not work in this lab, there is no password prompt. Set ansible_password in the inventory or with vault'));
   return { cfg, inv, vaultPw, extra, warnings };
 }
 function simanFinish(sh, run, record) {
@@ -1928,19 +1928,19 @@ function simanCmdVault(args, stdin) {
   const o = simanParseCli(args.slice(1));
   const cfg = simanReadCfg(sh);
   let pw; try { pw = simanVaultPw(sh, o, cfg); } catch (e) { return fail('ERROR! ' + e.message + '\n', 5); }
-  if (sub === 'create' || sub === 'edit' || sub === 'rekey') return fail(`ERROR! ansible-vault ${sub} bu lab'da calismaz, editor prompt'u yok. Dosyayi nano ile yaz, sonra ansible-vault encrypt ile sifrele\n`, 1);
-  if (!pw) return fail('ERROR! A vault password must be specified to encrypt data. Parolayi bir dosyaya yaz ve --vault-password-file dosya kullan, --ask-vault-pass bu lab\'da interaktif olamaz\n', 5);
+  if (sub === 'create' || sub === 'edit' || sub === 'rekey') return fail(lt(`ERROR! ansible-vault ${sub} bu lab'da calismaz, editor prompt'u yok. Dosyayi nano ile yaz, sonra ansible-vault encrypt ile sifrele\n`, `ERROR! ansible-vault ${sub} does not work in this lab, there is no editor prompt. Write the file with nano, then encrypt it with ansible-vault encrypt\n`), 1);
+  if (!pw) return fail('ERROR! A vault password must be specified to encrypt data. ' + lt('Parolayi bir dosyaya yaz ve --vault-password-file dosya kullan, --ask-vault-pass bu lab\'da interaktif olamaz\n', 'Write the password to a file and use --vault-password-file file, --ask-vault-pass cannot be interactive in this lab\n'), 5);
   if (sub === 'encrypt_string') {
     let secret = o.rest.length ? o.rest.join(' ') : null;
     if (secret === null && o.flags.has('--stdin-name')) secret = (stdin || '').replace(/\n$/, '');
-    if (secret === null) { if (stdin != null && stdin !== '') secret = stdin.replace(/\n$/, ''); else return fail('ERROR! Sifrelenecek metni arguman olarak ver, ornek ansible-vault encrypt_string --vault-password-file vault.pass \'Gizli123\' --name ios_password\n', 1); }
+    if (secret === null) { if (stdin != null && stdin !== '') secret = stdin.replace(/\n$/, ''); else return fail(lt('ERROR! Sifrelenecek metni arguman olarak ver, ornek ansible-vault encrypt_string --vault-password-file vault.pass \'Gizli123\' --name ios_password\n', 'ERROR! Give the text to encrypt as an argument, for example ansible-vault encrypt_string --vault-password-file vault.pass \'Gizli123\' --name ios_password\n'), 1); }
     const name = o.vals.name || o.vals['stdin-name'];
     const enc = simanVaultEncrypt(secret, pw);
     const body = enc.split('\n').filter(Boolean).map(l => '          ' + l).join('\n');
     const out = (name ? `${name}: ` : '') + '!vault |\n' + body + '\n';
     return ok(out + (name ? '' : '') + 'Encryption successful\n');
   }
-  const file = o.rest[0]; if (!file) return fail(`ERROR! ansible-vault ${sub} icin dosya adi gerekli\n`, 1);
+  const file = o.rest[0]; if (!file) return fail(lt(`ERROR! ansible-vault ${sub} icin dosya adi gerekli\n`, `ERROR! ansible-vault ${sub} needs a file name\n`), 1);
   const r = sh.readFile(file, 'ansible-vault'); if (r.err) return fail(`ERROR! The vault file ${file} was not found\n`, 1);
   if (sub === 'encrypt') { if (simanIsVaultFile(r.data)) return fail(`ERROR! input is already encrypted\n`, 1); sh.writeFile(file, simanVaultEncrypt(r.data, pw), false, 'ansible-vault'); return { out: '', err: 'Encryption successful\n', code: 0 }; }
   if (sub === 'decrypt' || sub === 'view') {
@@ -1963,7 +1963,7 @@ function simanCmdConfig(args) {
   if (cfg) Object.entries(cfg.sections).forEach(([sec, kv]) => Object.entries(kv).forEach(([k, v]) => { const K = map[k]; if (!K) return; let val = v; if (/^(true|false|yes|no)$/i.test(v)) val = simanBool(v); else if (/^\d+$/.test(v)) val = Number(v); if (K === 'DEFAULT_HOST_LIST' || K === 'DEFAULT_ROLES_PATH') val = String(v).split(/[,:]/).map(s => s.trim()).filter(Boolean).map(s => (s.startsWith('/') ? s : cfg.dir + '/' + s)); vals[K] = val; src[K] = cfg.path; }));
   const repr = v => (v === null ? 'None' : typeof v === 'boolean' ? (v ? 'True' : 'False') : Array.isArray(v) ? '[' + v.map(x => `'${x}'`).join(', ') + ']' : typeof v === 'string' ? v : String(v));
   if (sub === 'dump') { const only = args.includes('--only-changed'); return ok(Object.keys(vals).sort().filter(k => !only || src[k] !== 'default').map(k => `${k}(${src[k]}) = ${repr(vals[k])}`).join('\n') + '\n'); }
-  if (sub === 'list') return ok(Object.keys(map).map(k => `${map[k]}:\n  description: ${k} ayari\n  ini:\n  - key: ${k}\n    section: defaults\n  env:\n  - name: ANSIBLE_${k.toUpperCase()}`).join('\n') + '\n');
+  if (sub === 'list') return ok(Object.keys(map).map(k => `${map[k]}:\n  description: ${lt(k + ' ayari', k + ' setting')}\n  ini:\n  - key: ${k}\n    section: defaults\n  env:\n  - name: ANSIBLE_${k.toUpperCase()}`).join('\n') + '\n');
   if (sub === 'init') return ok('[defaults]\n;inventory=/etc/ansible/hosts\n;host_key_checking=True\n;roles_path=~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles\n;vault_password_file=\n;interpreter_python=auto\n\n[persistent_connection]\n;command_timeout=30\n;connect_timeout=30\n');
   return fail(`ansible-config: error: argument action: invalid choice: '${sub}' (choose from 'list', 'dump', 'view', 'init')\n`, 2);
 }
@@ -1976,7 +1976,7 @@ const SIMAN_DOCS = {
   command: ['ansible.builtin.command', 'Execute commands on targets', { cmd: 'The command to run.', chdir: 'Change into this directory before running the command.', creates: 'A filename or glob pattern. If a matching file already exists, this step will not be run.', removes: 'A filename or glob pattern. If a matching file exists, this step will be run.', free_form: 'The command module takes a free form string as a parameter.' }, '- name: Return motd to registered var\n  ansible.builtin.command: cat /etc/motd\n  register: mymotd\n  changed_when: false'],
   shell: ['ansible.builtin.shell', 'Execute shell commands on targets', { cmd: 'The command to run followed by optional arguments.', chdir: 'Change into this directory before running the command.', creates: 'A filename, when it already exists, this step will not be run.', executable: 'Change the shell used to execute the command.' }, '- name: Count vlans in a report\n  ansible.builtin.shell: grep -c VLAN report.txt | tee count.txt\n  args:\n    chdir: /home/burak/ansible'],
   copy: ['ansible.builtin.copy', 'Copy files to remote locations', { src: 'Local path to a file to copy to the remote server.', content: 'When used instead of src, sets the contents of a file directly to the specified value.', dest: '(=) Remote absolute path where the file should be copied to.', mode: 'The permissions of the destination file or directory.', backup: 'Create a backup file including the timestamp information.' }, '- name: Write a report\n  ansible.builtin.copy:\n    content: "{{ report_text }}"\n    dest: /home/burak/ansible/report.txt\n    mode: "0644"\n  delegate_to: localhost'],
-  file: ['ansible.builtin.file', 'Manage files and file properties', { path: '(=) Path to the file being managed.', state: 'absent, directory, file, touch (link ve hard bu lab\'da yok)', mode: 'The permissions the resulting filesystem object should have.' }, '- name: Create a directory\n  ansible.builtin.file:\n    path: /home/burak/ansible/reports\n    state: directory\n    mode: "0755"'],
+  file: ['ansible.builtin.file', 'Manage files and file properties', { path: '(=) Path to the file being managed.', get state() { return lt('absent, directory, file, touch (link ve hard bu lab\'da yok)', 'absent, directory, file, touch, link and hard are not available in this lab'); }, mode: 'The permissions the resulting filesystem object should have.' }, '- name: Create a directory\n  ansible.builtin.file:\n    path: /home/burak/ansible/reports\n    state: directory\n    mode: "0755"'],
   lineinfile: ['ansible.builtin.lineinfile', 'Manage lines in text files', { path: '(=) The file to modify.', line: 'The line to insert/replace into the file.', regexp: 'The regular expression to look for in every line of the file.', state: 'Whether the line should be there or not. present, absent', insertafter: 'EOF, BOF or a regex', create: 'Create the file if it does not exist.' }, '- name: Ensure host_key_checking is off\n  ansible.builtin.lineinfile:\n    path: ansible.cfg\n    regexp: "^host_key_checking"\n    line: host_key_checking = False'],
   template: ['ansible.builtin.template', 'Template a file out to a target host', { src: '(=) Path of a Jinja2 formatted template on the Ansible controller. Searched in templates/ next to the playbook or role.', dest: '(=) Location to render the template to on the remote machine.', mode: 'The permissions the resulting file should have.' }, '- name: Render interface config\n  ansible.builtin.template:\n    src: interfaces.j2\n    dest: /home/burak/ansible/build/{{ inventory_hostname }}.cfg\n  delegate_to: localhost'],
   stat: ['ansible.builtin.stat', 'Retrieve file or file system status', { path: '(=) The full path of the file/object to get the facts of.' }, '- ansible.builtin.stat:\n    path: /home/burak/ansible/report.txt\n  register: st\n- ansible.builtin.debug:\n    msg: exists\n  when: st.stat.exists'],
@@ -1995,7 +1995,7 @@ const SIMAN_DOCS = {
   include_role: ['ansible.builtin.include_role', 'Load and execute a role', { name: '(=) The name of the role to be executed.', tasks_from: 'File to load from a role tasks/ directory.' }, '- ansible.builtin.include_role:\n    name: ios_base'],
   import_role: ['ansible.builtin.import_role', 'Import a role into a play', { name: '(=) The name of the role to be executed.' }, '- ansible.builtin.import_role:\n    name: ios_base'],
   include_vars: ['ansible.builtin.include_vars', 'Load variables from files, dynamically within a task', { file: 'The file name from which variables should be loaded.', dir: 'The directory name from which the variables should be loaded.', name: 'The name of a variable into which assign the included vars.' }, '- ansible.builtin.include_vars:\n    file: vlans.yml'],
-  pause: ['ansible.builtin.pause', 'Pause playbook execution', { seconds: 'A positive number of seconds to pause for.', prompt: 'Optional text to use for the prompt message. Bu lab\'da prompt atlanir.' }, '- ansible.builtin.pause:\n    seconds: 5'],
+  pause: ['ansible.builtin.pause', 'Pause playbook execution', { seconds: 'A positive number of seconds to pause for.', get prompt() { return 'Optional text to use for the prompt message. ' + lt('Bu lab\'da prompt atlanir.', 'The prompt is skipped in this lab.'); } }, '- ansible.builtin.pause:\n    seconds: 5'],
   meta: ['ansible.builtin.meta', 'Execute Ansible actions', { free_form: 'flush_handlers, end_play, end_host, clear_host_errors, noop' }, '- ansible.builtin.meta: flush_handlers'],
   setup: ['ansible.builtin.setup', 'Gathers facts about remote hosts', { gather_subset: 'If supplied, restrict the additional facts collected to the given subset.' }, '- ansible.builtin.setup:'],
   blockinfile: ['ansible.builtin.blockinfile', 'Insert/update/remove a text block surrounded by marker lines', { path: '(=) The file to modify.', block: 'The text to insert inside the marker lines.', marker: 'The marker line template. {mark} will be replaced with BEGIN or END.', state: 'present, absent' }, '- ansible.builtin.blockinfile:\n    path: /home/burak/ansible/report.txt\n    block: |\n      vlan 10 MGMT\n      vlan 20 USERS'],
@@ -2010,10 +2010,10 @@ function simanCmdDoc(args) {
   if (args.includes('--version')) return ok(simanVersionText(sh));
   if (args.includes('-l') || args.includes('--list')) { const fqcn = n => (SIMAN_DOCS[n] ? SIMAN_DOCS[n][0] : simanFqcn(n)); return ok(Object.keys(SIMAN_DOCS).sort().map(n => `${fqcn(n).padEnd(36)} ${SIMAN_DOCS[n][1]}`).join('\n') + '\n'); }
   const name = args.filter(a => !a.startsWith('-'))[0];
-  if (!name) return ok('usage: ansible-doc [-h] [--version] [-v] [-l] [-s] [-t TYPE] [plugin ...]\n\nansible-doc -l  modulleri listeler\nansible-doc cisco.ios.ios_config\nansible-doc -s ansible.builtin.copy  kisa snippet\n');
+  if (!name) return ok('usage: ansible-doc [-h] [--version] [-v] [-l] [-s] [-t TYPE] [plugin ...]\n\nansible-doc -l  ' + lt('modulleri listeler', 'lists the modules') + '\nansible-doc cisco.ios.ios_config\nansible-doc -s ansible.builtin.copy  ' + lt('kisa snippet', 'short snippet') + '\n');
   const short = name.replace(/^(ansible\.builtin|ansible\.legacy|cisco\.ios|ansible\.netcommon)\./, '');
   const d = SIMAN_DOCS[short];
-  if (!d) return fail(`[WARNING]: module ${name} not found in: /home/burak/.ansible/plugins/modules:/usr/share/ansible/plugins/modules\nERROR! Bu lab\'da ${name} modulu yok. ansible-doc -l ile listeye bak\n`, 1);
+  if (!d) return fail(`[WARNING]: module ${name} not found in: /home/burak/.ansible/plugins/modules:/usr/share/ansible/plugins/modules\n` + lt(`ERROR! Bu lab\'da ${name} modulu yok. ansible-doc -l ile listeye bak\n`, `ERROR! There is no ${name} module in this lab. See the list with ansible-doc -l\n`), 1);
   if (args.includes('-s') || args.includes('--snippet')) return ok(`- name: ${d[1]}\n  ${d[0]}:\n` + Object.keys(d[2]).map(k => `      ${k}:                 # ${d[2][k].slice(0, 60)}`).join('\n') + '\n');
   const opts = Object.entries(d[2]).map(([k, v]) => `        ${v.startsWith('(=)') ? '= ' : '- '}${k}\n            ${v.replace(/^\(=\) /, '')}\n`).join('\n');
   return ok(`> ${d[0].toUpperCase()}    (/usr/lib/python3/dist-packages/ansible_collections/${d[0].split('.').slice(0, 2).join('/')}/plugins/modules/${short}.py)\n\n        ${d[1]}\n\nOPTIONS (= is mandatory):\n\n${opts}\n\nAUTHOR: Ansible Core Team\n\nEXAMPLES:\n\n${d[3]}\n\n`);
@@ -2024,7 +2024,7 @@ function simanCmdGalaxy(args) {
   if (a[0] === 'collection' && a[1] === 'install') { const names = a.slice(2).filter(x => !x.startsWith('-')); if (!names.length) return fail('ERROR! the following arguments are required: collection_name\n'); return ok('Starting galaxy collection install process\nProcess install dependency map\nStarting collection install process\n' + names.map(n => `'${n.includes(':') ? n : n + ':9.0.3'}' is already installed, skipping.`).join('\n') + '\n'); }
   if (a[0] === 'collection' && a[1] === 'list') return ok('\n# /usr/lib/python3/dist-packages/ansible_collections\nCollection                               Version\n---------------------------------------- -------\nansible.netcommon                        6.1.3  \nansible.utils                            4.1.0  \ncisco.ios                                9.0.3  \ncommunity.general                        9.4.0  \n');
   if (a[0] === 'role' && a[1] === 'list') return ok('# /home/burak/.ansible/roles\n');
-  if (a[0] === 'role' && a[1] === 'install' || a[0] === 'install') return fail('ERROR! Bu lab cevrimdisi, galaxy\'den role indirilemez. ansible-galaxy init ile yerel role iskeleti olustur\n', 1);
+  if (a[0] === 'role' && a[1] === 'install' || a[0] === 'install') return fail(lt('ERROR! Bu lab cevrimdisi, galaxy\'den role indirilemez. ansible-galaxy init ile yerel role iskeleti olustur\n', 'ERROR! This lab is offline, roles cannot be downloaded from galaxy. Create a local role skeleton with ansible-galaxy init\n'), 1);
   if ((a[0] === 'init') || (a[0] === 'role' && a[1] === 'init')) {
     const rest = a.slice(a[0] === 'init' ? 1 : 2); let initPath = null; const names = [];
     for (let i = 0; i < rest.length; i++) { if (rest[i] === '--init-path') initPath = rest[++i]; else if (rest[i].startsWith('--init-path=')) initPath = rest[i].split('=')[1]; else if (!rest[i].startsWith('-')) names.push(rest[i]); }
@@ -2076,7 +2076,7 @@ function simanCmdLint(args) {
         if ((short === 'copy' || short === 'template' || short === 'file') && simanIsPlainObj(t[mod]) && t[mod].mode === undefined && t[mod].state !== 'absent') add('risky-file-permissions', f, line, 'File permissions unset or incorrect.', `${where}: ${t.name || mod}`, 'safety', 'unpredictability');
         if (t.ignore_errors !== undefined && simanBool(t.ignore_errors)) add('ignore-errors', f, line, 'Use failed_when and specify error conditions instead of using ignore_errors.', `${where}: ${t.name || mod}`, 'shared', 'unpredictability');
         if (t.when !== undefined && /\{\{/.test(String(t.when))) add('no-jinja-when', f, line, 'No Jinja2 in when.', `${where}: ${t.name || mod}`, 'basic', 'deprecations');
-        if (short === 'ios_command' && t.register === undefined) add('cisco.ios[command-unused]', f, line, 'ios_command ciktisi register ile saklanmazsa kaybolur.', `${where}: ${t.name || mod}`, 'basic', 'idiom');
+        if (short === 'ios_command' && t.register === undefined) add('cisco.ios[command-unused]', f, line, lt('ios_command ciktisi register ile saklanmazsa kaybolur.', 'ios_command output is lost unless it is saved with register.'), `${where}: ${t.name || mod}`, 'basic', 'idiom');
       });
     };
     if (Array.isArray(data)) {
@@ -2102,7 +2102,7 @@ function simanCmdLint(args) {
 }
 function simanDeviceGuard(fn) {
   return function (args, stdin) {
-    if (!LAB.devices || !LAB.devices.r1) return fail('ansible: LAB.devices.r1 yok, sim-device.js yuklenmemis. Sayfayi yenile, sorun surerse index.html icinde sim-device.js sirasina bak\n', 1);
+    if (!LAB.devices || !LAB.devices.r1) return fail(lt('ansible: LAB.devices.r1 yok, sim-device.js yuklenmemis. Sayfayi yenile, sorun surerse index.html icinde sim-device.js sirasina bak\n', 'ansible: LAB.devices.r1 is missing, sim-device.js is not loaded. Reload the page, if the problem stays check the sim-device.js order in index.html\n'), 1);
     return fn.call(this, args, stdin);
   };
 }

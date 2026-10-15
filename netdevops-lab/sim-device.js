@@ -436,7 +436,7 @@ function simdCli(dev, cmd) {
   const raw = cmd.split('|'); const parts = [raw[0]];
   for (let i = 1; i < raw.length; i++) { if (/^\s*(i(n(c(l(u(d(e)?)?)?)?)?)?|e(x(c(l(u(d(e)?)?)?)?)?)?|s(e(c(t(i(o(n)?)?)?)?)?)?|b(e(g(i(n)?)?)?)?|c(o(u(n(t)?)?)?)?)(\s|$)/.test(raw[i])) parts.push(raw[i]); else parts[parts.length - 1] += '|' + raw[i]; }
   const base = parts[0].trim(); const pipes = parts.slice(1);
-  if (/^conf(igure)?(\s+t(erminal)?)?$/i.test(base)) return `Enter configuration commands, one per line.  End with CNTL/Z.\n% Bu lab'da interaktif config modu yok. configure() ya da netmiko send_config_set kullan\n`;
+  if (/^conf(igure)?(\s+t(erminal)?)?$/i.test(base)) return `Enter configuration commands, one per line.  End with CNTL/Z.\n% ${lt("Bu lab'da interaktif config modu yok. configure() ya da netmiko send_config_set kullan", 'This lab has no interactive config mode. Use configure() or netmiko send_config_set')}\n`;
   const toks = base.split(/\s+/);
   if (toks[0].toLowerCase() === 'do') toks.shift();
   for (const e of SIMD_EXEC) {
@@ -449,9 +449,9 @@ function simdCli(dev, cmd) {
   dev.log.push(`*${simdIosClock().slice(0, 12)}: %PARSER-5-CFGLOG_LOGGEDCMD: User:admin  logged command:${cmd}`);
   if (simdAbbrev(toks[0], 'show')) {
     const col = base.indexOf(toks[1] || '') ;
-    return `${' '.repeat(Math.max(col, 0) + dev.model.hostname.length + 1)}^\n% Invalid input detected at '^' marker.\n\nBu lab'da desteklenen komutlar, ${SIMD_SHOW_LIST}\n`;
+    return `${' '.repeat(Math.max(col, 0) + dev.model.hostname.length + 1)}^\n% Invalid input detected at '^' marker.\n\n${lt("Bu lab'da desteklenen komutlar,", 'Commands supported in this lab,')} ${SIMD_SHOW_LIST}\n`;
   }
-  return `Translating "${toks[0]}"...domain server (255.255.255.255)\n% Unknown command or computer name, or unable to find computer address\n\nBu lab'da desteklenen komutlar, ${SIMD_SHOW_LIST}\n`;
+  return `Translating "${toks[0]}"...domain server (255.255.255.255)\n% Unknown command or computer name, or unable to find computer address\n\n${lt("Bu lab'da desteklenen komutlar,", 'Commands supported in this lab,')} ${SIMD_SHOW_LIST}\n`;
 }
 
 /* ---------- configure(lines) ---------- */
@@ -1772,14 +1772,14 @@ function simdSsh(args, stdin) {
       return ok(out);
     }
     dev.netconf.closeSession(ses.sessionId);
-    return { out, err: `\nNot. NETCONF subsystem'i acildi, sunucu hello mesajini gonderdi. Gercek cihazda bu noktada client da kendi hello'sunu ve rpc'lerini yazar, bu lab'da tek satirlik shell interaktif oturum tutamaz. Bir rpc gondermek icin stdin kullan, ornek\n  cat rpc.xml | ssh -p 830 admin@r1.lab -s netconf\nya da python3 ile ncclient kullan.\n`, code: 0 };
+    return { out, err: lt(`\nNot. NETCONF subsystem'i acildi, sunucu hello mesajini gonderdi. Gercek cihazda bu noktada client da kendi hello'sunu ve rpc'lerini yazar, bu lab'da tek satirlik shell interaktif oturum tutamaz. Bir rpc gondermek icin stdin kullan, ornek\n  cat rpc.xml | ssh -p 830 admin@r1.lab -s netconf\nya da python3 ile ncclient kullan.\n`, `\nNote. The NETCONF subsystem opened and the server sent its hello. On a real device the client now writes its own hello and rpcs, but the single line shell in this lab cannot hold an interactive session. To send an rpc use stdin, for example\n  cat rpc.xml | ssh -p 830 admin@r1.lab -s netconf\nor use ncclient with python3.\n`), code: 0 };
   }
   if (!cmd.length) {
     const banner = dev.model.banner ? dev.model.banner + '\n' : '';
-    return ok(`${banner}\n${dev.model.hostname}#\n\nNot. Bu lab'in shell'i tek satirlik calisir, interaktif ssh oturumu acilamaz. Komutu argüman olarak ver, ornek\n  ssh ${user}@${target} "show ip interface brief"\n  ssh ${user}@${target} "show running-config | section bgp"\n`);
+    return ok(`${banner}\n${dev.model.hostname}#\n\n${lt("Not. Bu lab'in shell'i tek satirlik calisir, interaktif ssh oturumu acilamaz. Komutu argüman olarak ver, ornek", 'Note. The shell in this lab runs single lines, so an interactive ssh session cannot open. Pass the command as an argument, for example')}\n  ssh ${user}@${target} "show ip interface brief"\n  ssh ${user}@${target} "show running-config | section bgp"\n`);
   }
   const line = cmd.join(' ');
-  if (/^conf(igure)?(\s+t(erminal)?)?$/i.test(line)) return fail(`${dev.model.hostname}#${line}\nEnter configuration commands, one per line.  End with CNTL/Z.\n% Not. Interaktif config modu bu lab'da yok. Degisiklik icin netmiko send_config_set, ncclient edit-config, curl RESTCONF ya da gnmic set kullan\n`);
+  if (/^conf(igure)?(\s+t(erminal)?)?$/i.test(line)) return fail(`${dev.model.hostname}#${line}\nEnter configuration commands, one per line.  End with CNTL/Z.\n% ${lt("Not. Interaktif config modu bu lab'da yok. Degisiklik icin netmiko send_config_set, ncclient edit-config, curl RESTCONF ya da gnmic set kullan", 'Note. This lab has no interactive config mode. To make changes use netmiko send_config_set, ncclient edit-config, curl RESTCONF or gnmic set')}\n`);
   const out = dev.cli(line);
   return ok(out.endsWith('\n') || !out ? out : out + '\n');
 }
@@ -1914,7 +1914,7 @@ function simdGnmic(args, stdin) {
       if (n.sync_response) { if (!o.updatesOnly) out += J({ source: src, 'subscription-name': subName, timestamp: Date.now() * 1000000, time: iso(Date.now() * 1000000), 'sync-response': true }); continue; }
       if (o.format === 'flat') out += flat(n.update); else out += J(Object.assign({ source: src, 'subscription-name': subName }, fmtNotif(n.update)));
     }
-    if (mode !== 'once') out += `\n${mode === 'poll' ? 'poll' : 'stream'} subscription ended after ${r.filter(x => x.update).length} notifications, bu lab'da subscribe --max ile sinirli calisir, gercek gnmic Ctrl+C'ye kadar dinler\n`;
+    if (mode !== 'once') out += `\n${mode === 'poll' ? 'poll' : 'stream'} subscription ended after ${r.filter(x => x.update).length} notifications, ${lt("bu lab'da subscribe --max ile sinirli calisir, gercek gnmic Ctrl+C'ye kadar dinler", 'in this lab subscribe is limited by --max, real gnmic listens until Ctrl+C')}\n`;
     return ok(out);
   }
   return ok(SIMD_GNMIC_HELP);
@@ -1930,11 +1930,11 @@ function simdLab(args, stdin) {
     Object.values(LAB.devices).forEach(d => rows.push([d.name, d.host, d.ip, d.platform, d.model.hostname, String(d.mgmt.ssh), String(d.mgmt.netconf), String(d.mgmt.restconf), String(d.mgmt.gnmi), (d.candidate ? 'candidate pending' : 'running') + (d.nc.locks.running != null ? ', locked' : '')]));
     const w = rows[0].map((_, i) => Math.max(...rows.map(r => r[i].length)));
     const table = rows.map(r => r.map((c, i) => simdPad(c, w[i] + 2)).join('').trimEnd()).join('\n');
-    return ok(`${table}\n\nKullanici admin, parola admin. SSH, NETCONF, RESTCONF ve gNMI hepsi ayni cihaz modelini okur, biriyle yapilan degisiklik digerinde gorunur.\nOrnekler\n  ssh admin@r1.lab "show ip interface brief"\n  curl -k -u admin:admin -H "Accept: application/yang-data+json" https://r1.lab/restconf/data/ietf-interfaces:interfaces/interface=GigabitEthernet2\n  gnmic -a r1.lab:57400 -u admin -p admin --insecure get --path /interfaces/interface[name=GigabitEthernet2]/state/oper-status\n  ssh -p 830 admin@r1.lab -s netconf\n  ls ~/yang && pyang -f tree ~/yang/ietf-interfaces@2018-02-20.yang\n`);
+    return ok(`${table}\n\n${lt('Kullanici admin, parola admin. SSH, NETCONF, RESTCONF ve gNMI hepsi ayni cihaz modelini okur, biriyle yapilan degisiklik digerinde gorunur.\nOrnekler', 'User admin, password admin. SSH, NETCONF, RESTCONF and gNMI all read the same device model, a change made with one shows up in the others.\nExamples')}\n  ssh admin@r1.lab "show ip interface brief"\n  curl -k -u admin:admin -H "Accept: application/yang-data+json" https://r1.lab/restconf/data/ietf-interfaces:interfaces/interface=GigabitEthernet2\n  gnmic -a r1.lab:57400 -u admin -p admin --insecure get --path /interfaces/interface[name=GigabitEthernet2]/state/oper-status\n  ssh -p 830 admin@r1.lab -s netconf\n  ls ~/yang && pyang -f tree ~/yang/ietf-interfaces@2018-02-20.yang\n`);
   }
-  if (sub === 'reset' && (args[1] === 'devices' || args[1] === 'device')) { Object.values(LAB.devices).forEach(d => d.reset()); return ok('r1 ve r2 baslangic konfigurasyonuna dondu\n'); }
+  if (sub === 'reset' && (args[1] === 'devices' || args[1] === 'device')) { Object.values(LAB.devices).forEach(d => d.reset()); return ok(lt('r1 ve r2 baslangic konfigurasyonuna dondu\n', 'r1 and r2 are back to their initial configuration\n')); }
   if (SIMD_PREV_LAB) return SIMD_PREV_LAB.call(sh, args, stdin);
-  return ok('lab devices        cihazlari, adreslerini ve acik servisleri listeler\nlab reset devices  r1 ve r2 cihazlarini baslangic konfigurasyonuna dondurur\n');
+  return ok(lt('lab devices        cihazlari, adreslerini ve acik servisleri listeler\nlab reset devices  r1 ve r2 cihazlarini baslangic konfigurasyonuna dondurur\n', 'lab devices        lists the devices, their addresses and open services\nlab reset devices  returns r1 and r2 to their initial configuration\n'));
 }
 
 /* ---------- pyang, YANG parser ---------- */
@@ -2356,7 +2356,7 @@ function simdPyang(args, stdin) {
     else o.files.push(a);
   }
   if (o.format && !['tree', 'yin', 'yang', 'name', 'depend'].includes(o.format)) return { out: '', err: `${SIMD_PYANG_USAGE}\npyang: error: unknown output format "${o.format}"\n`, code: 2 };
-  if (!o.files.length) return { out: '', err: 'pyang: error: no input file given, bu lab stdin\'den modul okumaz\n', code: 1 };
+  if (!o.files.length) return { out: '', err: 'pyang: error: no input file given, ' + lt('bu lab stdin\'den modul okumaz\n', 'this lab does not read modules from stdin\n'), code: 1 };
   const dirs = [];
   const addDir = d => { if (!dirs.includes(d)) dirs.push(d); };
   o.paths.filter(Boolean).forEach(p => addDir(sh.resolve(p)));

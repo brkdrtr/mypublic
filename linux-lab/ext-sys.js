@@ -23,7 +23,8 @@ function sysKind(data) { for (const k of Object.keys(SYS_MAGIC)) if (typeof data
 function sysUnpack(data) { const k = sysKind(data); if (!k) return null; try { return { kind: k, obj: JSON.parse(data.slice(SYS_MAGIC[k].length)) }; } catch (e) { return null; } }
 
 /* ---------- genel yardimcilar ---------- */
-function sysNote(t) { return '💡 ' + t; }
+/* en verilirse Ingilizce modda o metin kullanilir */
+function sysNote(t, en) { return '💡 ' + lt(t, en); }
 function sysPad(s, n) { s = String(s); return s.length >= n ? s : s + ' '.repeat(n - s.length); }
 function sysLpad(s, n) { s = String(s); return s.length >= n ? s : ' '.repeat(n - s.length) + s; }
 function sysNum(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
@@ -160,7 +161,7 @@ function sysInstalled(sh) {
 }
 function sysSetInstalled(sh, list) { sysRootWrite(sh, SYS_DPKG, sysDpkgText(list), 0o644); }
 function sysHasPkg(sh, name) { return sysInstalled(sh).includes(name); }
-function sysNeedPkg(sh, cmd, pkg) { return sysHasPkg(sh, pkg) ? null : fail(`${cmd}: command not found\n${sysNote(`${cmd} bu kutuda kurulu değil. Ubuntu'da sudo apt install ${pkg}, RHEL ve Fedora'da sudo dnf install ${pkg}`)}`, 127); }
+function sysNeedPkg(sh, cmd, pkg) { return sysHasPkg(sh, pkg) ? null : fail(`${cmd}: command not found\n${sysNote(`${cmd} bu kutuda kurulu değil. Ubuntu'da sudo apt install ${pkg}, RHEL ve Fedora'da sudo dnf install ${pkg}`, `${cmd} is not installed on this box. On Ubuntu run sudo apt install ${pkg}, on RHEL and Fedora sudo dnf install ${pkg}`)}`, 127); }
 
 /* ---------- eklenti dosyalari ---------- */
 const SYS_SRC = '/home/burak/src/hello-2.12';
@@ -251,9 +252,9 @@ SYS_CMDS.useradd = function (args) {
   const sh = sysShadow(this); sh.splice(sh.findIndex(s => s.raw !== undefined) < 0 ? sh.length : sh.findIndex(s => s.raw !== undefined), 0, { name, hash: '!', last: '20740', min: '0', max: '99999', warn: '7', rest: '::' }); sysSaveShadow(this, sh);
   if (flags.has('m')) { if (!this.node(home)) { this.install(home, sysSkel(name)); sysSetGroup(this.node(home), name); } }
   const notes = [];
-  if (!flags.has('m')) notes.push(sysNote(`-m vermedin, home directory açılmadı. Debian'da useradd default olarak home açmaz, adduser açar`));
-  if (!vals.s) notes.push(sysNote(`-s vermedin, shell /bin/sh oldu. Bash için -s /bin/bash`));
-  notes.push(sysNote(`Hesap kilitli geldi, şifre için sudo passwd ${name}`));
+  if (!flags.has('m')) notes.push(sysNote(`-m vermedin, home directory açılmadı. Debian'da useradd default olarak home açmaz, adduser açar`, `You did not pass -m, so no home directory was created. On Debian useradd does not create a home by default, adduser does`));
+  if (!vals.s) notes.push(sysNote(`-s vermedin, shell /bin/sh oldu. Bash için -s /bin/bash`, `You did not pass -s, so the shell is /bin/sh. For bash use -s /bin/bash`));
+  notes.push(sysNote(`Hesap kilitli geldi, şifre için sudo passwd ${name}`, `The account starts locked, set a password with sudo passwd ${name}`));
   return ok(notes.length ? notes.join('\n') + '\n' : '');
 };
 
@@ -278,7 +279,7 @@ SYS_CMDS.adduser = function (args) {
   if (r.err) return r;
   const u = sysUser(this, name);
   const sd = sysShadow(this); const s = sd.find(x => x.name === name); if (s) s.hash = '$6$lab$' + sysHash('lab:' + name, 86); sysSaveShadow(this, sd);
-  return ok(`Adding user \`${name}' ...\nAdding new group \`${name}' (${u.gid}) ...\nAdding new user \`${name}' (${u.uid}) with group \`${name} (${u.gid})' ...\nCreating home directory \`${u.home}' ...\nCopying files from \`/etc/skel' ...\nNew password: \nRetype new password: \npasswd: password updated successfully\nChanging the user information for ${name}\nEnter the new value, or press ENTER for the default\n\tFull Name []: \n\tRoom Number []: \n\tWork Phone []: \n\tHome Phone []: \n\tOther []: \nIs the information correct? [Y/n] \nAdding new user \`${name}' to supplemental / extra groups \`users' ...\nAdding user \`${name}' to group \`users' ...\n${sysNote("Gerçek adduser şifreyi ve bilgileri interaktif sorar, lab'da prompt yok, şifre lab123 kabul edildi. Değiştirmek için sudo passwd " + name)}\n`);
+  return ok(`Adding user \`${name}' ...\nAdding new group \`${name}' (${u.gid}) ...\nAdding new user \`${name}' (${u.uid}) with group \`${name} (${u.gid})' ...\nCreating home directory \`${u.home}' ...\nCopying files from \`/etc/skel' ...\nNew password: \nRetype new password: \npasswd: password updated successfully\nChanging the user information for ${name}\nEnter the new value, or press ENTER for the default\n\tFull Name []: \n\tRoom Number []: \n\tWork Phone []: \n\tHome Phone []: \n\tOther []: \nIs the information correct? [Y/n] \nAdding new user \`${name}' to supplemental / extra groups \`users' ...\nAdding user \`${name}' to group \`users' ...\n${sysNote("Gerçek adduser şifreyi ve bilgileri interaktif sorar, lab'da prompt yok, şifre lab123 kabul edildi. Değiştirmek için sudo passwd " + name, 'Real adduser asks for the password and details interactively, the lab has no prompt, so the password lab123 was accepted. To change it run sudo passwd ' + name)}\n`);
 };
 
 SYS_CMDS.userdel = function (args) {
@@ -299,7 +300,7 @@ SYS_CMDS.userdel = function (args) {
   sysSaveShadow(this, sysShadow(this).filter(s => s.name !== name));
   let out = '';
   if (flags.has('r')) { if (this.node(u.home)) sysDel(this, u.home); else out += `userdel: ${name} home directory (${u.home}) not found\n`; }
-  else if (this.node(u.home)) out += sysNote(`home directory ${u.home} duruyor, -r ile birlikte silinirdi`) + '\n';
+  else if (this.node(u.home)) out += sysNote(`home directory ${u.home} duruyor, -r ile birlikte silinirdi`, `home directory ${u.home} is still there, -r would have removed it too`) + '\n';
   return ok(out);
 };
 
@@ -322,11 +323,11 @@ SYS_CMDS.usermod = function (args) {
       const before = groups.filter(g => g.members.includes(name) && g.gid !== u.gid).map(g => g.name);
       groups.forEach(g => { if (g.gid !== u.gid) g.members = g.members.filter(m => m !== name); });
       const lost = before.filter(g => !want.includes(g));
-      if (lost.length) notes.push(sysNote(`-a olmadan -G listeyi değiştirir, ${name} şu gruplardan çıktı: ${lost.join(', ')}. Eklemek istiyorsan usermod -aG`));
+      if (lost.length) notes.push(sysNote(`-a olmadan -G listeyi değiştirir, ${name} şu gruplardan çıktı: ${lost.join(', ')}. Eklemek istiyorsan usermod -aG`, `Without -a, -G replaces the list, ${name} was removed from these groups ${lost.join(', ')}. To add instead use usermod -aG`));
     }
     want.forEach(g => { const gg = groups.find(x => x.name === g); if (!gg.members.includes(name)) gg.members.push(name); });
     sysSaveGroups(this, groups);
-    if (name === USER) notes.push(sysNote('Grup üyeliği yeni login\'de geçerli olur, id ile bak, gerçek sistemde çıkıp girmen gerekir'));
+    if (name === USER) notes.push(sysNote('Grup üyeliği yeni login\'de geçerli olur, id ile bak, gerçek sistemde çıkıp girmen gerekir', 'Group membership takes effect at the next login, check with id, on a real system you need to log out and back in'));
   }
   if (vals.s) u.shell = vals.s;
   if (vals.c !== undefined) u.gecos = vals.c;
@@ -384,7 +385,7 @@ SYS_CMDS.chgrp = function (args) {
     const n = this.node(this.resolve(f));
     if (!n) { err += `chgrp: cannot access '${f}': No such file or directory\n`; continue; }
     if (!this.isRoot && n.o !== USER) { err += `chgrp: changing group of '${f}': Operation not permitted\n`; continue; }
-    if (!this.isRoot && !g.members.includes(USER) && g.name !== USER) { err += `chgrp: changing group of '${f}': Operation not permitted\n${sysNote(`Üyesi olmadığın bir gruba veremezsin, id ile gruplarına bak`)}\n`; continue; }
+    if (!this.isRoot && !g.members.includes(USER) && g.name !== USER) { err += `chgrp: changing group of '${f}': Operation not permitted\n${sysNote(`Üyesi olmadığın bir gruba veremezsin, id ile gruplarına bak`, `You cannot give it to a group you are not a member of, check your groups with id`)}\n`; continue; }
     if (flags.has('R')) sysSetGroup(n, g.name); else n.g = g.name;
   }
   return { out: '', err, code: err ? 1 : 0 };
@@ -417,13 +418,13 @@ SYS_CMDS.passwd = function (args) {
   s.last = String(Math.floor(Date.now() / 86400000));
   sysSaveShadow(this, sd);
   const flow = this.isRoot ? `New password: \nRetype new password: \npasswd: password updated successfully\n` : `Changing password for ${name}.\nCurrent password: \nNew password: \nRetype new password: \npasswd: password updated successfully\n`;
-  return ok(flow + sysNote(`Gerçek passwd şifreyi klavyeden gizli okur, lab'da prompt yok, şifre lab123 olarak kaydedildi. Script içinde şifre vermek için echo "user:pass" | sudo chpasswd${stdinPass ? '. --stdin Red Hat usulü, Debian passwd bunu bilmez' : ''}`) + '\n');
+  return ok(flow + sysNote(`Gerçek passwd şifreyi klavyeden gizli okur, lab'da prompt yok, şifre lab123 olarak kaydedildi. Script içinde şifre vermek için echo "user:pass" | sudo chpasswd${stdinPass ? '. --stdin Red Hat usulü, Debian passwd bunu bilmez' : ''}`, `Real passwd reads the password hidden from the keyboard, the lab has no prompt, so the password was saved as lab123. To set a password inside a script use echo "user:pass" | sudo chpasswd${stdinPass ? '. --stdin is the Red Hat way, Debian passwd does not know it' : ''}`) + '\n');
 };
 
 SYS_CMDS.chpasswd = function (args, stdin) {
   sysEnsure(this);
   if (!this.isRoot) return fail('chpasswd: Permission denied.\nchpasswd: cannot lock /etc/passwd; try again later.');
-  if (stdin == null) return fail('chpasswd: stdin bekler, echo "user:sifre" | sudo chpasswd');
+  if (stdin == null) return fail('chpasswd: ' + lt('stdin bekler, echo "user:sifre" | sudo chpasswd', 'expects stdin, echo "user:password" | sudo chpasswd'));
   const sd = sysShadow(this); let err = '';
   lines(stdin).forEach((l, i) => {
     const k = l.indexOf(':'); if (k < 0) { err += `chpasswd: line ${i + 1}: missing new password\n`; return; }
@@ -517,7 +518,7 @@ SYS_CMDS.finger = function (args) {
     if (!u) { out.push(`finger: ${n}: no such user.`); code = 1; continue; }
     out.push(`Login: ${sysPad(u.name, 32)}Name: ${u.gecos.split(',')[0]}`, `Directory: ${sysPad(u.home, 28)}Shell: ${u.shell}`, u.name === USER ? 'On since Tue Oct 13 08:01 (CEST) on pts/0 from 192.168.1.10' : 'Never logged in.', 'No mail.', 'No Plan.');
   }
-  return { out: join(out) + sysNote('finger çoğu sunucuda kurulu değildir, standart araçlar id user, getent passwd user, w ve last') + '\n', err: '', code };
+  return { out: join(out) + sysNote('finger çoğu sunucuda kurulu değildir, standart araçlar id user, getent passwd user, w ve last', 'finger is not installed on most servers, the standard tools are id user, getent passwd user, w and last') + '\n', err: '', code };
 };
 
 /* ======================================================================
@@ -527,7 +528,7 @@ SYS_CMDS.lscpu = function () {
   return ok(['Architecture:             x86_64', '  CPU op-mode(s):         32-bit, 64-bit', '  Address sizes:          46 bits physical, 48 bits virtual', '  Byte Order:             Little Endian', 'CPU(s):                   2', '  On-line CPU(s) list:    0,1', 'Vendor ID:                GenuineIntel', '  Model name:             Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz', '    CPU family:           6', '    Model:                85', '    Thread(s) per core:   1', '    Core(s) per socket:   2', '    Socket(s):            1', '    Stepping:             7', '    BogoMIPS:             4988.28', '    Flags:                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx lm avx avx2 avx512f hypervisor', 'Virtualization features:  ', '  Hypervisor vendor:      KVM', '  Virtualization type:    full', 'Caches (sum of all):      ', '  L1d:                    64 KiB (2 instances)', '  L1i:                    64 KiB (2 instances)', '  L2:                     2 MiB (2 instances)', '  L3:                     27.5 MiB (1 instance)', 'NUMA:                     ', '  NUMA node(s):           1', '  NUMA node0 CPU(s):      0,1', 'Vulnerabilities:          ', '  Meltdown:               Mitigation; PTI', '  Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization', '  Spectre v2:             Mitigation; Retpolines; IBPB conditional; IBRS_FW; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline'].join('\n') + '\n');
 };
 SYS_CMDS.dmidecode = function (args) {
-  if (!this.isRoot) return fail('/sys/firmware/dmi/tables/smbios_entry_point: Permission denied\n/dev/mem: Permission denied\n' + sysNote('dmidecode BIOS tablolarini /dev/mem uzerinden okur, root ister'));
+  if (!this.isRoot) return fail('/sys/firmware/dmi/tables/smbios_entry_point: Permission denied\n/dev/mem: Permission denied\n' + sysNote('dmidecode BIOS tablolarini /dev/mem uzerinden okur, root ister', 'dmidecode reads the BIOS tables through /dev/mem and needs root'));
   const ti = args.indexOf('-t'); const type = ti >= 0 ? args[ti + 1] : null;
   const si = args.indexOf('-s');
   if (si >= 0) { const key = args[si + 1]; const m = { 'system-manufacturer': 'QEMU', 'system-product-name': 'Standard PC (Q35 + ICH9, 2009)', 'bios-version': '1.16.3-debian-1.16.3-2', 'system-serial-number': 'Not Specified', 'processor-version': 'Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz' }; return m[key] ? ok(m[key] + '\n') : fail(`Invalid string keyword: ${key}`); }
@@ -572,7 +573,7 @@ SYS_CMDS.lshw = function (args) {
   if (short || cls) {
     const out = ['H/W path       Device     Class          Description', '====================================================='];
     list.forEach(r => out.push(`${sysPad(r[0], 15)}${sysPad(r[1] === 'network' ? (r[0].endsWith('/2') ? 'eth0' : 'eth1') : r[1] === 'disk' ? r[2].split(' ').pop().replace('3.0', '/dev/sdc') : '', 11)}${sysPad(r[1], 15)}${r[2]}`));
-    return ok(warn + join(out) + (this.isRoot ? '' : sysNote('root olmadan bazı alanlar eksik kalır, sudo lshw -short') + '\n'));
+    return ok(warn + join(out) + (this.isRoot ? '' : sysNote('root olmadan bazı alanlar eksik kalır, sudo lshw -short', 'Some fields stay empty without root, sudo lshw -short') + '\n'));
   }
   return ok(warn + `linuxlab\n    description: Computer\n    product: Standard PC (Q35 + ICH9, 2009)\n    vendor: QEMU\n    version: pc-q35-8.2\n    width: 64 bits\n    capabilities: smbios-2.8 dmi-2.8 smp vsyscall32\n  *-core\n       description: Motherboard\n       physical id: 0\n     *-memory\n          description: System Memory\n          physical id: 1000\n          size: 4GiB\n     *-cpu\n          product: Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz\n          vendor: Intel Corp.\n          physical id: 400\n          bus info: cpu@0\n          width: 64 bits\n     *-pci\n          description: Host bridge\n          product: 82G33/G31/P35/P31 Express DRAM Controller\n        *-network:0\n             description: Ethernet interface\n             product: Virtio network device\n             logical name: eth0\n             serial: 52:54:00:12:34:56\n             capabilities: ethernet physical\n             configuration: autonegotiation=off broadcast=yes driver=virtio_net ip=192.168.1.42 link=yes multicast=yes\n        *-storage\n             description: SATA controller\n             product: 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode]\n             configuration: driver=ahci\n  *-disk:0\n       description: ATA Disk\n       product: QEMU HARDDISK\n       logical name: /dev/sda\n       size: 40GiB (42GB)\n  *-disk:1\n       description: ATA Disk\n       product: QEMU HARDDISK\n       logical name: /dev/sdb\n       size: 100GiB (107GB)\n`);
 };
@@ -617,7 +618,7 @@ SYS_CMDS.hdparm = function (args) {
   const dev = rest[0];
   if (!dev) return fail('hdparm - get/set hard disk parameters - version v9.65, by Mark Lord.\n\nUsage:  hdparm  [options] [device ...]\n\nOptions:\n -i   display drive identification\n -I   detailed/current information directly from drive\n -t   perform device read timings\n -T   perform cache read timings');
   if (!sysDevOk(dev)) return fail(`${dev}: No such file or directory`);
-  if (!this.isRoot) return fail(`${dev}: Permission denied\n${sysNote('Disk aygıtına ham erişim root ister, sudo hdparm')}`);
+  if (!this.isRoot) return fail(`${dev}: Permission denied\n${sysNote('Disk aygıtına ham erişim root ister, sudo hdparm', 'Raw access to a disk device needs root, sudo hdparm')}`);
   const out = [`\n${dev}:`];
   if (flags.has('i') || flags.has('I')) out.push('', ' Model=QEMU HARDDISK, FwRev=2.5+, SerialNo=QM00001', ' Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }', ' RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=0', ' BuffType=unknown, BuffSize=unknown, MaxMultSect=16, MultSect=16', ' CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=83886080', ' IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}', ' PIO modes:  pio0 pio1 pio2 pio3 pio4 ', ' DMA modes:  mdma0 mdma1 mdma2 ', ' UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 ', ' AdvancedPM=no WriteCache=enabled', ' Drive conforms to: unknown:  ATA/ATAPI-5,6,7', '', ' * signifies the current active mode');
   if (flags.has('T')) out.push(' Timing cached reads:   18924 MB in  1.99 seconds = 9496.12 MB/sec');
@@ -630,15 +631,15 @@ SYS_CMDS.badblocks = function (args) {
   const dev = rest[0];
   if (!dev) return fail('Usage: badblocks [-b block_size] [-i input_file] [-o output_file] [-svwnfBX]\n       [-c blocks_at_once] [-d delay_factor_between_reads] [-e max_bad_blocks]\n       [-p num_passes] [-t test_pattern [-t test_pattern [...]]]\n       device [last_block [first_block]]');
   if (!sysDevOk(dev)) return fail(`badblocks: No such file or directory while trying to determine device size`, 1);
-  if (!this.isRoot) return fail(`badblocks: Permission denied while trying to open ${dev}\n${sysNote('Blok aygıtını okumak root ister, sudo badblocks -s ' + dev)}`);
-  if (flags.has('w')) return fail(`badblocks: ${dev} is apparently in use by the system; it's not safe to run badblocks!\n${sysNote('-w yazma testi diskteki her şeyi siler, mount edilmiş bir diske asla')}`);
+  if (!this.isRoot) return fail(`badblocks: Permission denied while trying to open ${dev}\n${sysNote('Blok aygıtını okumak root ister, sudo badblocks -s ' + dev, 'Reading a block device needs root, sudo badblocks -s ' + dev)}`);
+  if (flags.has('w')) return fail(`badblocks: ${dev} is apparently in use by the system; it's not safe to run badblocks!\n${sysNote('-w yazma testi diskteki her şeyi siler, mount edilmiş bir diske asla', 'The -w write test wipes everything on the disk, never use it on a mounted disk')}`);
   const total = dev.includes('sdb') ? 104857600 : dev.includes('sdc') ? 33554432 : 41943040;
   const out = [];
   if (flags.has('s')) { for (const pct of [0.00, 12.50, 37.50, 62.50, 87.50, 100.00]) out.push(`Checking for bad blocks (read-only test): ${sysLpad(pct.toFixed(2), 6)}% done, ${Math.round(pct * 1.2)}:${String(Math.round(pct * 0.6) % 60).padStart(2, '0')} elapsed. (0/0/0 errors)`); }
   else out.push('Checking for bad blocks (read-only test): ');
   out.push(`Checking for bad blocks (read-only test): done`, `Pass completed, 0 bad blocks found. (0/0/0 errors)`);
   if (flags.has('v')) out.unshift(`Checking blocks 0 to ${total - 1}`);
-  return ok(join(out) + sysNote('Gerçekte bu tarama dakikalar sürer, -s ilerlemeyi gösterir. Modern SSD için smartctl -a daha anlamlı') + '\n');
+  return ok(join(out) + sysNote('Gerçekte bu tarama dakikalar sürer, -s ilerlemeyi gösterir. Modern SSD için smartctl -a daha anlamlı', 'In reality this scan takes minutes, -s shows progress. For a modern SSD smartctl -a is more useful') + '\n');
 };
 
 /* ======================================================================
@@ -755,7 +756,7 @@ SYS_CMDS.tar = function (args, stdin) {
     if (members.some(m => this.resolve(baseDir + '/' + m.p) === archAbs)) err += `tar: ${file}: file is the archive; not dumped\n`;
     const manifest = sysPack('tar', { members: members.filter(m => this.resolve((m.p.startsWith('/') ? '' : baseDir + '/') + m.p) !== archAbs) });
     const data = comp ? sysPack(comp, { n: archAbs.split('/').pop().replace(/\.(gz|xz|bz2|tgz)$/, m => (m === '.tgz' ? '.tar' : '')), d: manifest, l: manifest.length }) : manifest;
-    if (!comp && /\.(tgz|tar\.gz)$/.test(file)) err += sysNote('Uzantı .gz ama -z vermedin, arşiv sıkıştırılmadan yazıldı. tar czf ya da tar -czvf') + '\n';
+    if (!comp && /\.(tgz|tar\.gz)$/.test(file)) err += sysNote('Uzantı .gz ama -z vermedin, arşiv sıkıştırılmadan yazıldı. tar czf ya da tar -czvf', 'The extension is .gz but you did not pass -z, so the archive was written uncompressed. Use tar czf or tar -czvf') + '\n';
     const e = this.writeFile(file, data, false, 'tar');
     if (e) return fail(`tar: ${file}: Cannot open: ${e.split(': ').pop()}\ntar: Error is not recoverable: exiting now`, 2);
     const out = verbose ? join(members.map(m => m.p)) : '';
@@ -855,7 +856,7 @@ function sysApt(sh, args, front) {
   const { flags, rest } = parseOpts(args);
   const sub = rest[0]; const names = rest.slice(1);
   const installed = sysInstalled(sh);
-  const hint = front === 'apt-get' ? sysNote('apt-get script ve otomasyon için, insan için modern ön yüz apt. İkisi de çalışır, apt daha okunur çıktı ve ilerleme çubuğu verir') + '\n' : '';
+  const hint = front === 'apt-get' ? sysNote('apt-get script ve otomasyon için, insan için modern ön yüz apt. İkisi de çalışır, apt daha okunur çıktı ve ilerleme çubuğu verir', 'apt-get is for scripts and automation, apt is the modern front end for humans. Both work, apt gives more readable output and a progress bar') + '\n' : '';
   const warn = front === 'apt' ? '' : '';
   if (!sub) return fail(front === 'apt' ? 'apt 2.7.14 (amd64)\nUsage: apt [options] command\n\napt is a commandline package manager and provides commands for\nsearching and managing as well as querying information about packages.\n\nMost used commands:\n  list - list packages based on package names\n  search - search in package descriptions\n  show - show package details\n  install - install packages\n  reinstall - reinstall packages\n  remove - remove packages\n  autoremove - automatically remove all unused packages\n  update - update list of available packages\n  upgrade - upgrade the system by installing/upgrading packages\n  full-upgrade - upgrade the system by removing/installing/upgrading packages\n  edit-sources - edit the source information file\n  satisfy - satisfy dependency strings' : 'apt-get 2.7.14 (amd64)\nUsage: apt-get [options] command\n\napt-get is a command line interface for retrieval of packages\nand information about them from authenticated sources and\nfor installation, upgrade and removal of packages together\nwith their dependencies.\n\nMost used commands:\n  update - Retrieve new lists of packages\n  upgrade - Perform an upgrade\n  install - Install new packages (pkg is libc6 not libc6.deb)\n  remove - Remove packages\n  purge - Remove packages and config files\n  autoremove - Remove automatically all unused packages', 1);
   if (sub === 'update') {
@@ -890,7 +891,7 @@ function sysApt(sh, args, front) {
     if (!names.length) return fail(SYS_APT_HEAD + (sh.isRoot ? '0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.' : SYS_APT_LOCK), sh.isRoot ? 0 : 100);
     const missing = names.filter(n => !sysPkg(n));
     if (missing.length) return fail((sh.isRoot ? SYS_APT_HEAD : '') + join(missing.map(m => `E: Unable to locate package ${m}`)), 100);
-    if (!sh.isRoot) return fail(SYS_APT_LOCK + '\n' + sysNote('Paket kurmak root ister, sudo apt install ' + names.join(' ')), 100);
+    if (!sh.isRoot) return fail(SYS_APT_LOCK + '\n' + sysNote('Paket kurmak root ister, sudo apt install ' + names.join(' '), 'Installing packages needs root, sudo apt install ' + names.join(' ')), 100);
     const fresh = names.filter(n => !installed.includes(n) || sub === 'reinstall');
     const already = names.filter(n => installed.includes(n) && sub !== 'reinstall');
     let out = hint + SYS_APT_HEAD;
@@ -898,13 +899,13 @@ function sysApt(sh, args, front) {
     if (!fresh.length) return ok(out + '0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n');
     const size = fresh.reduce((s, n) => s + Math.round(sysPkg(n).s / 3), 0);
     out += `The following NEW packages will be installed:\n  ${fresh.join(' ')}\n0 upgraded, ${fresh.length} newly installed, 0 to remove and 0 not upgraded.\nNeed to get ${sysNum(size)} kB of archives.\nAfter this operation, ${sysNum(fresh.reduce((s, n) => s + sysPkg(n).s, 0))} kB of additional disk space will be used.\n`;
-    if (fresh.length > 1 && !flags.has('y')) out += 'Do you want to continue? [Y/n] Y\n' + sysNote('Birden çok paket ya da bağımlılık varsa apt sorar, script içinde apt-get install -y') + '\n';
+    if (fresh.length > 1 && !flags.has('y')) out += 'Do you want to continue? [Y/n] Y\n' + sysNote('Birden çok paket ya da bağımlılık varsa apt sorar, script içinde apt-get install -y', 'apt asks when there are several packages or dependencies, in a script use apt-get install -y') + '\n';
     fresh.forEach((n, i) => { const p = sysPkg(n); out += `Get:${i + 1} http://archive.ubuntu.com/ubuntu noble/main amd64 ${n} amd64 ${p.v} [${Math.round(p.s / 3)} kB]\n`; });
     out += `Fetched ${sysNum(size)} kB in 0s (${sysNum(size * 4)} kB/s)\n`;
     fresh.forEach(n => { const p = sysPkg(n); out += `Selecting previously unselected package ${n}.\n(Reading database ... 98214 files and directories currently installed.)\nPreparing to unpack .../${n}_${p.v.replace(/:/, '%3a')}_amd64.deb ...\nUnpacking ${n} (${p.v}) ...\n`; });
     fresh.forEach(n => { out += `Setting up ${n} (${sysPkg(n).v}) ...\n`; });
     out += 'Processing triggers for man-db (2.12.0-4build2) ...\n';
-    if (fresh.includes('mlocate')) out += sysNote('mlocate kuruldu ama veritabanı boş, sudo updatedb çalıştırmadan locate bir şey bulmaz') + '\n';
+    if (fresh.includes('mlocate')) out += sysNote('mlocate kuruldu ama veritabanı boş, sudo updatedb çalıştırmadan locate bir şey bulmaz', 'mlocate is installed but its database is empty, locate finds nothing until you run sudo updatedb') + '\n';
     sysSetInstalled(sh, installed.concat(fresh.filter(n => !installed.includes(n))));
     return ok(out);
   }
@@ -917,17 +918,17 @@ function sysApt(sh, args, front) {
     let out = hint + SYS_APT_HEAD;
     names.filter(n => !installed.includes(n)).forEach(n => { out += `Package '${n}' is not installed, so not removed\n`; });
     if (!gone.length) return ok(out + '0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n');
-    if (gone.includes('build-essential') || gone.includes('openssh-server')) out += sysNote('Bu paket olmadan lab işlevsiz kalır, kaldırılmış sayıldı ama komutlar çalışmaya devam eder') + '\n';
+    if (gone.includes('build-essential') || gone.includes('openssh-server')) out += sysNote('Bu paket olmadan lab işlevsiz kalır, kaldırılmış sayıldı ama komutlar çalışmaya devam eder', 'The lab cannot work without this package, it counts as removed but the commands keep working') + '\n';
     out += `The following packages will be REMOVED:\n  ${gone.map(n => n + (sub === 'purge' ? '*' : '')).join(' ')}\n0 upgraded, 0 newly installed, ${gone.length} to remove and 0 not upgraded.\nAfter this operation, ${sysNum(gone.reduce((s, n) => s + sysPkg(n).s, 0))} kB disk space will be freed.\n`;
     if (!flags.has('y')) out += 'Do you want to continue? [Y/n] Y\n';
     gone.forEach(n => { out += `(Reading database ... 98214 files and directories currently installed.)\nRemoving ${n} (${sysPkg(n).v}) ...\n`; if (sub === 'purge') out += `Purging configuration files for ${n} (${sysPkg(n).v}) ...\n`; });
     out += 'Processing triggers for man-db (2.12.0-4build2) ...\n';
-    if (sub === 'remove' && gone.some(n => sysPkg(n).f.some(f => f.startsWith('/etc/')))) out += sysNote('remove config dosyalarını /etc altında bırakır, hepsini silmek için purge') + '\n';
+    if (sub === 'remove' && gone.some(n => sysPkg(n).f.some(f => f.startsWith('/etc/')))) out += sysNote('remove config dosyalarını /etc altında bırakır, hepsini silmek için purge', 'remove leaves config files under /etc, use purge to delete everything') + '\n';
     sysSetInstalled(sh, installed.filter(n => !gone.includes(n)));
     return ok(out + warn);
   }
   if (sub === 'clean' || sub === 'autoclean') return sh.isRoot ? ok(hint) : fail(SYS_APT_LOCK, 100);
-  if (sub === 'edit-sources' || sub === 'satisfy' || sub === 'depends' || sub === 'rdepends') return ok(hint + sysNote(`${sub} bu lab'da simüle edilmiyor`) + '\n');
+  if (sub === 'edit-sources' || sub === 'satisfy' || sub === 'depends' || sub === 'rdepends') return ok(hint + sysNote(`${sub} bu lab'da simüle edilmiyor`, `${sub} is not simulated in this lab`) + '\n');
   return fail(`E: Invalid operation ${sub}`, 100);
 }
 SYS_CMDS.apt = function (args) { return sysApt(this, args, 'apt'); };
@@ -987,7 +988,7 @@ SYS_CMDS.dpkg = function (args) {
   if (flags.has('--configure') || flags.has('--get-selections')) return ok(join(installed.map(n => `${sysPad(n, 40)}install`)));
   return fail('dpkg: error: need an action option\n\nType dpkg --help for help about installing and deinstalling packages [*];\nUse \'apt\' or \'aptitude\' for user-friendly package management;\nType dpkg -Dhelp for a list of dpkg debug flag values;', 2);
 };
-function sysRpmNote(cmd) { return sysNote(`Bu kutu Debian tabanlı Ubuntu, ${cmd} RHEL, Fedora, Rocky ve Alma ailesinin aracı. Burada karşılığı apt ve dpkg. Öğrenmek için aşağıda gerçek bir RHEL çıktısı simüle ediliyor`) + '\n'; }
+function sysRpmNote(cmd) { return sysNote(`Bu kutu Debian tabanlı Ubuntu, ${cmd} RHEL, Fedora, Rocky ve Alma ailesinin aracı. Burada karşılığı apt ve dpkg. Öğrenmek için aşağıda gerçek bir RHEL çıktısı simüle ediliyor`, `This box is Debian based Ubuntu, ${cmd} is a tool of the RHEL, Fedora, Rocky and Alma family. The equivalent here is apt and dpkg. For learning, real RHEL output is simulated below`) + '\n'; }
 SYS_CMDS.dnf = function (args) {
   sysEnsure(this);
   const sub = args.filter(a => !a.startsWith('-'))[0];
@@ -998,7 +999,7 @@ SYS_CMDS.dnf = function (args) {
     if (!this.isRoot) return fail(note + 'Error: This command has to be run with superuser privileges (under the root user on most systems).', 1);
     if (sub === 'install' && names[0] && !sysPkg(names[0])) return fail(note + `Updating Subscription Management repositories.\nLast metadata expiration check: 0:12:03 ago on ${sysCtime(new Date())}.\nNo match for argument: ${names[0]}\nError: Unable to find a match: ${names[0]}`, 1);
     const p = names[0] ? sysPkg(names[0]) : null;
-    return ok(note + `Updating Subscription Management repositories.\nLast metadata expiration check: 0:12:03 ago on ${sysCtime(new Date())}.\nDependencies resolved.\n================================================================================\n Package           Architecture   Version                  Repository      Size\n================================================================================\n${sub === 'install' ? 'Installing' : sub === 'remove' || sub === 'erase' ? 'Removing' : 'Upgrading'}:\n ${sysPad(p ? p.n : 'kernel', 17)} x86_64         ${sysPad(p ? p.v.replace(/^\d+:/, '').replace(/-.*$/, '') + '-1.el9' : '5.14.0-427.el9', 24)} ${sysPad(sub === 'remove' ? '@baseos' : 'appstream', 15)}${p ? Math.round(p.s / 3) : 4200} k\n\nTransaction Summary\n================================================================================\n${sub === 'install' ? 'Install' : sub === 'remove' || sub === 'erase' ? 'Remove' : 'Upgrade'}  1 Package\n\nIs this ok [y/N]: ${args.includes('-y') ? 'y' : ''}\n${args.includes('-y') ? 'Complete!' : sysNote('dnf onay ister, script için dnf -y install ' + (p ? p.n : ''))}\n`);
+    return ok(note + `Updating Subscription Management repositories.\nLast metadata expiration check: 0:12:03 ago on ${sysCtime(new Date())}.\nDependencies resolved.\n================================================================================\n Package           Architecture   Version                  Repository      Size\n================================================================================\n${sub === 'install' ? 'Installing' : sub === 'remove' || sub === 'erase' ? 'Removing' : 'Upgrading'}:\n ${sysPad(p ? p.n : 'kernel', 17)} x86_64         ${sysPad(p ? p.v.replace(/^\d+:/, '').replace(/-.*$/, '') + '-1.el9' : '5.14.0-427.el9', 24)} ${sysPad(sub === 'remove' ? '@baseos' : 'appstream', 15)}${p ? Math.round(p.s / 3) : 4200} k\n\nTransaction Summary\n================================================================================\n${sub === 'install' ? 'Install' : sub === 'remove' || sub === 'erase' ? 'Remove' : 'Upgrade'}  1 Package\n\nIs this ok [y/N]: ${args.includes('-y') ? 'y' : ''}\n${args.includes('-y') ? 'Complete!' : sysNote('dnf onay ister, script için dnf -y install ' + (p ? p.n : ''), 'dnf asks for confirmation, in a script use dnf -y install ' + (p ? p.n : ''))}\n`);
   }
   if (sub === 'search') return ok(note + `Last metadata expiration check: 0:12:03 ago on ${sysCtime(new Date())}.\n========================== Name & Summary Matched: ${names[0] || ''} ==========================\n` + join(SYS_PKGS.filter(p => !names[0] || p.n.includes(names[0]) || p.d.includes(names[0])).slice(0, 8).map(p => `${p.n}.x86_64 : ${p.d}`)));
   if (sub === 'list') return ok(note + 'Installed Packages\n' + join(SYS_PKGS.filter(p => sysInstalled(this).includes(p.n)).map(p => `${sysPad(p.n + '.x86_64', 40)} ${sysPad(p.v.replace(/^\d+:/, '').replace(/-.*$/, '') + '-1.el9', 30)} @baseos`)));
@@ -1009,7 +1010,7 @@ SYS_CMDS.dnf = function (args) {
 };
 SYS_CMDS.yum = function (args) {
   const r = SYS_CMDS.dnf.call(this, args);
-  const note = sysNote('yum eskidi, modern RHEL 8 ve sonrası, Fedora ve Rocky üzerinde yum aslında dnf\'e giden bir symlink. Yeni sistemde dnf yaz') + '\n';
+  const note = sysNote('yum eskidi, modern RHEL 8 ve sonrası, Fedora ve Rocky üzerinde yum aslında dnf\'e giden bir symlink. Yeni sistemde dnf yaz', 'yum is outdated, on modern RHEL 8 and later, Fedora and Rocky yum is just a symlink to dnf. On a new system type dnf') + '\n';
   return { out: r.out ? note + r.out : '', err: r.err ? note + r.err : '', code: r.code };
 };
 SYS_CMDS.rpm = function (args) {
@@ -1056,7 +1057,7 @@ function sysMakefile(sh) { const n = sh.node(sh.resolve('Makefile')) || sh.node(
 SYS_CMDS.make = function (args) {
   const { rest } = parseOpts(args, 'fCj');
   const mk = sysMakefile(this);
-  if (mk === null) return fail(rest[0] ? `make: *** No rule to make target '${rest[0]}'.  Stop.` : 'make: *** No targets specified and no makefile found.  Stop.' + (this.node(this.resolve('Makefile.in')) ? '\n' + sysNote('Makefile.in var ama Makefile yok, önce ./configure') : ''), 2);
+  if (mk === null) return fail(rest[0] ? `make: *** No rule to make target '${rest[0]}'.  Stop.` : 'make: *** No targets specified and no makefile found.  Stop.' + (this.node(this.resolve('Makefile.in')) ? '\n' + sysNote('Makefile.in var ama Makefile yok, önce ./configure', 'There is a Makefile.in but no Makefile, run ./configure first') : ''), 2);
   const prefix = (/^prefix\s*=\s*(\S+)/m.exec(mk) || [])[1] || '/usr/local';
   const bindir = prefix + '/bin';
   const targets = {}; mk.replace(/^([A-Za-z_][\w.-]*)\s*:/gm, (m, t) => { targets[t] = true; return m; });
@@ -1083,8 +1084,8 @@ SYS_CMDS.make = function (args) {
     if (!(hello && hello.x === 'elf')) { const e = build(); if (e) return fail(e, 2); out += 'gcc -O2 -g -Wall -I. -o hello src/hello.c\n'; }
     out += `/usr/bin/install -c -d ${bindir}\n/usr/bin/install -c hello ${bindir}/hello\n`;
     const binDirNode = this.node(bindir);
-    if (!binDirNode) { if (!this.isRoot && !prefix.startsWith(HOME)) return fail(out + `/usr/bin/install: cannot create directory '${bindir}': Permission denied\nmake: *** [Makefile:12: install] Error 1\n${sysNote('Sistem dizinine kurulum root ister, sudo make install. Alternatif ./configure --prefix=$HOME/.local ile kendi dizinine kur')}`, 2); COMMANDS.mkdir.call(this, ['-p', bindir]); }
-    else if (!this.canWrite(binDirNode)) return fail(out + `/usr/bin/install: cannot create regular file '${bindir}/hello': Permission denied\nmake: *** [Makefile:13: install] Error 1\n${sysNote('Sistem dizinine kurulum root ister, sudo make install')}`, 2);
+    if (!binDirNode) { if (!this.isRoot && !prefix.startsWith(HOME)) return fail(out + `/usr/bin/install: cannot create directory '${bindir}': Permission denied\nmake: *** [Makefile:12: install] Error 1\n${sysNote('Sistem dizinine kurulum root ister, sudo make install. Alternatif ./configure --prefix=$HOME/.local ile kendi dizinine kur', 'Installing into a system directory needs root, sudo make install. Or install into your own directory with ./configure --prefix=$HOME/.local')}`, 2); COMMANDS.mkdir.call(this, ['-p', bindir]); }
+    else if (!this.canWrite(binDirNode)) return fail(out + `/usr/bin/install: cannot create regular file '${bindir}/hello': Permission denied\nmake: *** [Makefile:13: install] Error 1\n${sysNote('Sistem dizinine kurulum root ister, sudo make install', 'Installing into a system directory needs root, sudo make install')}`, 2);
     const copy = sysClone(this.node(this.resolve('hello'))); copy.o = this.user; copy.ts = Date.now();
     this.node(bindir).c.hello = copy;
     return ok(out);
@@ -1095,7 +1096,7 @@ SYS_CMDS.make = function (args) {
 };
 SYS_CMDS.hello = function () {
   for (const p of this.env.PATH.split(':')) { const n = this.node(p + '/hello'); if (n && n.t === 'f') return this.runScript(p + '/hello', [], true, null); }
-  return fail('hello: command not found\n' + sysNote('hello henüz PATH üzerinde değil. ~/src/hello-2.12 içinde ./configure, make, sudo make install'), 127);
+  return fail('hello: command not found\n' + sysNote('hello henüz PATH üzerinde değil. ~/src/hello-2.12 içinde ./configure, make, sudo make install', 'hello is not on the PATH yet. In ~/src/hello-2.12 run ./configure, make, sudo make install'), 127);
 };
 SYS_CMDS.gcc = function (args) {
   const { vals, rest } = parseOpts(args, 'o');
@@ -1161,7 +1162,7 @@ SYS_CMDS.hostname = function (args) {
   const { flags, rest } = parseOpts(args);
   const st = sysState(this);
   const name = st.hostname || HOSTNAME;
-  if (rest[0]) { if (!this.isRoot) return fail('hostname: you must be root to change the host name'); st.hostname = rest[0]; sysSetState(this, st); return ok(sysNote(`Kernel hostname ${rest[0]} oldu, kalıcı olması için sudo hostnamectl set-hostname ${rest[0]}. Lab prompt'u sabit kalır`) + '\n'); }
+  if (rest[0]) { if (!this.isRoot) return fail('hostname: you must be root to change the host name'); st.hostname = rest[0]; sysSetState(this, st); return ok(sysNote(`Kernel hostname ${rest[0]} oldu, kalıcı olması için sudo hostnamectl set-hostname ${rest[0]}. Lab prompt'u sabit kalır`, `The kernel hostname is now ${rest[0]}, to make it permanent run sudo hostnamectl set-hostname ${rest[0]}. The lab prompt stays the same`) + '\n'); }
   if (flags.has('I')) return ok('192.168.1.42 192.168.2.1 192.168.100.5 172.17.0.1 10.8.0.2 \n');
   if (flags.has('i')) return ok('127.0.1.1\n');
   if (flags.has('f') || flags.has('A') || flags.has('--fqdn')) return ok(name + '.corp.lab\n');
@@ -1169,7 +1170,7 @@ SYS_CMDS.hostname = function (args) {
   if (flags.has('s') || flags.has('--short')) return ok(name.split('.')[0] + '\n');
   if (flags.has('a')) return ok('linuxlab\n');
   const bad = [...flags].find(f => !['b'].includes(f));
-  if (bad) return fail(`hostname: invalid option -- '${bad}'\nUsage: hostname [-b] {hostname|-F file}         set host name (from file)\n       hostname [-a|-A|-d|-f|-i|-I|-s|-y]      display formatted name\n       hostname                                display host name\n\n    -a, --alias            alias names\n    -A, --all-fqdns        all long host names (FQDNs)\n    -d, --domain           DNS domain name\n    -f, --fqdn, --long     long host name (FQDN)\n    -i, --ip-address       addresses for the host name\n    -I, --all-ip-addresses all addresses for the host\n    -s, --short            short host name\n    -y, --yp, --nis        NIS/YP domain name` + (bad === 'l' ? '\n' + sysNote('Küçük l yok, IP adresleri için büyük I, hostname -I') : ''), 1);
+  if (bad) return fail(`hostname: invalid option -- '${bad}'\nUsage: hostname [-b] {hostname|-F file}         set host name (from file)\n       hostname [-a|-A|-d|-f|-i|-I|-s|-y]      display formatted name\n       hostname                                display host name\n\n    -a, --alias            alias names\n    -A, --all-fqdns        all long host names (FQDNs)\n    -d, --domain           DNS domain name\n    -f, --fqdn, --long     long host name (FQDN)\n    -i, --ip-address       addresses for the host name\n    -I, --all-ip-addresses all addresses for the host\n    -s, --short            short host name\n    -y, --yp, --nis        NIS/YP domain name` + (bad === 'l' ? '\n' + sysNote('Küçük l yok, IP adresleri için büyük I, hostname -I', 'There is no lowercase l, use uppercase I for IP addresses, hostname -I') : ''), 1);
   return ok(name + '\n');
 };
 SYS_CMDS.hostnamectl = function (args) {
@@ -1199,7 +1200,7 @@ SYS_CMDS.modprobe = function (args) {
   if (flags.has('r') || flags.has('--remove')) return SYS_CMDS.rmmod.call(this, [key]);
   if (flags.has('n') || flags.has('--show') || flags.has('--dry-run')) return ok(SYS_MODCAT[key] === undefined ? '' : (SYS_MODCAT[key] ? SYS_MODCAT[key].split(',').map(d => `insmod /lib/modules/${SYS_KERNEL}/kernel/${d}.ko`).join('\n') + '\n' : '') + `insmod /lib/modules/${SYS_KERNEL}/kernel/${key}.ko\n`);
   if (SYS_MODCAT[key] === undefined) return fail(`modprobe: FATAL: Module ${name} not found in directory /lib/modules/${SYS_KERNEL}`, 1);
-  if (!this.isRoot) return fail(`modprobe: ERROR: could not insert '${key}': Operation not permitted\n${sysNote('Kernel modülü yüklemek root ister, sudo modprobe ' + name)}`, 1);
+  if (!this.isRoot) return fail(`modprobe: ERROR: could not insert '${key}': Operation not permitted\n${sysNote('Kernel modülü yüklemek root ister, sudo modprobe ' + name, 'Loading a kernel module needs root, sudo modprobe ' + name)}`, 1);
   if (mods.some(m => m.n === key)) return ok();
   const deps = SYS_MODCAT[key] ? SYS_MODCAT[key].split(',') : [];
   deps.forEach(d => { if (!mods.some(m => m.n === d)) mods.push({ n: d, size: String(16384 + d.length * 4096), used: '1', by: [key] }); else { const m = mods.find(x => x.n === d); m.used = String(+m.used + 1); if (!m.by.includes(key)) m.by.push(key); } });
@@ -1261,15 +1262,15 @@ function sysShutdown(sh, args, defMode) {
   }
   const at = sysShutdownAt(spec);
   if (!at) return fail(`Failed to parse time specification: ${spec}`, 1);
-  if (!sh.isRoot) return fail(`Failed to set wall message, ignoring: Interactive authentication required.\nFailed to ${defMode === 'reboot' && !args.length ? 'reboot system via logind' : 'call ScheduleShutdown in logind, no action will be taken'}: Interactive authentication required.\n${sysNote('Kapatma ve yeniden başlatma root ister, sudo shutdown')}`, 1);
+  if (!sh.isRoot) return fail(`Failed to set wall message, ignoring: Interactive authentication required.\nFailed to ${defMode === 'reboot' && !args.length ? 'reboot system via logind' : 'call ScheduleShutdown in logind, no action will be taken'}: Interactive authentication required.\n${sysNote('Kapatma ve yeniden başlatma root ister, sudo shutdown', 'Shutting down and rebooting needs root, sudo shutdown')}`, 1);
   const verb = mode === 'reboot' ? 'reboot' : mode === 'halt' ? 'halt' : 'power off';
   const immediate = at.getTime() - Date.now() < 1000;
   if (!immediate) {
     sysRootWrite(sh, SYS_SHUTDOWN, `USEC=${at.getTime() * 1000}\nWARN_WALL=1\nMODE=${mode}\nUID=0\nTTY=pts/0\nWALL_MESSAGE=${msg.join(' ')}\n`, 0o600);
-    return ok(`${mode === 'reboot' ? 'Reboot' : 'Shutdown'} scheduled for ${sysSysd(at)}, use 'shutdown -c' to cancel.\n\nBroadcast message from root@linuxlab on pts/0 (${sysSysd(new Date())}):\n\n${msg.length ? msg.join(' ') + '\n' : ''}The system will ${verb} at ${sysSysd(at)}!\n\n${sysNote('Gerçek sistemde tüm oturumlara wall mesajı gider ve süre dolunca kutu kapanır. Lab kapanmaz, iptal için sudo shutdown -c')}\n`);
+    return ok(`${mode === 'reboot' ? 'Reboot' : 'Shutdown'} scheduled for ${sysSysd(at)}, use 'shutdown -c' to cancel.\n\nBroadcast message from root@linuxlab on pts/0 (${sysSysd(new Date())}):\n\n${msg.length ? msg.join(' ') + '\n' : ''}The system will ${verb} at ${sysSysd(at)}!\n\n${sysNote('Gerçek sistemde tüm oturumlara wall mesajı gider ve süre dolunca kutu kapanır. Lab kapanmaz, iptal için sudo shutdown -c', 'On a real system a wall message goes to every session and the box shuts down when the time is up. The lab stays up, cancel with sudo shutdown -c')}\n`);
   }
   sysDel(sh, SYS_SHUTDOWN);
-  return ok(`\nBroadcast message from root@linuxlab on pts/0 (${sysSysd(new Date())}):\n\n${msg.length ? msg.join(' ') + '\n' : ''}The system will ${verb} now!\n\n${sysNote(`Gerçek sistemde bu noktada ssh bağlantın kopar ve kutu ${mode === 'reboot' ? 'yeniden başlar' : 'kapanır'}. Lab'da kutu ayakta kalır, çalışmaya devam et`)}\n`);
+  return ok(`\nBroadcast message from root@linuxlab on pts/0 (${sysSysd(new Date())}):\n\n${msg.length ? msg.join(' ') + '\n' : ''}The system will ${verb} now!\n\n${sysNote(`Gerçek sistemde bu noktada ssh bağlantın kopar ve kutu ${mode === 'reboot' ? 'yeniden başlar' : 'kapanır'}. Lab'da kutu ayakta kalır, çalışmaya devam et`, `On a real system your ssh connection drops at this point and the box ${mode === 'reboot' ? 'restarts' : 'powers off'}. In the lab the box stays up, keep working`)}\n`);
 }
 SYS_CMDS.shutdown = function (args) { return sysShutdown(this, args, 'poweroff'); };
 SYS_CMDS.reboot = function (args) { return sysShutdown(this, args.concat(['now']), 'reboot'); };
@@ -1286,13 +1287,13 @@ SYS_CMDS.timedatectl = function (args) {
   if (sub === 'list-timezones') return ok(join(SYS_TZ));
   if (sub === 'set-timezone') {
     if (!args[1]) return fail('Expected a time zone, got nothing.', 1);
-    if (!this.isRoot) return fail('Failed to set time zone: Interactive authentication required.\n' + sysNote('Saat dilimi sistem geneli bir ayar, sudo timedatectl set-timezone ' + args[1]), 1);
-    if (!SYS_TZ.includes(args[1])) return fail(`Failed to set time zone: Invalid or not installed time zone '${args[1]}'\n${sysNote('Geçerli isimler için timedatectl list-timezones | grep -i ' + args[1].split('/')[0])}`, 1);
+    if (!this.isRoot) return fail('Failed to set time zone: Interactive authentication required.\n' + sysNote('Saat dilimi sistem geneli bir ayar, sudo timedatectl set-timezone ' + args[1], 'The time zone is a system wide setting, sudo timedatectl set-timezone ' + args[1]), 1);
+    if (!SYS_TZ.includes(args[1])) return fail(`Failed to set time zone: Invalid or not installed time zone '${args[1]}'\n${sysNote('Geçerli isimler için timedatectl list-timezones | grep -i ' + args[1].split('/')[0], 'For valid names run timedatectl list-timezones | grep -i ' + args[1].split('/')[0])}`, 1);
     st.tz = args[1]; sysSetState(this, st); sysRootWrite(this, '/etc/timezone', args[1] + '\n');
     return ok();
   }
   if (sub === 'set-ntp') { if (!this.isRoot) return fail('Failed to set ntp: Interactive authentication required.', 1); st.ntp = /^(true|1|yes|on)$/.test(args[1] || '') ? '1' : '0'; sysSetState(this, st); return ok(); }
-  if (sub === 'set-time') { if (!this.isRoot) return fail('Failed to set time: Interactive authentication required.', 1); if (st.ntp === '1') return fail('Failed to set time: Automatic time synchronization is enabled', 1); return ok(sysNote('Lab saati tarayıcı saatidir, değişmedi') + '\n'); }
+  if (sub === 'set-time') { if (!this.isRoot) return fail('Failed to set time: Interactive authentication required.', 1); if (st.ntp === '1') return fail('Failed to set time: Automatic time synchronization is enabled', 1); return ok(sysNote('Lab saati tarayıcı saatidir, değişmedi', 'The lab clock is the browser clock, it did not change') + '\n'); }
   if (sub !== 'status' && sub !== 'show') return fail(`Unknown command verb ${sub}.`, 1);
   const [off, abbr] = SYS_TZOFF[st.tz] || [0, 'UTC'];
   const now = new Date();
@@ -1316,7 +1317,7 @@ SYS_CMDS.ulimit = function (args) {
     if (!rest.length) return ok((hard ? hardv : soft) + '\n');
     const v = rest[0] === 'unlimited' ? 'unlimited' : String(parseInt(rest[0], 10));
     if (v === 'NaN') return fail(`bash: ulimit: ${rest[0]}: invalid number`, 1);
-    if (!this.isRoot && (v === 'unlimited' || +v > +hardv)) return fail('bash: ulimit: open files: cannot modify limit: Operation not permitted\n' + sysNote(`Soft limit hard limit'i (${hardv}) aşamaz. Kalıcı değişiklik /etc/security/limits.conf, root ise ulimit -n ile yükseltebilir`), 1);
+    if (!this.isRoot && (v === 'unlimited' || +v > +hardv)) return fail('bash: ulimit: open files: cannot modify limit: Operation not permitted\n' + sysNote(`Soft limit hard limit'i (${hardv}) aşamaz. Kalıcı değişiklik /etc/security/limits.conf, root ise ulimit -n ile yükseltebilir`, `The soft limit cannot exceed the hard limit of ${hardv}. A permanent change goes in /etc/security/limits.conf, root can raise it with ulimit -n`), 1);
     if (hard) st.nofileHard = v; else st.nofile = v;
     if (!hard && +v > +hardv) st.nofileHard = v;
     sysSetState(this, st);
@@ -1384,8 +1385,8 @@ SYS_CMDS.chmod = function (args) {
     if (flags.has('v') || flags.has('c')) out += `mode of '${f}' changed to 0${(n.m & 0o777).toString(8)} (${modeStr(n).slice(1)})\n`;
     if ((flags.has('R') || flags.has('--recursive')) && n.t === 'd') sysWalk(this, abs, (p, c) => { if (p === abs) return; const rr = SYS_OLD.chmod.call(this, [mode, p]); if (rr.err) err += rr.err; });
   }
-  if (/^0?777$/.test(mode) && !err) out += sysNote('777 herkese yazma ve çalıştırma verir, bir çözüm değil bir itiraf. Dizin için 755, dosya için 644, gizli şeyler için 600 ya da 700') + '\n';
-  if (/^0?766$/.test(mode) && !err) out += sysNote('766 tuhaf bir kombinasyon, group ve others yazabilir ama çalıştıramaz. Dizinde x olmadan içine girilemez. Gerçek hayatta 755 ya da 775 görürsün') + '\n';
+  if (/^0?777$/.test(mode) && !err) out += sysNote('777 herkese yazma ve çalıştırma verir, bir çözüm değil bir itiraf. Dizin için 755, dosya için 644, gizli şeyler için 600 ya da 700', '777 gives everyone write and execute, it is not a fix but a confession. Use 755 for directories, 644 for files, 600 or 700 for secrets') + '\n';
+  if (/^0?766$/.test(mode) && !err) out += sysNote('766 tuhaf bir kombinasyon, group ve others yazabilir ama çalıştıramaz. Dizinde x olmadan içine girilemez. Gerçek hayatta 755 ya da 775 görürsün', '766 is an odd combination, group and others can write but not execute. Without x nobody can enter a directory. In real life you see 755 or 775') + '\n';
   return { out, err, code: err ? 1 : 0 };
 };
 SYS_CMDS.chown = function (args) {
@@ -1398,7 +1399,7 @@ SYS_CMDS.chown = function (args) {
   if (group && !sysGroup(this, group)) return fail(`chown: invalid group: '${spec}'`);
   if (!this.isRoot) {
     const mine = files.every(f => { const n = this.node(this.resolve(f)); return n && n.o === USER; });
-    if (owner && owner !== USER) return fail(`chown: changing ownership of '${files[0]}': Operation not permitted\n${sysNote("Dosyayı başkasına vermek root ister, sudo chown. Sıradan kullanıcı sadece üyesi olduğu gruba chgrp yapabilir")}`);
+    if (owner && owner !== USER) return fail(`chown: changing ownership of '${files[0]}': Operation not permitted\n${sysNote("Dosyayı başkasına vermek root ister, sudo chown. Sıradan kullanıcı sadece üyesi olduğu gruba chgrp yapabilir", 'Giving a file to someone else needs root, sudo chown. A regular user can only chgrp to a group they belong to')}`);
     if (!mine) return fail(`chown: changing ownership of '${files[0]}': Operation not permitted`);
   }
   let err = '';
@@ -1417,7 +1418,7 @@ SYS_CMDS.chattr = function (args) {
   if (!spec || !files.length) return fail('Usage: chattr [-pRVf] [-+=aAcCdDeijmPsStTuFx] [-v version] files...', 1);
   const m = /^([+\-=])([aAcdeijsStTu]+)$/.exec(spec);
   if (!m) return fail(`chattr: Invalid mode: ${spec}`, 1);
-  if (!this.isRoot && /[ia]/.test(m[2])) return fail(`chattr: Operation not permitted while setting flags on ${files[0]}\n${sysNote('immutable ve append-only bayrakları root ister, sudo chattr')}`, 1);
+  if (!this.isRoot && /[ia]/.test(m[2])) return fail(`chattr: Operation not permitted while setting flags on ${files[0]}\n${sysNote('immutable ve append-only bayrakları root ister, sudo chattr', 'The immutable and append-only flags need root, sudo chattr')}`, 1);
   let err = '';
   for (const f of files) {
     const n = this.node(this.resolve(f));
@@ -1482,14 +1483,14 @@ SYS_CMDS.ssh = function (args) {
     if (/^\d+\.\d+\.\d+\.\d+$/.test(t.host) || inHosts || /\.(com|net|org)$/.test(t.host) || t.host === 'localhost' || t.host === 'linuxlab') return SYS_OLD.ssh.call(this, [t.host]);
     return fail(`ssh: Could not resolve hostname ${t.host}: Name or service not known`, 255);
   }
-  if (port && port !== '22') return fail(`ssh: connect to host ${t.host} port ${port}: Connection refused\n${sysNote(`${h} üzerinde sshd 22'de dinliyor. Port'u -p ile verirsin ama doğru port'u bilmen gerekir, karşı tarafta ss -tlnp`)}`, 255);
+  if (port && port !== '22') return fail(`ssh: connect to host ${t.host} port ${port}: Connection refused\n${sysNote(`${h} üzerinde sshd 22'de dinliyor. Port'u -p ile verirsin ama doğru port'u bilmen gerekir, karşı tarafta ss -tlnp`, `sshd on ${h} listens on 22. You pass the port with -p but you need to know the right port, on the other side run ss -tlnp`)}`, 255);
   if (!sysUser(this, t.user) && t.user !== 'root') return fail(`${t.user}@${t.host}: Permission denied (publickey,password).`, 255);
   const key = sysKeyAuth(this, h, t.user);
   const pw = key ? '' : `${t.user}@${t.host}'s password: \n`;
   sysRemoteLog(this, h, t.user, key ? 'publickey' : 'password');
   const cmd = rest.slice(1);
   if (!cmd.length) {
-    return ok(pw + `Welcome to Ubuntu 24.04 LTS (GNU/Linux ${SYS_KERNEL} x86_64)\n\n * Documentation:  https://help.ubuntu.com\n * Management:     https://landscape.canonical.com\n\n  System information as of ${sysCtime(new Date())}\n\n  System load:  0.08              Processes:             118\n  Usage of /:   ${h === 'backup.lab' ? '61.2% of 97.87GB' : '23.4% of 38.70GB'}  Users logged in:       0\n  Memory usage: 31%               IPv4 address for eth0: ${SYS_HOSTS[h]}\n\nLast login: ${sysCtime(new Date(Date.now() - 86400000))} from 192.168.1.42\n${t.user}@${h.split('.')[0]}:~$ \n${sysNote(`Interaktif remote shell bu lab'da yok. Komutu ssh satırının sonuna ekle, ssh ${t.user === USER ? '' : t.user + '@'}${t.host} ls /var/backups`)}\n`);
+    return ok(pw + `Welcome to Ubuntu 24.04 LTS (GNU/Linux ${SYS_KERNEL} x86_64)\n\n * Documentation:  https://help.ubuntu.com\n * Management:     https://landscape.canonical.com\n\n  System information as of ${sysCtime(new Date())}\n\n  System load:  0.08              Processes:             118\n  Usage of /:   ${h === 'backup.lab' ? '61.2% of 97.87GB' : '23.4% of 38.70GB'}  Users logged in:       0\n  Memory usage: 31%               IPv4 address for eth0: ${SYS_HOSTS[h]}\n\nLast login: ${sysCtime(new Date(Date.now() - 86400000))} from 192.168.1.42\n${t.user}@${h.split('.')[0]}:~$ \n${sysNote(`Interaktif remote shell bu lab'da yok. Komutu ssh satırının sonuna ekle, ssh ${t.user === USER ? '' : t.user + '@'}${t.host} ls /var/backups`, `There is no interactive remote shell in this lab. Add the command to the end of the ssh line, ssh ${t.user === USER ? '' : t.user + '@'}${t.host} ls /var/backups`)}\n`);
   }
   const mapArgs = cmd.slice(1).map(a => (a.startsWith('-') ? a : /^[~/]/.test(a) || !['hostname', 'uptime', 'whoami', 'id', 'uname', 'df', 'free', 'date', 'w', 'ps'].includes(cmd[0]) && !a.includes('=') ? sysRemotePath(h, t.user, a) : a));
   const home = sysRemotePath(h, t.user, '');
@@ -1544,7 +1545,7 @@ SYS_CMDS.scp = function (args) {
   let out = ''; let err = '';
   for (const s of srcs) {
     const ss = resolveSide(s); if (ss.err) { err += ss.err; continue; }
-    if (ss.local && d.local) { err += 'scp: ' + sysNote('iki taraf da local, cp kullan') + '\n'; continue; }
+    if (ss.local && d.local) { err += 'scp: ' + sysNote('iki taraf da local, cp kullan', 'both sides are local, use cp') + '\n'; continue; }
     const remote = ss.local ? d : ss;
     if (!sysUser(this, remote.user) && remote.user !== 'root') { err += `${remote.user}@${remote.h}: Permission denied (publickey,password).\nscp: Connection closed\n`; continue; }
     if (!sysKeyAuth(this, remote.h, remote.user)) out += `${remote.user}@${remote.h}'s password: \n`;
@@ -1617,7 +1618,7 @@ SYS_CMDS.rsync = function (args) {
     deleted.forEach(d => { out += `deleting ${d}\n`; });
     changed.forEach(it => { out += it.rel + '\n'; });
     out += `\nsent ${sysNum(sent)} bytes  received ${sysNum(35 + changed.length * 12)} bytes  ${sysNum(((sent + 35) * 2).toFixed(2))} bytes/sec\ntotal size is ${sysNum(total)}  speedup is ${(total / Math.max(1, sent + 35)).toFixed(2)}${dry ? ' (DRY RUN)' : ''}\n`;
-  } else if (dry) out += sysNote('-n dry run bitti, hiçbir şey kopyalanmadı. Listeyi görmek için -v ekle') + '\n';
+  } else if (dry) out += sysNote('-n dry run bitti, hiçbir şey kopyalanmadı. Listeyi görmek için -v ekle', 'The -n dry run finished, nothing was copied. Add -v to see the list') + '\n';
   if (del && !deleted.length && verbose && !dry && dn) { /* sessiz */ }
   if (!S.local || !D.local) sysRemoteLog(this, remote.h, remote.user, sysKeyAuth(this, remote.h, remote.user) ? 'publickey' : 'password');
   return { out, err, code: err ? 23 : 0 };
@@ -1647,7 +1648,7 @@ SYS_CMDS.sftp = function (args) {
     const p = t.path.split(/\s+/);
     if (p[0] === 'get' || p[0] === 'put') {
       const file = p[1] || rest[1];
-      out += `Connected to ${t.host}.\n` + sysNote(`${p[0]} bir sftp oturum komutudur, gerçekte sftp> promptunda yazılır. Tek satırda indirmek için sftp ${t.user}@${t.host}:${file || 'dosya'}, yüklemek için scp ${file || 'dosya'} ${t.user}@${t.host}:`) + '\n';
+      out += `Connected to ${t.host}.\n` + sysNote(`${p[0]} bir sftp oturum komutudur, gerçekte sftp> promptunda yazılır. Tek satırda indirmek için sftp ${t.user}@${t.host}:${file || 'dosya'}, yüklemek için scp ${file || 'dosya'} ${t.user}@${t.host}:`, `${p[0]} is an sftp session command, normally typed at the sftp> prompt. To download in one line use sftp ${t.user}@${t.host}:${file || 'file'}, to upload use scp ${file || 'file'} ${t.user}@${t.host}:`) + '\n';
       if (!file) return fail(out, 1);
       const e = p[0] === 'get' ? doGet(file, rest[2]) : doPut(file, p[2]);
       return e ? { out, err: e, code: 1 } : ok(out);
@@ -1656,10 +1657,10 @@ SYS_CMDS.sftp = function (args) {
     const e = doGet(t.path, rest[1]);
     return e ? { out, err: e, code: 1 } : ok(out);
   }
-  return ok(out + `Connected to ${t.host}.\nsftp> \n${sysNote(`Interaktif sftp oturumu bu lab'da yok. sftp> promptunda get dosya indirir, put dosya yükler, ls ve cd gezer, quit çıkar. Lab'da tek satır: sftp ${t.user}@${t.host}:uzak/dosya ya da sftp -b batch.txt ${t.user}@${t.host}`)}\n`);
+  return ok(out + `Connected to ${t.host}.\nsftp> \n${sysNote(`Interaktif sftp oturumu bu lab'da yok. sftp> promptunda get dosya indirir, put dosya yükler, ls ve cd gezer, quit çıkar. Lab'da tek satır: sftp ${t.user}@${t.host}:uzak/dosya ya da sftp -b batch.txt ${t.user}@${t.host}`, `There is no interactive sftp session in this lab. At the sftp> prompt get downloads a file, put uploads a file, ls and cd browse, quit leaves. In the lab use one line, sftp ${t.user}@${t.host}:remote/file or sftp -b batch.txt ${t.user}@${t.host}`)}\n`);
 };
 ['get', 'put', 'mget', 'mput', 'quit', 'bye', 'lcd', 'lls'].forEach(c => {
-  SYS_CMDS[c] = function () { return fail(`${c}: command not found\n${sysNote(`${c} bir Linux komutu değil, sftp ve ftp oturumunun içinde çalışan bir komut. Önce sftp user@host, sonra sftp> promptunda ${c}. Lab'da tek satırlık karşılığı ${c === 'get' || c === 'mget' ? 'scp user@host:dosya .' : c === 'put' || c === 'mput' ? 'scp dosya user@host:' : c === 'quit' || c === 'bye' ? 'exit, bash için de aynı' : 'cd ya da ls'}`)}`, 127); };
+  SYS_CMDS[c] = function () { return fail(`${c}: command not found\n${sysNote(`${c} bir Linux komutu değil, sftp ve ftp oturumunun içinde çalışan bir komut. Önce sftp user@host, sonra sftp> promptunda ${c}. Lab'da tek satırlık karşılığı ${c === 'get' || c === 'mget' ? 'scp user@host:dosya .' : c === 'put' || c === 'mput' ? 'scp dosya user@host:' : c === 'quit' || c === 'bye' ? 'exit, bash için de aynı' : 'cd ya da ls'}`, `${c} is not a Linux command, it runs inside an sftp or ftp session. First sftp user@host, then ${c} at the sftp> prompt. The one line equivalent in the lab is ${c === 'get' || c === 'mget' ? 'scp user@host:file .' : c === 'put' || c === 'mput' ? 'scp file user@host:' : c === 'quit' || c === 'bye' ? 'exit, same as for bash' : 'cd or ls'}`)}`, 127); };
 });
 SYS_CMDS['ssh-keygen'] = function (args) {
   sysEnsure(this);
@@ -1669,12 +1670,12 @@ SYS_CMDS['ssh-keygen'] = function (args) {
   const file = this.resolve(vals.f || HOME + '/.ssh/id_' + type);
   if (flags.has('l')) { const n = this.node(file) || this.node(file + '.pub'); if (!n) return fail(`${vals.f || file}: No such file or directory`, 255); const pub = n.d.startsWith('ssh-') ? n.d : (this.node(file + '.pub') || { d: '' }).d; return ok(`256 SHA256:${sysB64(pub, 43)} ${(pub.trim().split(' ')[2] || USER + '@' + HOSTNAME)} (${type.toUpperCase()})\n`); }
   if (flags.has('y')) { const n = this.node(file + '.pub'); if (!n) return fail(`Load key "${vals.f || file}": No such file or directory`, 255); return ok(n.d); }
-  if (type === 'dsa') return fail('ssh-keygen: DSA keys are not allowed in OpenSSH 9.x\n' + sysNote('dsa 2015\'ten beri kapalı, ed25519 kullan'), 255);
+  if (type === 'dsa') return fail('ssh-keygen: DSA keys are not allowed in OpenSSH 9.x\n' + sysNote('dsa 2015\'ten beri kapalı, ed25519 kullan', 'dsa has been disabled since 2015, use ed25519'), 255);
   const comment = vals.C || USER + '@' + HOSTNAME;
   const bits = type === 'ed25519' ? 256 : +(vals.b || (type === 'rsa' ? 3072 : 256));
   const { dir, name } = this.parent(file);
   if (!dir) { return fail(`Saving key "${file}" failed: No such file or directory`, 1); }
-  if (this.node(file)) return fail(`${file} already exists.\nOverwrite (y/n)? \n${sysNote('Gerçek ssh-keygen sorar, lab prompt açamaz. Üstüne yazmak için önce rm, ya da -f ile başka bir dosya adı ver')}`, 1);
+  if (this.node(file)) return fail(`${file} already exists.\nOverwrite (y/n)? \n${sysNote('Gerçek ssh-keygen sorar, lab prompt açamaz. Üstüne yazmak için önce rm, ya da -f ile başka bir dosya adı ver', 'Real ssh-keygen asks, the lab cannot open a prompt. To overwrite run rm first, or give another file name with -f')}`, 1);
   if (!this.canWrite(dir)) return fail(`Saving key "${file}" failed: Permission denied`, 1);
   const seed = file + comment + Date.now();
   const pub = `${type === 'ed25519' ? 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI' + sysB64(seed, 43) : type === 'rsa' ? 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQ' + sysB64(seed, 540) : 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABB' + sysB64(seed, 88)} ${comment}\n`;
@@ -1685,7 +1686,7 @@ SYS_CMDS['ssh-keygen'] = function (args) {
   const fp = sysB64(pub, 43);
   const art = ['+--[' + (type === 'ed25519' ? 'ED25519 256' : type.toUpperCase() + ' ' + bits) + ']--+', '|      o+o.       |', '|     . =.o .     |', '|      + * o .    |', '|     o B = o     |', '|    . + S = .    |', '|     . = * +     |', '|      o B.=      |', '|       o=E=      |', '|       .o+=o     |', '+----[SHA256]-----+'];
   if (flags.has('q')) return ok();
-  return ok(`Generating public/private ${type} key pair.\n${vals.f ? '' : `Enter file in which to save the key (${file}): \n`}${vals.N !== undefined ? '' : 'Enter passphrase (empty for no passphrase): \nEnter same passphrase again: \n'}Your identification has been saved in ${file}\nYour public key has been saved in ${file}.pub\nThe key fingerprint is:\nSHA256:${fp} ${comment}\nThe key's randomart image is:\n${art.join('\n')}\n${vals.N === undefined ? sysNote('Lab prompt açamaz, passphrase boş kabul edildi. Script içinde ssh-keygen -t ed25519 -N "" -f dosya') + '\n' : ''}`);
+  return ok(`Generating public/private ${type} key pair.\n${vals.f ? '' : `Enter file in which to save the key (${file}): \n`}${vals.N !== undefined ? '' : 'Enter passphrase (empty for no passphrase): \nEnter same passphrase again: \n'}Your identification has been saved in ${file}\nYour public key has been saved in ${file}.pub\nThe key fingerprint is:\nSHA256:${fp} ${comment}\nThe key's randomart image is:\n${art.join('\n')}\n${vals.N === undefined ? sysNote('Lab prompt açamaz, passphrase boş kabul edildi. Script içinde ssh-keygen -t ed25519 -N "" -f dosya', 'The lab cannot open a prompt, an empty passphrase was accepted. In a script use ssh-keygen -t ed25519 -N "" -f file') + '\n' : ''}`);
 };
 SYS_CMDS['ssh-copy-id'] = function (args) {
   sysEnsure(this);
@@ -1696,7 +1697,7 @@ SYS_CMDS['ssh-copy-id'] = function (args) {
   if (!h) return fail(`/usr/bin/ssh-copy-id: ERROR: ssh: Could not resolve hostname ${t.host}: Name or service not known\n`, 1);
   const keyFile = vals.i ? this.resolve(vals.i.endsWith('.pub') ? vals.i : vals.i + '.pub') : [HOME + '/.ssh/id_ed25519.pub', HOME + '/.ssh/id_rsa.pub', HOME + '/.ssh/id_ecdsa.pub'].find(p => this.node(p));
   const pub = keyFile && this.node(keyFile);
-  if (!pub) return fail(`/usr/bin/ssh-copy-id: ERROR: No identities found\n${sysNote('Önce bir anahtar üret, ssh-keygen -t ed25519')}`, 1);
+  if (!pub) return fail(`/usr/bin/ssh-copy-id: ERROR: No identities found\n${sysNote('Önce bir anahtar üret, ssh-keygen -t ed25519', 'Generate a key first, ssh-keygen -t ed25519')}`, 1);
   if (!sysUser(this, t.user) && t.user !== 'root') return fail(`/usr/bin/ssh-copy-id: ERROR: ${t.user}@${t.host}: Permission denied (publickey,password).`, 1);
   const akPath = sysRemotePath(h, t.user, '.ssh/authorized_keys');
   const ak = this.node(akPath);
@@ -1706,7 +1707,7 @@ SYS_CMDS['ssh-copy-id'] = function (args) {
   sysRemoteLog(this, h, t.user, 'password');
   return ok(`/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "${keyFile}"\n/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed\n/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys\n${t.user}@${t.host}'s password: \n\nNumber of key(s) added: 1\n\nNow try logging into the machine, with:   "ssh '${t.user}@${t.host}'"\nand check to make sure that only the key(s) you wanted were added.\n\n`);
 };
-SYS_CMDS['ssh-add'] = function (args) { if (args.includes('-l')) { const pub = this.node(HOME + '/.ssh/id_ed25519.pub'); return pub ? ok(`256 SHA256:${sysB64(pub.d, 43)} ${pub.d.trim().split(' ')[2] || ''} (ED25519)\n`) : ok('The agent has no identities.\n'); } return this.node(HOME + '/.ssh/id_ed25519') ? ok('Identity added: /home/burak/.ssh/id_ed25519 (burak@linuxlab)\n') : fail('Could not open a connection to your authentication agent.\n' + sysNote('eval "$(ssh-agent -s)" ile agent başlatılır, lab\'da agent simüle edilmiyor')); };
+SYS_CMDS['ssh-add'] = function (args) { if (args.includes('-l')) { const pub = this.node(HOME + '/.ssh/id_ed25519.pub'); return pub ? ok(`256 SHA256:${sysB64(pub.d, 43)} ${pub.d.trim().split(' ')[2] || ''} (ED25519)\n`) : ok('The agent has no identities.\n'); } return this.node(HOME + '/.ssh/id_ed25519') ? ok('Identity added: /home/burak/.ssh/id_ed25519 (burak@linuxlab)\n') : fail('Could not open a connection to your authentication agent.\n' + sysNote('eval "$(ssh-agent -s)" ile agent başlatılır, lab\'da agent simüle edilmiyor', 'The agent is started with eval "$(ssh-agent -s)", the agent is not simulated in the lab')); };
 
 /* ======================================================================
    8. Disk
@@ -1775,8 +1776,8 @@ SYS_CMDS.du = function (args) {
 };
 SYS_CMDS.fdisk = function (args) {
   const { flags, rest } = parseOpts(args);
-  if (!flags.has('l')) { if (!rest[0]) return fail('\nUsage:\n fdisk [options] <disk>         change partition table\n fdisk [options] -l [<disk>...] list partition table(s)\n\nDisplay or manipulate a disk partition table.\n\nOptions:\n -l, --list                    display partitions and exit\n -x, --list-details            like --list but with more details', 1); if (!sysDevOk(rest[0])) return fail(`fdisk: cannot open ${rest[0]}: No such file or directory`, 1); if (!this.isRoot) return fail(`fdisk: cannot open ${rest[0]}: Permission denied`, 1); return fail(`\nWelcome to fdisk (util-linux 2.39.3).\nChanges will remain in memory only, until you decide to write them.\nBe careful before using the write command.\n\nCommand (m for help): \n${sysNote('Interaktif bölümleme bu lab\'da yok. Gerçekte p listeler, n yeni bölüm, d siler, w yazar, q kaydetmeden çıkar. Tabloyu görmek için sudo fdisk -l')}`, 1); }
-  if (!this.isRoot) return fail('fdisk: cannot open /dev/sda: Permission denied\n' + sysNote('Bölüm tablosu ham diskten okunur, sudo fdisk -l'), 1);
+  if (!flags.has('l')) { if (!rest[0]) return fail('\nUsage:\n fdisk [options] <disk>         change partition table\n fdisk [options] -l [<disk>...] list partition table(s)\n\nDisplay or manipulate a disk partition table.\n\nOptions:\n -l, --list                    display partitions and exit\n -x, --list-details            like --list but with more details', 1); if (!sysDevOk(rest[0])) return fail(`fdisk: cannot open ${rest[0]}: No such file or directory`, 1); if (!this.isRoot) return fail(`fdisk: cannot open ${rest[0]}: Permission denied`, 1); return fail(`\nWelcome to fdisk (util-linux 2.39.3).\nChanges will remain in memory only, until you decide to write them.\nBe careful before using the write command.\n\nCommand (m for help): \n${sysNote('Interaktif bölümleme bu lab\'da yok. Gerçekte p listeler, n yeni bölüm, d siler, w yazar, q kaydetmeden çıkar. Tabloyu görmek için sudo fdisk -l', 'There is no interactive partitioning in this lab. Normally p lists, n adds a partition, d deletes, w writes, q quits without saving. To see the table run sudo fdisk -l')}`, 1); }
+  if (!this.isRoot) return fail('fdisk: cannot open /dev/sda: Permission denied\n' + sysNote('Bölüm tablosu ham diskten okunur, sudo fdisk -l', 'The partition table is read from the raw disk, sudo fdisk -l'), 1);
   const want = rest.length ? rest : ['/dev/sda', '/dev/sdb', '/dev/sdc'];
   const out = [];
   for (const d of want) {
@@ -1810,7 +1811,7 @@ SYS_CMDS.mount = function (args) {
   const { flags, vals, rest } = parseOpts(args, 'to');
   const table = sysMountTable(this);
   if (!rest.length) return ok(join(table.map(r => `${r.fs} on ${r.mp} type ${r.type} (${r.opts})`)));
-  if (!this.isRoot) return fail('mount: only root can do that\n' + sysNote('Mount sistem geneli bir işlem, sudo mount'), 1);
+  if (!this.isRoot) return fail('mount: only root can do that\n' + sysNote('Mount sistem geneli bir işlem, sudo mount', 'Mount is a system wide operation, sudo mount'), 1);
   if (flags.has('a')) return ok();
   if (rest.length === 1) { const t = this.resolve(rest[0]); if (table.some(r => r.mp === t)) return ok(); const fst = lines(sysRead(this, '/etc/fstab')).find(l => l.split(/\s+/)[1] === t); if (!fst) return fail(`mount: ${rest[0]}: can't find in /etc/fstab.`, 1); return ok(); }
   const [dev, mpRaw] = rest; const mp = this.resolve(mpRaw);
@@ -1838,14 +1839,14 @@ SYS_CMDS.umount = function (args) {
   const r = table.find(x => x.mp === t || x.fs === t);
   if (!r) return fail(`umount: ${rest[0]}: not mounted.`, 32);
   if (r.mp === '/' || r.mp === '/data' || r.mp === '/boot/efi' || !SYS_MOUNTABLE[r.fs]) return fail(`umount: ${r.mp}: target is busy.`, 32);
-  if (this.cwd === r.mp || this.cwd.startsWith(r.mp + '/')) return fail(`umount: ${r.mp}: target is busy.\n${sysNote('Mount noktasının içindesin, önce cd ile dışarı çık. Kim kullanıyor görmek için lsof ' + r.mp)}`, 32);
+  if (this.cwd === r.mp || this.cwd.startsWith(r.mp + '/')) return fail(`umount: ${r.mp}: target is busy.\n${sysNote('Mount noktasının içindesin, önce cd ile dışarı çık. Kim kullanıyor görmek için lsof ' + r.mp, 'You are inside the mount point, cd out of it first. To see who is using it run lsof ' + r.mp)}`, 32);
   const n = this.node(r.mp); if (n) n.c = {};
   sysRootWrite(this, SYS_MOUNTS, join(lines(sysRead(this, SYS_MOUNTS)).filter(l => l.split(' ')[1] !== r.mp)));
   return ok();
 };
 SYS_CMDS.blkid = function (args) {
   const { rest } = parseOpts(args, 'so');
-  if (!this.isRoot) return rest.length ? ok() : ok(sysNote('blkid root olmadan sadece cache\'i gösterir, burada boş. sudo blkid') + '\n');
+  if (!this.isRoot) return rest.length ? ok() : ok(sysNote('blkid root olmadan sadece cache\'i gösterir, burada boş. sudo blkid', 'Without root blkid only shows its cache, which is empty here. sudo blkid') + '\n');
   const out = [];
   SYS_BLK.forEach(d => d.parts.forEach(p => { if (!rest.length || rest.includes('/dev/' + p.n)) out.push(`/dev/${p.n}: ${p.label ? 'LABEL="' + p.label + '" ' : ''}UUID="${p.uuid}" BLOCK_SIZE="${p.fs === 'vfat' ? '512' : '4096'}" TYPE="${p.fs}" PARTUUID="${sysHash(p.n, 8)}-0${p.n.replace(/\D/g, '').padStart(1, '0')}"`); }));
   return ok(join(out));
@@ -1873,7 +1874,7 @@ SYS_CMDS.lsof = function (args) {
     if (iVal) { let m; if ((m = /^:(\d+)$/.exec(iVal))) rows = rows.filter(r => r.name.includes(':' + m[1] + ' ') || r.name.includes(':' + m[1] + '-') || r.name.endsWith(':' + m[1])); else if ((m = /^(tcp|udp)(?::(\d+))?$/i.exec(iVal))) rows = rows.filter(r => r.node.toLowerCase() === m[1].toLowerCase() && (!m[2] || r.name.includes(':' + m[2]))); else if (/^\d+$/.test(iVal)) rows = rows.filter(r => r.name.includes(':' + iVal)); }
     if (flags.has('P') || flags.has('n')) { /* zaten numerik */ }
     rows = rows.filter(mine);
-    if (!rows.length) return { out: this.isRoot ? '' : sysNote('Sonuç yok. Root olmayan kullanıcı sadece kendi process\'lerini görür, sudo lsof -i') + '\n', err: '', code: 1 };
+    if (!rows.length) return { out: this.isRoot ? '' : sysNote('Sonuç yok. Root olmayan kullanıcı sadece kendi process\'lerini görür, sudo lsof -i', 'No results. A non root user only sees their own processes, sudo lsof -i') + '\n', err: '', code: 1 };
     return ok(head + '\n' + join(rows.map(row)));
   }
   if (vals.p) { const pid = +vals.p; const p = this.procs.find(x => x.pid === pid); if (!p) return fail(`lsof: status error on ${vals.p}: No such process\nlsof 4.95.0\n latest version: https://github.com/lsof-org/lsof`, 1); if (!this.isRoot && p.user !== USER) return { out: '', err: '', code: 1 }; const base = p.cmd.split(' ')[0].split('/').pop(); const out = [head, `${sysPad(base.slice(0, 9), 9)} ${sysLpad(pid, 5)} ${sysLpad(p.user, 15)}  cwd    DIR    8,1     4096      2 ${p.user === USER ? HOME : '/'}`, `${sysPad(base.slice(0, 9), 9)} ${sysLpad(pid, 5)} ${sysLpad(p.user, 15)}  rtd    DIR    8,1     4096      2 /`, `${sysPad(base.slice(0, 9), 9)} ${sysLpad(pid, 5)} ${sysLpad(p.user, 15)}  txt    REG    8,1   ${sysLpad(900000 + pid * 7, 7)}  ${sysLpad(130000 + pid, 6)} /usr/bin/${base}`, `${sysPad(base.slice(0, 9), 9)} ${sysLpad(pid, 5)} ${sysLpad(p.user, 15)}  mem    REG    8,1  2125328 393346 /usr/lib/x86_64-linux-gnu/libc.so.6`, `${sysPad(base.slice(0, 9), 9)} ${sysLpad(pid, 5)} ${sysLpad(p.user, 15)}    0u   CHR  136,0      0t0      3 /dev/pts/0`]; net.filter(r => r.pid === pid).forEach(r => out.push(row(r))); return ok(join(out)); }
@@ -1881,7 +1882,7 @@ SYS_CMDS.lsof = function (args) {
   if (rest[0]) { const abs = this.resolve(rest[0]); const n = this.node(abs); if (!n) return fail(`lsof: status error on ${rest[0]}: No such file or directory`, 1); const users = this.procs.filter(p => (abs === HOME && p.user === USER) || p.cmd.includes(abs) || (abs === '/var/log/nginx/access.log' && this.services.nginx === 'active') || (abs === '/run/docker.sock' && p.pid === 777) || (abs.startsWith('/mnt') && this.cwd.startsWith('/mnt') && p.pid === 733)); if (!users.length) return { out: '', err: '', code: 1 }; return ok(head + '\n' + join(users.map(p => `${sysPad(p.cmd.split(' ')[0].split('/').pop().slice(0, 9), 9)} ${sysLpad(p.pid, 5)} ${sysLpad(p.user, 15)}  ${n.t === 'd' ? 'cwd' : '3r'}    ${n.t === 'd' ? 'DIR' : 'REG'}    8,1 ${sysLpad(n.t === 'd' ? 4096 : n.d.length, 8)} ${sysLpad(131000 + abs.length, 6)} ${abs}`))); }
   const out = [head];
   this.procs.filter(mine).forEach(p => { const base = p.cmd.split(' ')[0].split('/').pop(); out.push(`${sysPad(base.slice(0, 9), 9)} ${sysLpad(p.pid, 5)} ${sysLpad(p.user, 15)}  cwd    DIR    8,1     4096      2 /`, `${sysPad(base.slice(0, 9), 9)} ${sysLpad(p.pid, 5)} ${sysLpad(p.user, 15)}  txt    REG    8,1   ${sysLpad(900000 + p.pid * 7, 7)}  ${sysLpad(130000 + p.pid, 6)} /usr/bin/${base}`); net.filter(r => r.pid === p.pid).forEach(r => out.push(row(r))); });
-  return ok(join(out) + (this.isRoot ? '' : sysNote('Tam liste için sudo lsof, en çok kullanılan biçimler lsof -i :80, lsof -p PID, lsof -u user, lsof /mnt') + '\n'));
+  return ok(join(out) + (this.isRoot ? '' : sysNote('Tam liste için sudo lsof, en çok kullanılan biçimler lsof -i :80, lsof -p PID, lsof -u user, lsof /mnt', 'For the full list run sudo lsof, the most common forms are lsof -i :80, lsof -p PID, lsof -u user, lsof /mnt') + '\n'));
 };
 
 /* ======================================================================
@@ -1954,7 +1955,7 @@ SYS_CMDS.fg = function (args) {
   const j = r.job;
   this.procs = this.procs.filter(p => p !== j);
   let out = j.cmd + '\n';
-  if (sysIsLong(j.cmd)) out += sysNote(`${j.cmd.split(' ')[0]} öne alındı. Gerçekte terminal bu komuta kilitlenir, Ctrl+Z ile tekrar durdurur, bg ile arkaya atar, Ctrl+C ile öldürürsün. Lab'da job bitmiş sayıldı`) + '\n';
+  if (sysIsLong(j.cmd)) out += sysNote(`${j.cmd.split(' ')[0]} öne alındı. Gerçekte terminal bu komuta kilitlenir, Ctrl+Z ile tekrar durdurur, bg ile arkaya atar, Ctrl+C ile öldürürsün. Lab'da job bitmiş sayıldı`, `${j.cmd.split(' ')[0]} was brought to the foreground. Normally the terminal locks to this command, Ctrl+Z stops it again, bg sends it to the background, Ctrl+C kills it. In the lab the job counts as finished`) + '\n';
   else { const buf = []; const errs = []; this.execList(j.cmd, (t, cls) => (cls === 'err' ? errs : buf).push(t)); out += buf.join(''); if (errs.length) return { out, err: errs.join(''), code: 1 }; }
   return ok(out);
 };
@@ -1978,7 +1979,7 @@ SYS_CMDS.nohup = function (args, stdin) {
   const cmd = args.join(' ');
   const e = this.writeFile('nohup.out', '', true, 'nohup');
   if (e) return fail(`nohup: failed to open 'nohup.out': Permission denied`, 125);
-  if (sysIsLong(cmd)) return { out: '', err: `nohup: ignoring input and appending output to 'nohup.out'\n${sysNote(`${args[0]} uzun süren bir komut, gerçekte terminal buna takılı kalır. Arkaya atmak için sonuna & koy: nohup ${cmd} &`)}\n`, code: 0 };
+  if (sysIsLong(cmd)) return { out: '', err: `nohup: ignoring input and appending output to 'nohup.out'\n${sysNote(`${args[0]} uzun süren bir komut, gerçekte terminal buna takılı kalır. Arkaya atmak için sonuna & koy: nohup ${cmd} &`, `${args[0]} is a long running command, normally the terminal would hang on it. To send it to the background add & at the end, nohup ${cmd} &`)}\n`, code: 0 };
   const buf = []; const errs = [];
   const code = this.execList(cmd, (t, cls) => (cls === 'err' ? errs : buf).push(t));
   this.writeFile('nohup.out', buf.join('') + errs.join(''), true, 'nohup');
@@ -2004,7 +2005,7 @@ SYS_CMDS.kill = function (args) {
     else job = this.procs.find(p => p.jn && String(p.pid) === t) || null;
     if (sig === 'STOP' || sig === 'TSTP') { const p = this.procs.find(x => String(x.pid) === pid); if (!p) { err += `bash: kill: (${pid}) - No such process\n`; continue; } if (!this.isRoot && p.user !== USER) { err += `bash: kill: (${pid}) - Operation not permitted\n`; continue; } p.st = 'Stopped'; if (p.jn) out += `\n[${p.jn}]+  Stopped                 ${p.cmd}\n`; continue; }
     if (sig === 'CONT') { const p = this.procs.find(x => String(x.pid) === pid); if (!p) { err += `bash: kill: (${pid}) - No such process\n`; continue; } p.st = 'Running'; continue; }
-    if (sig === 'HUP' || sig === 'USR1' || sig === 'USR2' || sig === 'WINCH' || sig === '0') { const p = this.procs.find(x => String(x.pid) === pid); if (!p) { err += `bash: kill: (${pid}) - No such process\n`; continue; } if (!this.isRoot && p.user !== USER) { err += `bash: kill: (${pid}) - Operation not permitted\n`; continue; } if (sig === 'HUP' && !p.jn) out += sysNote(`SIGHUP ${p.cmd.split(' ')[0]} için çoğu daemon'da config reload demektir`) + '\n'; continue; }
+    if (sig === 'HUP' || sig === 'USR1' || sig === 'USR2' || sig === 'WINCH' || sig === '0') { const p = this.procs.find(x => String(x.pid) === pid); if (!p) { err += `bash: kill: (${pid}) - No such process\n`; continue; } if (!this.isRoot && p.user !== USER) { err += `bash: kill: (${pid}) - Operation not permitted\n`; continue; } if (sig === 'HUP' && !p.jn) out += sysNote(`SIGHUP ${p.cmd.split(' ')[0]} için çoğu daemon'da config reload demektir`, `For most daemons SIGHUP means a config reload for ${p.cmd.split(' ')[0]}`) + '\n'; continue; }
     const r = SYS_OLD.kill.call(this, [pid]);
     if (r.err) { err += r.err; continue; }
     if (job) out += `[${job.jn}]+  ${sig === 'KILL' ? 'Killed' : 'Terminated'}${' '.repeat(sig === 'KILL' ? 18 : 14)}${job.cmd}\n`;
@@ -2020,7 +2021,7 @@ SYS_CMDS.killall = function (args) {
     if (!ms.length) { if (!flags.has('q')) err += `${name}: no process found\n`; code = 1; continue; }
     for (const p of ms) {
       if (p.pid === 1) { err += `${name}(1): Operation not permitted\n`; code = 1; continue; }
-      if (p.pid === 733) { err += sysNote('kendi shell\'ini kill etmeye kalkma 🙂') + '\n'; continue; }
+      if (p.pid === 733) { err += sysNote('kendi shell\'ini kill etmeye kalkma 🙂', 'do not try to kill your own shell 🙂') + '\n'; continue; }
       if (!this.isRoot && p.user !== USER) { err += `${name}(${p.pid}): Operation not permitted\n`; code = 1; continue; }
       this.procs = this.procs.filter(x => x !== p);
       if (flags.has('v')) out += `Killed ${name}(${p.pid}) with signal ${flags.has('9') ? 9 : 15}\n`;
@@ -2093,7 +2094,7 @@ SYS_CMDS.pstree = function (args) {
   const pad = ' '.repeat(root.length + 3 + 'sshd───sshd───bash'.length + (P ? 15 : 0));
   const extra = bash.split('\n').slice(1).map(l => pad + l.trim().replace(/^[ ]*/, ''));
   if (extra.length) lines2.splice(idx + 1, 0, ...extra.map(l => (idx === kids.length - 1 ? l : l.replace(pad, ' '.repeat(root.length) + ' │' + pad.slice(root.length + 2)))));
-  return ok(join(lines2) + (flags.has('p') ? '' : sysNote('PID görmek için pstree -p, bir kullanıcının ağacı için pstree burak') + '\n'));
+  return ok(join(lines2) + (flags.has('p') ? '' : sysNote('PID görmek için pstree -p, bir kullanıcının ağacı için pstree burak', 'To see PIDs use pstree -p, for one user tree use pstree burak') + '\n'));
 };
 SYS_CMDS.htop = function () {
   const gate = sysNeedPkg(this, 'htop', 'htop'); if (gate) return gate;
@@ -2107,7 +2108,7 @@ SYS_CMDS.htop = function () {
     '    PID USER       PRI  NI  VIRT   RES   SHR S CPU% MEM%   TIME+  Command',
   ];
   sorted.forEach(p => out.push(`${sysLpad(p.pid, 7)} ${sysPad(p.user.slice(0, 10), 10)} ${sysLpad(20 + (p.ni || 0), 3)} ${sysLpad(p.ni || 0, 3)} ${sysLpad(sysHuman(Math.round(p.mem * 120000 + 10000) * 1024), 5)} ${sysLpad(sysHuman(Math.round(p.mem * 40000) * 1024), 5)} ${sysLpad(sysHuman(4096 * 1024), 5)} ${p.st === 'Stopped' ? 'T' : p.cpu > 50 ? 'R' : 'S'} ${sysLpad(p.cpu.toFixed(1), 4)} ${sysLpad(p.mem.toFixed(1), 4)} ${sysLpad('0:0' + (p.pid % 10) + '.' + String(p.pid % 100).padStart(2, '0'), 8)} ${p.cmd}`));
-  out.push('', 'F1Help  F2Setup F3SearchF4FilterF5Tree  F6SortByF7Nice -F8Nice +F9Kill  F10Quit', '', '[htop canlı güncellenir, q ile çıkılır, F9 kill, F7 ve F8 nice. Burada tek frame var]');
+  out.push('', 'F1Help  F2Setup F3SearchF4FilterF5Tree  F6SortByF7Nice -F8Nice +F9Kill  F10Quit', '', lt('[htop canlı güncellenir, q ile çıkılır, F9 kill, F7 ve F8 nice. Burada tek frame var]', '[htop updates live, q quits, F9 kills, F7 and F8 change nice. This is a single frame]'));
   return ok(join(out));
 };
 SYS_CMDS.nice = function (args, stdin) {
@@ -2119,7 +2120,7 @@ SYS_CMDS.nice = function (args, stdin) {
   let warn = '';
   if (n < 0 && !this.isRoot) { warn = 'nice: cannot set niceness: Permission denied\n'; n = 0; }
   n = Math.max(-20, Math.min(19, n));
-  if (sysIsLong(rest.join(' '))) return { out: sysNote(`${rest[0]} nice ${n} ile çalışırdı ama uzun süren bir komut, arkaya atmak için sonuna & ekle: nice -n ${n} ${rest.join(' ')} &`) + '\n', err: warn, code: 0 };
+  if (sysIsLong(rest.join(' '))) return { out: sysNote(`${rest[0]} nice ${n} ile çalışırdı ama uzun süren bir komut, arkaya atmak için sonuna & ekle: nice -n ${n} ${rest.join(' ')} &`, `${rest[0]} would run with nice ${n}, but it is a long running command, add & at the end to send it to the background, nice -n ${n} ${rest.join(' ')} &`) + '\n', err: warn, code: 0 };
   const r = this.execSimple(rest, stdin, {});
   return { out: r.out || '', err: warn + (r.err || ''), code: r.code };
 };
@@ -2140,7 +2141,7 @@ SYS_CMDS.renice = function (args) {
     for (const p of list) {
       const old = p.ni || 0;
       const nn = Math.max(-20, Math.min(19, n));
-      if (!this.isRoot && (p.user !== USER || nn < old)) { err += `renice: failed to set priority for ${p.pid} (process ID): Permission denied\n${nn < old && p.user === USER ? sysNote('Sıradan kullanıcı niceness\'ı sadece artırabilir yani önceliği düşürebilir. Geri almak root ister, sudo renice -n ' + nn + ' -p ' + p.pid) + '\n' : ''}`; continue; }
+      if (!this.isRoot && (p.user !== USER || nn < old)) { err += `renice: failed to set priority for ${p.pid} (process ID): Permission denied\n${nn < old && p.user === USER ? sysNote('Sıradan kullanıcı niceness\'ı sadece artırabilir yani önceliği düşürebilir. Geri almak root ister, sudo renice -n ' + nn + ' -p ' + p.pid, 'A regular user can only raise niceness, which lowers priority. Undoing it needs root, sudo renice -n ' + nn + ' -p ' + p.pid) + '\n' : ''}`; continue; }
       p.ni = nn;
       out += `${p.pid} (process ID) old priority ${old}, new priority ${nn}\n`;
     }
@@ -2153,7 +2154,7 @@ SYS_CMDS.pmap = function (args) {
   if (!rest[0]) return fail('\nUsage:\n pmap [options] PID [PID ...]\n\nDisplay information about process memory mappings.\n\nOptions:\n -x, --extended              show details\n -d, --device                show the device format\n -q, --quiet                 do not display header and footer', 1);
   const p = this.procs.find(x => x.pid === pid);
   if (!p) return fail(`${rest[0]}: ${isNaN(pid) ? 'invalid process id' : 'No such process'}`, 42);
-  if (!this.isRoot && p.user !== USER) return ok(`${pid}:   ${p.cmd}\n` + sysNote('Başkasının process haritasını okumak için sudo pmap ' + pid) + '\n');
+  if (!this.isRoot && p.user !== USER) return ok(`${pid}:   ${p.cmd}\n` + sysNote('Başkasının process haritasını okumak için sudo pmap ' + pid, 'To read the process map of another user run sudo pmap ' + pid) + '\n');
   const base = p.cmd.split(' ')[0].split('/').pop().replace(/^-/, '');
   const rows = [['0000555b2c200000', '132K', 'r----', base], ['0000555b2c221000', '920K', 'r-x--', base], ['0000555b2c307000', '280K', 'r----', base], ['0000555b2c34d000', '16K', 'r----', base], ['0000555b2c351000', '52K', 'rw---', base], ['0000555b2d9a0000', `${Math.round(p.mem * 400 + 132)}K`, 'rw---', '[ anon ]'], ['00007f3c1a000000', '160K', 'r----', 'libc.so.6'], ['00007f3c1a028000', '1620K', 'r-x--', 'libc.so.6'], ['00007f3c1a1bd000', '352K', 'r----', 'libc.so.6'], ['00007f3c1a215000', '16K', 'r----', 'libc.so.6'], ['00007f3c1a219000', '8K', 'rw---', 'libc.so.6'], ['00007f3c1a21b000', '52K', 'rw---', '[ anon ]'], ['00007f3c1a2d0000', '8K', 'r----', 'ld-linux-x86-64.so.2'], ['00007f3c1a2d2000', '152K', 'r-x--', 'ld-linux-x86-64.so.2'], ['00007ffd4e1c0000', '132K', 'rw---', '[ stack ]'], ['00007ffd4e1fb000', '16K', 'r----', '[ vvar ]'], ['00007ffd4e1ff000', '8K', 'r-x--', '[ vdso ]']];
   const total = rows.reduce((s, r) => s + parseInt(r[1], 10), 0);
@@ -2172,7 +2173,7 @@ SYS_CMDS.trap = function (args) {
   const action = rest[0]; const sigs = rest.slice(1).map(norm);
   for (const s of sigs) { if (!(s === 'EXIT' || s === 'ERR' || s === 'DEBUG' || s === 'RETURN' || SYS_SIGS.includes(s))) return fail(`bash: trap: ${s}: invalid signal specification`, 1); if (s === 'KILL' || s === 'STOP') return fail(`bash: trap: ${s}: SIGKILL ve SIGSTOP yakalanamaz, kernel bunu izin vermez`, 1); }
   sigs.forEach(s => { if (action === '-' || action === '') delete this.sysTraps[s]; else this.sysTraps[s] = action; });
-  const out = this.depth === 0 && sigs.includes('EXIT') ? sysNote('EXIT trap interaktif shell kapanırken çalışır. Asıl yeri script, temp dosya temizliği gibi işler için. Bir script içinde dene, bash ~/scripts/trap.sh') + '\n' : '';
+  const out = this.depth === 0 && sigs.includes('EXIT') ? sysNote('EXIT trap interaktif shell kapanırken çalışır. Asıl yeri script, temp dosya temizliği gibi işler için. Bir script içinde dene, bash ~/scripts/trap.sh', 'The EXIT trap runs when the interactive shell closes. Its real place is a script, for jobs like temp file cleanup. Try it in a script, bash ~/scripts/trap.sh') + '\n' : '';
   return ok(out);
 };
 
@@ -2202,11 +2203,11 @@ SYS_CMDS.at = function (args, stdin) {
   if (this.services.atd === 'inactive') return fail("Can't open /var/run/atd.pid to signal atd. No atd running?", 1);
   if (!rest.length) return fail('Garbled time', 1);
   const when = sysAtTime(rest.join(' '));
-  if (!when) return fail(`syntax error. Last token seen: ${rest[rest.length - 1]}\nGarbled time\n${sysNote('Kabul edilen biçimler: at 10:30, at now + 5 minutes, at noon tomorrow, at 2026-12-31 23:59')}`, 1);
+  if (!when) return fail(`syntax error. Last token seen: ${rest[rest.length - 1]}\nGarbled time\n${sysNote('Kabul edilen biçimler: at 10:30, at now + 5 minutes, at noon tomorrow, at 2026-12-31 23:59', 'Accepted formats are at 10:30, at now + 5 minutes, at noon tomorrow, at 2026-12-31 23:59')}`, 1);
   let cmd = null;
   if (vals.f) { const r = this.readFile(vals.f, 'at'); if (r.err) return fail(`Cannot open input file ${vals.f}: No such file or directory`, 1); cmd = r.data; }
   else if (stdin != null) cmd = stdin;
-  if (cmd === null) return fail(`warning: commands will be executed using /bin/sh\nat> \n${sysNote('Gerçek at komutları at> promptundan okur, Ctrl+D ile bitirirsin. Lab\'da prompt yok, komutu pipe ile ver: echo "komut" | at ' + rest.join(' ') + ', ya da at -f dosya ' + rest.join(' '))}`, 1);
+  if (cmd === null) return fail(`warning: commands will be executed using /bin/sh\nat> \n${sysNote('Gerçek at komutları at> promptundan okur, Ctrl+D ile bitirirsin. Lab\'da prompt yok, komutu pipe ile ver: echo "komut" | at ' + rest.join(' ') + ', ya da at -f dosya ' + rest.join(' '), 'Real at reads commands from the at> prompt and you finish with Ctrl+D. The lab has no prompt, pipe the command in, echo "command" | at ' + rest.join(' ') + ', or at -f file ' + rest.join(' '))}`, 1);
   if (!cmd.trim()) return fail('warning: commands will be executed using /bin/sh\nat: no commands, job not queued', 1);
   const jobs = sysAtJobs(this);
   const id = jobs.length ? jobs[jobs.length - 1].id + 1 : 1;
@@ -2224,7 +2225,7 @@ SYS_CMDS.atrm = function (args) {
 SYS_CMDS['at-tick'] = function () {
   sysEnsure(this);
   const jobs = sysAtJobs(this);
-  if (!jobs.length) return fail('at-tick: kuyruk boş, önce echo "komut" | at now + 1 minute');
+  if (!jobs.length) return fail('at-tick: ' + lt('kuyruk boş, önce echo "komut" | at now + 1 minute', 'the queue is empty, first run echo "command" | at now + 1 minute'));
   const out = [];
   for (const j of jobs) {
     const buf = []; const errs = [];
@@ -2243,7 +2244,7 @@ SYS_CMDS.watch = function (args) {
     else if (a === '-g' || a === '-e' || a === '-x' || a === '-c' || a === '-b' || a === '--chgexit' || a === '--errexit' || a === '--color' || a === '--exec' || a === '--beep') { /* kabul */ }
     else return fail(`watch: unrecognized option '${a}'\n\nUsage:\n watch [options] command\n\nOptions:\n  -d, --differences[=<permanent>]\n                         highlight changes between updates\n  -n, --interval <secs>  seconds to wait between updates\n  -t, --no-title         turn off header`, 1);
   }
-  if (!rest.length) return fail('watch: command yok\n\nUsage:\n watch [options] command', 1);
+  if (!rest.length) return fail('watch: ' + lt('command yok', 'no command given') + '\n\nUsage:\n watch [options] command', 1);
   if (isNaN(interval) || interval < 0.1) interval = 0.1;
   const cmd = rest.join(' ');
   const buf = []; const errs = [];
@@ -2252,7 +2253,7 @@ SYS_CMDS.watch = function (args) {
   const right = `${HOSTNAME}: ${sysCtime(new Date())}`;
   const out = title ? [head + ' '.repeat(Math.max(1, 80 - head.length - right.length)) + right, ''] : [];
   out.push((buf.join('') + errs.join('')).replace(/\n$/, ''));
-  out.push('', `[watch her ${interval} saniyede bir ekranı yeniler, Ctrl+C ile çıkılır${diff ? ', -d değişen yerleri vurgular' : ''}. Burada tek bir yenileme var]`);
+  out.push('', lt(`[watch her ${interval} saniyede bir ekranı yeniler, Ctrl+C ile çıkılır${diff ? ', -d değişen yerleri vurgular' : ''}. Burada tek bir yenileme var]`, `[watch refreshes the screen every ${interval} seconds, Ctrl+C quits${diff ? ', -d highlights what changed' : ''}. This is a single refresh]`));
   return ok(join(out));
 };
 SYS_CMDS.history = function (args) {
@@ -2265,7 +2266,7 @@ SYS_CMDS.history = function (args) {
   if (rest[0] && /^\d+$/.test(rest[0])) return ok(join(lines(r.out).slice(-+rest[0])));
   return r;
 };
-SYS_CMDS.fc = function (args) { const { flags } = parseOpts(args); if (flags.has('l')) return ok(join(this.history.slice(-16).map((h, i) => `${sysLpad(this.history.length - 16 + i + 1 > 0 ? this.history.length - Math.min(16, this.history.length) + i + 1 : i + 1, 5)}\t ${h}`))); return fail('fc: bu lab\'da sadece fc -l, düzenlemek için ↑ ve !n'); };
+SYS_CMDS.fc = function (args) { const { flags } = parseOpts(args); if (flags.has('l')) return ok(join(this.history.slice(-16).map((h, i) => `${sysLpad(this.history.length - 16 + i + 1 > 0 ? this.history.length - Math.min(16, this.history.length) + i + 1 : i + 1, 5)}\t ${h}`))); return fail('fc: ' + lt('bu lab\'da sadece fc -l, düzenlemek için ↑ ve !n', 'only fc -l in this lab, to edit use ↑ and !n')); };
 
 /* ======================================================================
    11. Arama: find, locate, updatedb
@@ -2360,7 +2361,7 @@ SYS_CMDS.find = function (args) {
 SYS_CMDS.updatedb = function () {
   sysEnsure(this);
   const gate = sysNeedPkg(this, 'updatedb', 'mlocate'); if (gate) return gate;
-  if (!this.isRoot) return fail(`updatedb: can not open a temporary file for \`/var/lib/mlocate/mlocate.db'\n${sysNote('Veritabanı root\'a ait, sudo updatedb. Normalde cron her gün gece çalıştırır')}`, 1);
+  if (!this.isRoot) return fail(`updatedb: can not open a temporary file for \`/var/lib/mlocate/mlocate.db'\n${sysNote('Veritabanı root\'a ait, sudo updatedb. Normalde cron her gün gece çalıştırır', 'The database belongs to root, sudo updatedb. Normally cron runs it every night')}`, 1);
   const all = [];
   sysWalk(this, '/', (p, n) => { if (!p.startsWith('/proc') && !p.startsWith('/srv/remote') && !p.startsWith('/var/lib/lab') && p !== '/') all.push(p); });
   sysRootWrite(this, SYS_LOCATEDB, join(all), 0o640);
@@ -2371,7 +2372,7 @@ SYS_CMDS.locate = function (args) {
   const gate = sysNeedPkg(this, 'locate', 'mlocate'); if (gate) return gate;
   const { flags, vals, rest } = parseOpts(args, 'nd');
   const db = this.node(SYS_LOCATEDB);
-  if (!db) return fail(`locate: can not stat () \`/var/lib/mlocate/mlocate.db': No such file or directory\n${sysNote('locate canlı aramaz, updatedb ile üretilen veritabanına bakar. Önce sudo updatedb')}`, 1);
+  if (!db) return fail(`locate: can not stat () \`/var/lib/mlocate/mlocate.db': No such file or directory\n${sysNote('locate canlı aramaz, updatedb ile üretilen veritabanına bakar. Önce sudo updatedb', 'locate does not search live, it reads the database built by updatedb. Run sudo updatedb first')}`, 1);
   if (!rest.length) return fail('locate: no pattern to search for specified\nTry `locate --help\' for more information.', 1);
   let list = lines(db.d);
   if (!this.isRoot) list = list.filter(p => { const parts = p.split('/'); let n = this.root; for (let k = 1; k < parts.length - 1; k++) { n = n.c[parts[k]]; if (!n || !(n.m & 0o001 || n.o === USER)) return false; } return true; });
@@ -2383,7 +2384,7 @@ SYS_CMDS.locate = function (args) {
   if (vals.n) hits = hits.slice(0, +vals.n);
   if (flags.has('c')) return ok(hits.length + '\n');
   const stale = hits.some(p => !this.node(p));
-  return { out: join(hits) + (stale && !flags.has('e') ? sysNote('Bazı yollar artık yok, veritabanı eski. sudo updatedb ile tazele ya da locate -e ile sadece var olanları göster') + '\n' : ''), err: '', code: hits.length ? 0 : 1 };
+  return { out: join(hits) + (stale && !flags.has('e') ? sysNote('Bazı yollar artık yok, veritabanı eski. sudo updatedb ile tazele ya da locate -e ile sadece var olanları göster', 'Some paths no longer exist, the database is stale. Refresh it with sudo updatedb or show only existing ones with locate -e') + '\n' : ''), err: '', code: hits.length ? 0 : 1 };
 };
 
 /* ======================================================================
@@ -2431,22 +2432,22 @@ SYS_CMDS.gpg = function (args, stdin) {
   const oi = args.indexOf('--output'); const outName = vals.o || (oi >= 0 ? args[oi + 1] : null);
   const files2 = files.filter(x => x !== outName);
   if (longs.includes('--version')) return ok('gpg (GnuPG) 2.4.4\nlibgcrypt 1.10.3\nCopyright (C) 2024 g10 Code GmbH\n\nHome: /home/burak/.gnupg\nSupported algorithms:\nPubkey: RSA, ELG, DSA, ECDH, ECDSA, EDDSA\nCipher: IDEA, 3DES, CAST5, BLOWFISH, AES, AES192, AES256, TWOFISH,\n        CAMELLIA128, CAMELLIA192, CAMELLIA256\nHash: SHA1, RIPEMD160, SHA256, SHA384, SHA512, SHA224\nCompression: Uncompressed, ZIP, ZLIB, BZIP2\n');
-  if (longs.includes('--gen-key') || longs.includes('--full-generate-key') || longs.includes('--list-keys') || flags.has('k')) return ok(sysNote('Açık anahtar işlemleri bu lab\'da simüle edilmiyor, mousepad\'deki kullanım simetrik şifreleme: gpg -c dosya ve gpg dosya.gpg') + '\n');
+  if (longs.includes('--gen-key') || longs.includes('--full-generate-key') || longs.includes('--list-keys') || flags.has('k')) return ok(sysNote('Açık anahtar işlemleri bu lab\'da simüle edilmiyor, mousepad\'deki kullanım simetrik şifreleme: gpg -c dosya ve gpg dosya.gpg', 'Public key operations are not simulated in this lab, the usage in mousepad is symmetric encryption, gpg -c file and gpg file.gpg') + '\n');
   const sym = flags.has('c') || longs.includes('--symmetric');
   const dec = flags.has('d') || longs.includes('--decrypt');
   const f = files2[0];
-  if (!f) { if (sym) return fail(`gpg: ${sysNote('şifrelenecek dosyayı ver, gpg -c dosya')}`, 2); return fail('gpg: WARNING: no command supplied.  Trying to guess what you mean ...\ngpg: Go ahead and type your message ...\n' + sysNote('Dosya adı ver. gpg -c dosya şifreler, gpg dosya.gpg çözer'), 2); }
+  if (!f) { if (sym) return fail(`gpg: ${sysNote('şifrelenecek dosyayı ver, gpg -c dosya', 'give the file to encrypt, gpg -c file')}`, 2); return fail('gpg: WARNING: no command supplied.  Trying to guess what you mean ...\ngpg: Go ahead and type your message ...\n' + sysNote('Dosya adı ver. gpg -c dosya şifreler, gpg dosya.gpg çözer', 'Give a file name. gpg -c file encrypts, gpg file.gpg decrypts'), 2); }
   const r = this.readFile(f, 'gpg');
   if (r.err) return fail(`gpg: can't open '${f}': No such file or directory\ngpg: ${sym ? 'symmetric encryption of' : 'decrypt_message failed:'} '${f}' failed: No such file or directory`, 2);
-  const noPass = () => fail(`gpg: problem with the agent: No pinentry\ngpg: error creating passphrase: Operation cancelled\n${sysNote('Gerçek gpg passphrase\'i pinentry penceresinden sorar, lab\'da prompt yok. --batch --passphrase "gizli" ile ver ya da export GPG_PASSPHRASE=gizli')}`, 2);
+  const noPass = () => fail(`gpg: problem with the agent: No pinentry\ngpg: error creating passphrase: Operation cancelled\n${sysNote('Gerçek gpg passphrase\'i pinentry penceresinden sorar, lab\'da prompt yok. --batch --passphrase "gizli" ile ver ya da export GPG_PASSPHRASE=gizli', 'Real gpg asks for the passphrase in a pinentry window, the lab has no prompt. Pass it with --batch --passphrase "secret" or export GPG_PASSPHRASE=secret')}`, 2);
   if (sym) {
-    if (sysKind(r.data) === 'gpg') return fail(`gpg: ${f}: zaten şifreli görünüyor, çözmek için gpg ${f}`, 2);
+    if (sysKind(r.data) === 'gpg') return fail(lt(`gpg: ${f}: zaten şifreli görünüyor, çözmek için gpg ${f}`, `gpg: ${f}: looks already encrypted, to decrypt run gpg ${f}`), 2);
     if (pass === null) return noPass();
     const target = outName || f + '.gpg';
-    if (this.node(this.resolve(target)) && !longs.includes('--yes') && !longs.includes('--batch')) return fail(`File '${target}' exists. Overwrite? (y/N) \n${sysNote('Üstüne yazmak için --yes ekle')}`, 2);
+    if (this.node(this.resolve(target)) && !longs.includes('--yes') && !longs.includes('--batch')) return fail(`File '${target}' exists. Overwrite? (y/N) \n${sysNote('Üstüne yazmak için --yes ekle', 'Add --yes to overwrite')}`, 2);
     const e = this.writeFile(target, sysPack('gpg', { n: f.split('/').pop(), p: sysHash('gpg:' + pass, 32), d: r.data }), false, 'gpg');
     if (e) return fail(`gpg: can't create '${target}': Permission denied`, 2);
-    return ok(longs.includes('--armor') || flags.has('a') ? sysNote('ASCII armor bu lab\'da ikili ile aynı saklanır') + '\n' : '');
+    return ok(longs.includes('--armor') || flags.has('a') ? sysNote('ASCII armor bu lab\'da ikili ile aynı saklanır', 'In this lab ASCII armor is stored the same as binary') + '\n' : '');
   }
   const packed = sysUnpack(r.data);
   if (!packed || packed.kind !== 'gpg') return fail(`gpg: no valid OpenPGP data found.\ngpg: decrypt_message failed: Unknown system error`, 2);
@@ -2455,7 +2456,7 @@ SYS_CMDS.gpg = function (args, stdin) {
   const head = 'gpg: AES256.CFB encrypted data\ngpg: encrypted with 1 passphrase\n';
   if (dec && !outName) return { out: packed.obj.d, err: head, code: 0 };
   const target = outName || (f.endsWith('.gpg') || f.endsWith('.asc') ? f.slice(0, -4) : packed.obj.n);
-  if (this.node(this.resolve(target)) && !longs.includes('--yes') && !longs.includes('--batch')) return fail(`${head}File '${target}' exists. Overwrite? (y/N) \n${sysNote('Üstüne yazmak için --yes ekle')}`, 2);
+  if (this.node(this.resolve(target)) && !longs.includes('--yes') && !longs.includes('--batch')) return fail(`${head}File '${target}' exists. Overwrite? (y/N) \n${sysNote('Üstüne yazmak için --yes ekle', 'Add --yes to overwrite')}`, 2);
   const e = this.writeFile(target, packed.obj.d, false, 'gpg');
   if (e) return fail(`${head}gpg: can't create '${target}': Permission denied`, 2);
   return { out: '', err: head, code: 0 };
@@ -2545,9 +2546,9 @@ SYS_CMDS.ls = function (args) {
 SYS_CMDS.rm = function (args) {
   const { flags, rest } = parseOpts(args);
   const rec = flags.has('r') || flags.has('R') || flags.has('--recursive');
-  if (rec && rest.some(r => this.resolve(r) === '/')) return fail(`rm: it is dangerous to operate recursively on '/'\nrm: use --no-preserve-root to override this failsafe\n${sysNote(`${rest.length > 1 ? 'Bu komut muhtemelen bir boşluk hatası, rm -rf /tmp/x/ yazarken / ayrı bir argüman oldu. ' : ''}Gerçek sistemde --no-preserve-root ile her şeyi siler, geri dönüşü yok. Değişkenli yollarda "$DIR"/x yerine "${'${DIR:?}'}"/x kullan, DIR boşsa patlar, silmez`)}`);
-  if (rec && rest.some(r => /^\/\*$/.test(r))) return fail(`rm: cannot remove '/*': ${sysNote('/* preserve-root korumasını atlar ve her şeyi siler. Lab durdurdu, gerçek sistem durdurmaz')}`);
-  for (const f of rest) { const n = this.node(this.resolve(f)); if (n && n.at && n.at.includes('i')) return fail(`rm: cannot remove '${f}': Operation not permitted\n${sysNote('Dosya immutable, lsattr ile bak, sudo chattr -i ' + f + ' ile kaldır')}`); if (n && n.t === 'd' && rec) { let im = null; sysWalk(this, this.resolve(f), (p, x) => { if (!im && x.at && x.at.includes('i')) im = p; }); if (im) return fail(`rm: cannot remove '${im}': Operation not permitted`); } }
+  if (rec && rest.some(r => this.resolve(r) === '/')) return fail(`rm: it is dangerous to operate recursively on '/'\nrm: use --no-preserve-root to override this failsafe\n${sysNote(`${rest.length > 1 ? 'Bu komut muhtemelen bir boşluk hatası, rm -rf /tmp/x/ yazarken / ayrı bir argüman oldu. ' : ''}Gerçek sistemde --no-preserve-root ile her şeyi siler, geri dönüşü yok. Değişkenli yollarda "$DIR"/x yerine "${'${DIR:?}'}"/x kullan, DIR boşsa patlar, silmez`, `${rest.length > 1 ? 'This command is probably a space typo, while typing rm -rf /tmp/x/ the / became a separate argument. ' : ''}On a real system --no-preserve-root deletes everything with no way back. In paths with variables use "${'${DIR:?}'}"/x instead of "$DIR"/x, if DIR is empty it fails instead of deleting`)}`);
+  if (rec && rest.some(r => /^\/\*$/.test(r))) return fail(`rm: cannot remove '/*': ${sysNote('/* preserve-root korumasını atlar ve her şeyi siler. Lab durdurdu, gerçek sistem durdurmaz', '/* skips the preserve-root guard and deletes everything. The lab stopped it, a real system will not')}`);
+  for (const f of rest) { const n = this.node(this.resolve(f)); if (n && n.at && n.at.includes('i')) return fail(`rm: cannot remove '${f}': Operation not permitted\n${sysNote('Dosya immutable, lsattr ile bak, sudo chattr -i ' + f + ' ile kaldır', 'The file is immutable, check with lsattr, remove the flag with sudo chattr -i ' + f)}`); if (n && n.t === 'd' && rec) { let im = null; sysWalk(this, this.resolve(f), (p, x) => { if (!im && x.at && x.at.includes('i')) im = p; }); if (im) return fail(`rm: cannot remove '${im}': Operation not permitted`); } }
   for (const f of rest) { const n = this.node(this.resolve(f)); if (n && !n.l && n.nl > 1) n.nl--; }
   return SYS_OLD.rm.call(this, args);
 };
@@ -2620,19 +2621,19 @@ SYS_CMDS.xargs = function (args, stdin) {
   else batches.push(cmd.concat(items));
   let out = ''; let err = ''; let code = 0;
   for (const b of batches) { if (trace) err += b.join(' ') + '\n'; const r = this.execSimple(b, null, {}); out += r.out || ''; err += r.err || ''; if (r.code) code = 123; }
-  if (!zero && !repl && items.length > 1 && cmd[0] === 'wc' && input.includes(' ') && lines(input).some(l => / /.test(l.trim()))) err += sysNote('Boşluklu bir ad boşluktan bölündü, wc iki ayrı dosya sandı. Çözüm find -print0 ile xargs -0, ya da doğrudan wc *') + '\n';
+  if (!zero && !repl && items.length > 1 && cmd[0] === 'wc' && input.includes(' ') && lines(input).some(l => / /.test(l.trim()))) err += sysNote('Boşluklu bir ad boşluktan bölündü, wc iki ayrı dosya sandı. Çözüm find -print0 ile xargs -0, ya da doğrudan wc *', 'A name with a space was split at the space, wc saw two separate files. The fix is find -print0 with xargs -0, or just wc *') + '\n';
   return { out, err, code };
 };
 SYS_CMDS.ifconfig = function (args) {
   const r = SYS_OLD.ifconfig.call(this, args);
-  if (args.length && !/^-a$/.test(args[0]) && !/^eth0$/.test(args[0])) { if (/^(eth1|eth2|wg0|docker0|lo)$/.test(args[0])) { const ipr = SYS_OLD.ip.call(this, ['addr', 'show', args[0]]); const inet = (/inet (\S+)/.exec(ipr.out || '') || [])[1] || ''; const [ip, len] = inet.split('/'); const mask = len ? [0, 0, 0, 0].map((x, i) => { const b = Math.max(0, Math.min(8, +len - i * 8)); return 256 - (1 << (8 - b)); }).join('.') : ''; return ok(`${args[0]}: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu ${args[0] === 'wg0' ? 1420 : args[0] === 'eth2' ? 1492 : args[0] === 'lo' ? 65536 : 1500}\n        inet ${ip}  netmask ${mask}${args[0] !== 'lo' && args[0] !== 'wg0' ? '  broadcast ' + ip.replace(/\d+$/, '255') : ''}\n\n${sysNote('ifconfig net-tools paketinden, 2009\'dan beri deprecated. Modern karşılığı ip addr show ' + args[0] + ', adres eklemek için sudo ip addr add 10.0.0.5/24 dev ' + args[0])}\n`); } if (args.includes('up') || args.includes('down') || /^\d/.test(args[1] || '')) return this.isRoot ? fail(`SIOCSIFFLAGS: ${sysNote('ifconfig ile adres ve link değişikliği lab\'da simüle edilmiyor, sudo ip addr add 10.0.0.5/24 dev eth0 ve sudo ip link set eth0 up kullan')}`) : fail('SIOCSIFFLAGS: Operation not permitted'); return fail(`${args[0]}: error fetching interface information: Device not found`); }
-  return ok(r.out.replace(/\[ifconfig eskidi, ip addr kullanmaya alis\]/, sysNote("ifconfig net-tools paketinden, 2009'dan beri deprecated ve yeni kurulumlarda yok. Modern karşılığı ip addr, ip -br addr, ip link")));
+  if (args.length && !/^-a$/.test(args[0]) && !/^eth0$/.test(args[0])) { if (/^(eth1|eth2|wg0|docker0|lo)$/.test(args[0])) { const ipr = SYS_OLD.ip.call(this, ['addr', 'show', args[0]]); const inet = (/inet (\S+)/.exec(ipr.out || '') || [])[1] || ''; const [ip, len] = inet.split('/'); const mask = len ? [0, 0, 0, 0].map((x, i) => { const b = Math.max(0, Math.min(8, +len - i * 8)); return 256 - (1 << (8 - b)); }).join('.') : ''; return ok(`${args[0]}: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu ${args[0] === 'wg0' ? 1420 : args[0] === 'eth2' ? 1492 : args[0] === 'lo' ? 65536 : 1500}\n        inet ${ip}  netmask ${mask}${args[0] !== 'lo' && args[0] !== 'wg0' ? '  broadcast ' + ip.replace(/\d+$/, '255') : ''}\n\n${sysNote('ifconfig net-tools paketinden, 2009\'dan beri deprecated. Modern karşılığı ip addr show ' + args[0] + ', adres eklemek için sudo ip addr add 10.0.0.5/24 dev ' + args[0], 'ifconfig comes from the net-tools package, deprecated since 2009. The modern equivalent is ip addr show ' + args[0] + ', to add an address use sudo ip addr add 10.0.0.5/24 dev ' + args[0])}\n`); } if (args.includes('up') || args.includes('down') || /^\d/.test(args[1] || '')) return this.isRoot ? fail(`SIOCSIFFLAGS: ${sysNote('ifconfig ile adres ve link değişikliği lab\'da simüle edilmiyor, sudo ip addr add 10.0.0.5/24 dev eth0 ve sudo ip link set eth0 up kullan', 'Address and link changes with ifconfig are not simulated in the lab, use sudo ip addr add 10.0.0.5/24 dev eth0 and sudo ip link set eth0 up')}`) : fail('SIOCSIFFLAGS: Operation not permitted'); return fail(`${args[0]}: error fetching interface information: Device not found`); }
+  return ok(r.out.replace(/\[ifconfig eskidi, ip addr kullanmaya alis\]|\[ifconfig is outdated, get used to ip addr\]/, sysNote("ifconfig net-tools paketinden, 2009'dan beri deprecated ve yeni kurulumlarda yok. Modern karşılığı ip addr, ip -br addr, ip link", 'ifconfig comes from the net-tools package, deprecated since 2009 and missing on new installs. The modern equivalent is ip addr, ip -br addr, ip link')));
 };
 SYS_CMDS.netstat = function (args) {
   const r = SYS_OLD.netstat.call(this, args);
   const { flags } = parseOpts(args);
-  if (flags.has('r')) return ok('Kernel IP routing table\nDestination     Gateway         Genmask         Flags   MSS Window  irtt Iface\n0.0.0.0         192.168.1.1     0.0.0.0         UG        0 0          0 eth0\n10.8.0.0        0.0.0.0         255.255.255.0   U         0 0          0 wg0\n10.50.0.0       192.168.1.1     255.255.0.0     UG        0 0          0 eth0\n192.168.1.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0\n192.168.2.0     0.0.0.0         255.255.255.0   U         0 0          0 eth1\n\n' + sysNote('netstat -r yerine ip route') + '\n');
-  if (flags.has('i')) return ok('Kernel Interface table\nIface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg\ndocker0   1500        0      0      0 0             0      0      0      0 BMU\neth0      1500  2210488      0      0 0       1744021      0      0      0 BMRU\neth1      1500   981203   1843     12 0        744102      0      0      0 BMRU\neth2      1492   120330      0      0 0         98012      0      0      0 BMRU\nlo       65536   180211      0      0 0        180211      0      0      0 LRU\nwg0       1420    44102      0      0 0         40211      0      0      0 OPRU\n\n' + sysNote('netstat -i yerine ip -s link') + '\n');
+  if (flags.has('r')) return ok('Kernel IP routing table\nDestination     Gateway         Genmask         Flags   MSS Window  irtt Iface\n0.0.0.0         192.168.1.1     0.0.0.0         UG        0 0          0 eth0\n10.8.0.0        0.0.0.0         255.255.255.0   U         0 0          0 wg0\n10.50.0.0       192.168.1.1     255.255.0.0     UG        0 0          0 eth0\n192.168.1.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0\n192.168.2.0     0.0.0.0         255.255.255.0   U         0 0          0 eth1\n\n' + sysNote('netstat -r yerine ip route', 'use ip route instead of netstat -r') + '\n');
+  if (flags.has('i')) return ok('Kernel Interface table\nIface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg\ndocker0   1500        0      0      0 0             0      0      0      0 BMU\neth0      1500  2210488      0      0 0       1744021      0      0      0 BMRU\neth1      1500   981203   1843     12 0        744102      0      0      0 BMRU\neth2      1492   120330      0      0 0         98012      0      0      0 BMRU\nlo       65536   180211      0      0 0        180211      0      0      0 LRU\nwg0       1420    44102      0      0 0         40211      0      0      0 OPRU\n\n' + sysNote('netstat -i yerine ip -s link', 'use ip -s link instead of netstat -i') + '\n');
   const flagStr = [...flags].sort().join('');
   const ls = lines(r.out);
   const header = ls[0]; let rows = ls.slice(1);
@@ -2642,7 +2643,7 @@ SYS_CMDS.netstat = function (args) {
   const out = ['Active Internet connections ' + (flags.has('l') ? '(only servers)' : flags.has('a') ? '(servers and established)' : '(w/o servers)'), 'Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    '];
   rows.forEach(x => { const p = x.trim().split(/\s+/); const proto = p[0]; const state = p[1] === 'UNCONN' ? '' : p[1] === 'ESTAB' ? 'ESTABLISHED' : p[1]; const prog = (/pid=(\d+)/.exec(x) || [])[1]; const name = (/\("([^"]+)"/.exec(x) || [])[1]; out.push(`${sysPad(proto, 5)} ${sysLpad(p[2], 6)} ${sysLpad(p[3], 6)} ${sysPad(p[4].replace('%lo', ''), 23)} ${sysPad(p[5], 23)} ${sysPad(state, 11)} ${prog ? prog + '/' + name : flags.has('p') && !this.isRoot ? '-' : '-'}`); });
   void header; void flagStr;
-  return ok(join(out) + '\n' + sysNote(`netstat net-tools paketinden, deprecated. Modern karşılığı ss -tulpn${!this.isRoot && flags.has('p') ? '. Başkasının PID bilgisi için sudo' : ''}`) + '\n');
+  return ok(join(out) + '\n' + sysNote(`netstat net-tools paketinden, deprecated. Modern karşılığı ss -tulpn${!this.isRoot && flags.has('p') ? '. Başkasının PID bilgisi için sudo' : ''}`, `netstat comes from the net-tools package and is deprecated. The modern equivalent is ss -tulpn${!this.isRoot && flags.has('p') ? '. For PIDs of other users use sudo' : ''}`) + '\n');
 };
 SYS_CMDS.ip = function (args) {
   sysEnsure(this);
@@ -2652,13 +2653,13 @@ SYS_CMDS.ip = function (args) {
     const spec = rest[1]; const di = rest.indexOf('dev'); const dev = di >= 0 ? rest[di + 1] : null;
     if (!spec) return fail('Command line is not complete. Try option "help" or "--help" for more information.', 1);
     if (!/^\d+\.\d+\.\d+\.\d+(\/\d+)?$/.test(spec)) return fail(`Error: any valid prefix is expected rather than "${spec}".`, 1);
-    if (!dev) return fail('Not enough information: "dev" argument is required.\n' + sysNote('Adres tek başına yetmez, hangi interface\'e eklendiği de gerekir: sudo ip addr add ' + spec + (spec.includes('/') ? '' : '/24') + ' dev eth0'), 2);
+    if (!dev) return fail('Not enough information: "dev" argument is required.\n' + sysNote('Adres tek başına yetmez, hangi interface\'e eklendiği de gerekir: sudo ip addr add ' + spec + (spec.includes('/') ? '' : '/24') + ' dev eth0', 'An address alone is not enough, you also need the interface it goes on, sudo ip addr add ' + spec + (spec.includes('/') ? '' : '/24') + ' dev eth0'), 2);
     if (!['eth0', 'eth1', 'eth2', 'lo', 'docker0', 'wg0'].includes(dev)) return fail(`Cannot find device "${dev}"`, 1);
-    if (!this.isRoot) return fail('RTNETLINK answers: Operation not permitted\n' + sysNote('Interface ayarı root ister, sudo ip addr ' + rest[0] + ' ' + spec + ' dev ' + dev), 2);
+    if (!this.isRoot) return fail('RTNETLINK answers: Operation not permitted\n' + sysNote('Interface ayarı root ister, sudo ip addr ' + rest[0] + ' ' + spec + ' dev ' + dev, 'Interface settings need root, sudo ip addr ' + rest[0] + ' ' + spec + ' dev ' + dev), 2);
     const st = sysState(this); const extra = st.extra ? st.extra.split(',').filter(Boolean) : [];
     const full = spec.includes('/') ? spec : spec + '/32';
     const key = full + '@' + dev;
-    if (rest[0] === 'add') { if (extra.includes(key)) return fail('RTNETLINK answers: File exists', 2); extra.push(key); st.extra = extra.join(','); sysSetState(this, st); return ok(spec.includes('/') ? '' : sysNote('Prefix vermedin, kernel /32 yazdı yani tek adres, o subnet için route oluşmadı. Genelde istenen ' + spec + '/24') + '\n'); }
+    if (rest[0] === 'add') { if (extra.includes(key)) return fail('RTNETLINK answers: File exists', 2); extra.push(key); st.extra = extra.join(','); sysSetState(this, st); return ok(spec.includes('/') ? '' : sysNote('Prefix vermedin, kernel /32 yazdı yani tek adres, o subnet için route oluşmadı. Genelde istenen ' + spec + '/24', 'You gave no prefix, so the kernel used /32, a single address, and no route was created for that subnet. Usually you want ' + spec + '/24') + '\n'); }
     const idx = extra.findIndex(e => e === key || e.split('@')[0].split('/')[0] === spec.split('/')[0] && e.endsWith('@' + dev));
     if (idx < 0) return fail('RTNETLINK answers: Cannot assign requested address', 2);
     extra.splice(idx, 1); st.extra = extra.join(','); sysSetState(this, st); return ok();
@@ -2715,11 +2716,11 @@ SYS_CMDS.set = function (args) {
     this.positional = args.slice(i); break;
   }
   st.setopts = [...opts].join(','); sysSetState(this, st);
-  if (opts.has('e')) notes.push('set -e açık, script içinde bir komut sıfır dışı exit code verirse script orada durur');
-  if (opts.has('x')) notes.push('set -x açık, script içinde her komut çalışmadan önce + ile ekrana yazılır, debug için birebir');
-  if (opts.has('u')) notes.push('set -u açık, tanımsız değişken kullanımı hata verir');
-  if (opts.has('pipefail')) notes.push('pipefail açık, pipe içindeki herhangi bir komut fail olursa pipe fail sayılır');
-  return ok(notes.length ? sysNote(notes.join('. ') + ". Lab'ın interaktif satırında bu bayraklar sadece kaydedilir, bash script başına set -euxo pipefail koymak iyi alışkanlık") + '\n' : '');
+  if (opts.has('e')) notes.push(lt('set -e açık, script içinde bir komut sıfır dışı exit code verirse script orada durur', 'set -e is on, if a command in a script exits non zero the script stops there'));
+  if (opts.has('x')) notes.push(lt('set -x açık, script içinde her komut çalışmadan önce + ile ekrana yazılır, debug için birebir', 'set -x is on, each command in a script is printed with + before it runs, perfect for debugging'));
+  if (opts.has('u')) notes.push(lt('set -u açık, tanımsız değişken kullanımı hata verir', 'set -u is on, using an undefined variable is an error'));
+  if (opts.has('pipefail')) notes.push(lt('pipefail açık, pipe içindeki herhangi bir komut fail olursa pipe fail sayılır', 'pipefail is on, if any command in a pipe fails the whole pipe fails'));
+  return ok(notes.length ? sysNote(notes.join('. ') + ". Lab'ın interaktif satırında bu bayraklar sadece kaydedilir, bash script başına set -euxo pipefail koymak iyi alışkanlık", notes.join('. ') + '. On the interactive lab prompt these flags are only recorded, putting set -euxo pipefail at the top of a bash script is a good habit') + '\n' : '');
 };
 SYS_CMDS.readonly = function (args) {
   sysEnsure(this);
@@ -2733,7 +2734,7 @@ SYS_CMDS.declare = function (args) {
   const { flags, rest } = parseOpts(args);
   if (flags.has('p') || (!rest.length && !flags.size)) { const list = rest.length ? rest : Object.keys(this.env).sort(); const out = []; let err = ''; for (const k of list) { if (this.env[k] === undefined) { err += `bash: declare: ${k}: not found\n`; continue; } out.push(`declare -${this.sysReadonly.has(k) ? 'r' : ''}${(this.sysInt || new Set()).has(k) ? 'i' : ''}${k === k.toUpperCase() && ['HOME', 'PATH', 'USER', 'SHELL', 'LANG', 'EDITOR', 'HOSTNAME'].includes(k) ? 'x' : ''}${this.sysReadonly.has(k) || (this.sysInt || new Set()).has(k) ? '' : '-'} ${k}="${this.env[k]}"`); } return { out: join(out), err, code: err ? 1 : 0 }; }
   if (flags.has('f') || flags.has('F')) { const names = rest.length ? rest : Object.keys(this.funcs); const out = []; names.forEach(n => { if (this.funcs[n]) out.push(flags.has('F') ? `declare -f ${n}` : `${n} () \n{ \n    ...\n}`); }); return { out: join(out), err: '', code: 0 }; }
-  if (flags.has('a') || flags.has('A')) return ok(sysNote('Bash dizileri bu lab\'da simüle edilmiyor, düz değişken ve for döngüsü kullan') + '\n');
+  if (flags.has('a') || flags.has('A')) return ok(sysNote('Bash dizileri bu lab\'da simüle edilmiyor, düz değişken ve for döngüsü kullan', 'Bash arrays are not simulated in this lab, use plain variables and a for loop') + '\n');
   this.sysInt = this.sysInt || new Set();
   let err = '';
   for (const a of rest) {

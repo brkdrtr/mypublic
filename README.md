@@ -27,6 +27,10 @@ Oynayarak Linux öğrenme. Tarayıcı içinde çalışan sanal bir Ubuntu kabuğ
 - XP, seviye, gün serisi, rozetler, quiz, aranabilir komut sözlüğü
 - iPhone klavyesi için Tab, ok tuşları ve özel karakter çubuğu
 
+## Dil
+
+Linux Lab ve NetDevOps Lab Türkçe ve İngilizce. Profil ayarından ya da üst bardaki TR EN düğmesinden seçilir, profil başına saklanır ve senkronla taşınır. Görevler, 408 senaryo varyantı, quiz, rozetler, komut sözlüğü, açıklama motoru, arayüz ve shell mesajları iki dilli. Çeviriler ayrı dosyalarda, `linux-lab/I18N.md` biçimi, `node tests/i18n.test.js` kapsamı denetler. İngilizce dil seçeneği.
+
 ## A2 Nederlands
 
 Inburgeringsexamen A2 hazırlığı. İçerik Hollandaca, arayüz Türkçe veya İngilizce.
@@ -70,6 +74,9 @@ Modül sözleşmesi `netdevops-lab/CONTRACT.md` içinde. Test `tests/netdevops.t
 python3 -m http.server 8765 &
 node tests/linux.test.js
 node tests/explain.test.js
+node tests/i18n.test.js
+node tests/i18n.test.js netdevops
+node tests/linux.test.js --lang=en
 NODE_PATH=$(npm root -g) node tests/linux.e2e.js
 NODE_PATH=$(npm root -g) node tests/netdevops.test.js
 NODE_PATH=$(npm root -g) node tests/netdevops.e2e.js

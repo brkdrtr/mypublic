@@ -304,24 +304,24 @@ SIMA_reset();
     const sh = this;
     const sub = args[0] || 'status';
     const s = SIMA_STORE;
-    if (sub === 'reset') { SIMA_reset(); return ok('api.lab reset, 60 device seeded, token ve job listesi temizlendi, rate limit ve flaky sayaclari sifirlandi\n'); }
-    if (sub === 'seed') { s.devices = SIMA_seedDevices(); s.nextId = 61; return ok('api.lab device listesi yeniden seed edildi, 60 device, token ve job listesi korundu\n'); }
+    if (sub === 'reset') { SIMA_reset(); return ok(lt('api.lab reset, 60 device seeded, token ve job listesi temizlendi, rate limit ve flaky sayaclari sifirlandi\n', 'api.lab reset, 60 devices seeded, tokens and jobs cleared, rate limit and flaky counters reset\n')); }
+    if (sub === 'seed') { s.devices = SIMA_seedDevices(); s.nextId = 61; return ok(lt('api.lab device listesi yeniden seed edildi, 60 device, token ve job listesi korundu\n', 'api.lab device list reseeded, 60 devices, tokens and jobs kept\n')); }
     if (sub === 'log') {
       const n = Math.min(parseInt(args[1] || '20', 10) || 20, 100);
       const rows = s.log.slice(-n);
-      if (!rows.length) return ok('api.lab log bos, henuz istek yok\n');
+      if (!rows.length) return ok(lt('api.lab log bos, henuz istek yok\n', 'api.lab log is empty, no requests yet\n'));
       const lines = rows.map(r => `${String(r.seq).padStart(4)}  ${r.t.slice(11, 19)}  ${r.method.padEnd(6)} ${String(r.status).padEnd(3)} ${r.auth ? 'auth ' : '     '} ${r.path}${r.ifMatch ? '  If-Match: ' + r.ifMatch : ''}`);
       return ok(`${'seq'.padStart(4)}  time      method status        path\n` + lines.join('\n') + `\n${rows.length} of ${s.log.length} requests, ${s.stats.errors} errors total, ${s.rl.limited} rate limited\n`);
     }
     if (sub === 'status') {
       return ok([`api.lab  https://api.lab/v1  version 2.4.1`, `devices  ${s.devices.length} (${SIMA_STATUSES.map(x => x + ' ' + s.devices.filter(d => d.status === x).length).join(', ')})`, `tokens   ${Object.keys(s.tokens).length} active`, `jobs     ${s.jobs.length} (${s.jobs.filter(j => j.status === 'done').length} done)`, `deploy   staging ${s.deployments.staging.version}, production ${s.deployments.production.version}`, `requests ${s.stats.requests}, errors ${s.stats.errors}, rate limited ${s.rl.limited}, rate limit ${s.rl.enabled ? 'on' : 'off'}`, `flaky    ${s.flaky.failed ? 'armed again after api-lab reset, /v1/flaky now returns 200' : '/v1/flaky will return 500 once'}`].join('\n') + '\n');
     }
-    if (sub === 'jobs') { if (!s.jobs.length) return ok('job yok\n'); return ok(s.jobs.map(j => `${j.id}  ${j.type.padEnd(9)} ${j.status.padEnd(8)} polls ${j.polls}  ${JSON.stringify(j.params)}`).join('\n') + '\n'); }
+    if (sub === 'jobs') { if (!s.jobs.length) return ok(lt('job yok\n', 'no jobs\n')); return ok(s.jobs.map(j => `${j.id}  ${j.type.padEnd(9)} ${j.status.padEnd(8)} polls ${j.polls}  ${JSON.stringify(j.params)}`).join('\n') + '\n'); }
     if (sub === 'devices') { const site = args[1]; return ok(s.devices.filter(d => !site || d.site === site).map(d => `${String(d.id).padStart(3)}  ${d.hostname.padEnd(16)} ${d.site.padEnd(8)} ${d.model.padEnd(16)} ${d.mgmt_ip.padEnd(14)} ${d.status}`).join('\n') + '\n'); }
-    if (sub === 'ratelimit') { if (args[1] === 'off') { s.rl.enabled = false; return ok('rate limit kapali\n'); } if (args[1] === 'on') { s.rl.enabled = true; s.rl.times = []; return ok('rate limit acik, 2 saniyelik pencerede 7. istek 429 alir\n'); } return ok(`rate limit ${s.rl.enabled ? 'on' : 'off'}, ${s.rl.limited} istek 429 aldi\n`); }
-    if (sub === 'flaky') { s.flaky = { failed: false, calls: 0 }; return ok('/v1/flaky yeniden kuruldu, ilk istek 500, sonraki 200\n'); }
+    if (sub === 'ratelimit') { if (args[1] === 'off') { s.rl.enabled = false; return ok(lt('rate limit kapali\n', 'rate limit off\n')); } if (args[1] === 'on') { s.rl.enabled = true; s.rl.times = []; return ok(lt('rate limit acik, 2 saniyelik pencerede 7. istek 429 alir\n', 'rate limit on, the 7th request in a 2 second window gets 429\n')); } return ok(lt(`rate limit ${s.rl.enabled ? 'on' : 'off'}, ${s.rl.limited} istek 429 aldi\n`, `rate limit ${s.rl.enabled ? 'on' : 'off'}, ${s.rl.limited} requests got 429\n`)); }
+    if (sub === 'flaky') { s.flaky = { failed: false, calls: 0 }; return ok(lt('/v1/flaky yeniden kuruldu, ilk istek 500, sonraki 200\n', '/v1/flaky rearmed, first request 500, then 200\n')); }
     if (sub === 'docs') { const r = LAB.http({ method: 'GET', url: SIMA_BASE + '/v1/docs' }); return ok(r.body); }
-    return fail(`api-lab: bilinmeyen alt komut ${sub}. Kullanim, api-lab [status|log [n]|reset|seed|jobs|devices [site]|ratelimit on|off|flaky|docs]`);
+    return fail(lt(`api-lab: bilinmeyen alt komut ${sub}. Kullanim, api-lab [status|log [n]|reset|seed|jobs|devices [site]|ratelimit on|off|flaky|docs]`, `api-lab: unknown subcommand ${sub}. Usage, api-lab [status|log [n]|reset|seed|jobs|devices [site]|ratelimit on|off|flaky|docs]`));
   }
   registerExt({
     commands: { 'api-lab': apiLab },

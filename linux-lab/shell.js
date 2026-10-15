@@ -734,7 +734,7 @@ class Shell {
     if (!n) return fail(`bash: ${path}: No such file or directory`, 127);
     if (n.t === 'd') return fail(`bash: ${path}: Is a directory`, 126);
     if (!this.canRead(n) || (needExec && !this.canExec(n))) return fail(`bash: ${path}: Permission denied`, 126);
-    if (n.d.startsWith('\x7fELF')) return fail(`${path}: binary çalıştırmak bu lab'da desteklenmiyor`);
+    if (n.d.startsWith('\x7fELF')) return fail(`${path}: ` + lt("binary çalıştırmak bu lab'da desteklenmiyor", 'running binaries is not supported in this lab'));
     if (this.depth > 6) return fail('bash: maximum recursion');
     const out = []; const err = [];
     const savedPos = this.positional;
@@ -1100,22 +1100,24 @@ function evalTest(sh, args) {
   return expr(args);
 }
 
-const SUGGEST = {
-  dir: "Linux'ta ls kullanılır",
-  cls: 'ekranı temizlemek için clear',
-  ipconfig: "Linux'ta ip addr kullanılır",
-  ifconfig: 'modern sistemlerde ip addr tercih edilir',
-  type: 'dosya okumak için cat',
-  copy: 'kopyalamak için cp',
-  move: 'taşımak ya da rename için mv',
-  del: 'silmek için rm',
-  netstat: 'modern karşılığı ss -tulpn',
-  tracert: "Linux'ta traceroute kullanılır",
-  service: 'systemctl status servis_adi',
-  apt: "bu lab'da package kurulumu yok, gerçek Ubuntu'da sudo apt install paket",
-  python: "python3 bu lab'da yok, gerçek sistemde var",
-  vi: 'nano ya da vim dene',
-};
+/* Bilinmeyen komut ipuclari, her deger [tr, en]. Getter okundugu anda aktif dili doner */
+const SUGGEST = {};
+Object.entries({
+  dir: ["Linux'ta ls kullanılır", 'On Linux use ls'],
+  cls: ['ekranı temizlemek için clear', 'use clear to clear the screen'],
+  ipconfig: ["Linux'ta ip addr kullanılır", 'On Linux use ip addr'],
+  ifconfig: ['modern sistemlerde ip addr tercih edilir', 'modern systems prefer ip addr'],
+  type: ['dosya okumak için cat', 'use cat to read a file'],
+  copy: ['kopyalamak için cp', 'use cp to copy'],
+  move: ['taşımak ya da rename için mv', 'use mv to move or rename'],
+  del: ['silmek için rm', 'use rm to delete'],
+  netstat: ['modern karşılığı ss -tulpn', 'the modern equivalent is ss -tulpn'],
+  tracert: ["Linux'ta traceroute kullanılır", 'On Linux use traceroute'],
+  service: ['systemctl status servis_adi', 'systemctl status service_name'],
+  apt: ["bu lab'da package kurulumu yok, gerçek Ubuntu'da sudo apt install paket", 'this lab has no package installs, on real Ubuntu run sudo apt install package'],
+  python: ["python3 bu lab'da yok, gerçek sistemde var", 'python3 is not in this lab, a real system has it'],
+  vi: ['nano ya da vim dene', 'try nano or vim'],
+}).forEach(([k, [tr, en]]) => Object.defineProperty(SUGGEST, k, { get: () => lt(tr, en), set(v) { Object.defineProperty(SUGGEST, k, { value: v, writable: true, enumerable: true, configurable: true }); }, enumerable: true, configurable: true }));
 
 function readInputs(sh, files, stdin, cmd) {
   if (!files.length) return { texts: [stdin || ''], errs: '' };
@@ -1211,16 +1213,17 @@ function cowsay(msg) {
   return `${top}\n< ${msg} >\n${bot}\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||\n`;
 }
 
+/* her oge [tr, en], fortune cagrildiginda aktif dil secilir */
 const FORTUNES = [
-  "Bir sysadmin'in en iyi arkadaşı man page'dir.",
-  "rm -rf yazmadan önce iki kez düşün, enter'a bir kez bas.",
-  'It\'s always DNS.',
-  "Linux'ta her şey bir dosyadır. Printer bile.",
-  "Backup'ı olmayan veri, silinmeyi bekleyen veridir.",
-  'İyi bir pipe, bin tıklamaya bedeldir.',
-  'chmod 777 bir çözüm değil, bir itiraftır.',
-  'Çalışıyorsa dokunma, dokunduysan commit et.',
-  "BGP'nin bile kötü günleri olur, tıpkı bir sysadmin gibi.",
+  ["Bir sysadmin'in en iyi arkadaşı man page'dir.", "A sysadmin's best friend is the man page."],
+  ["rm -rf yazmadan önce iki kez düşün, enter'a bir kez bas.", 'Think twice before typing rm -rf, press enter once.'],
+  ['It\'s always DNS.', 'It\'s always DNS.'],
+  ["Linux'ta her şey bir dosyadır. Printer bile.", 'On Linux everything is a file. Even the printer.'],
+  ["Backup'ı olmayan veri, silinmeyi bekleyen veridir.", 'Data without a backup is data waiting to be deleted.'],
+  ['İyi bir pipe, bin tıklamaya bedeldir.', 'A good pipe is worth a thousand clicks.'],
+  ['chmod 777 bir çözüm değil, bir itiraftır.', 'chmod 777 is not a fix, it is a confession.'],
+  ['Çalışıyorsa dokunma, dokunduysan commit et.', 'If it works do not touch it, if you touched it commit it.'],
+  ["BGP'nin bile kötü günleri olur, tıpkı bir sysadmin gibi.", 'Even BGP has bad days, just like a sysadmin.'],
 ];
 
 const COMMANDS = {
@@ -1361,7 +1364,7 @@ const COMMANDS = {
     const { flags, rest } = parseOpts(args);
     const rec = flags.has('r') || flags.has('R'), force = flags.has('f');
     if (rec && rest.some(r => this.resolve(r) === '/')) {
-      return fail('rm: \'/\' üzerinde rm çalıştırmak felaket. İyi ki burası bir lab. Gerçek sistemde --no-preserve-root bile yazdırmazlar adama. 😅');
+      return fail('rm: ' + lt('\'/\' üzerinde rm çalıştırmak felaket. İyi ki burası bir lab. Gerçek sistemde --no-preserve-root bile yazdırmazlar adama. 😅', "running rm on '/' is a disaster. Luckily this is a lab. On a real system nobody would even let you type --no-preserve-root. 😅"));
     }
     if (!rest.length) return fail('rm: missing operand');
     let err = '';
@@ -1372,7 +1375,7 @@ const COMMANDS = {
       if (n.t === 'd' && !rec) { err += `rm: cannot remove '${f}': Is a directory\n`; continue; }
       const { dir, name } = this.parent(abs);
       if (!this.canWrite(dir)) { err += `rm: cannot remove '${f}': Permission denied\n`; continue; }
-      if (abs === HOME || abs === this.cwd) { err += `rm: '${f}' silinmedi, ya bu directory'nin içindesin ya da burası senin home directory'n\n`; continue; }
+      if (abs === HOME || abs === this.cwd) { err += lt(`rm: '${f}' silinmedi, ya bu directory'nin içindesin ya da burası senin home directory'n\n`, `rm: '${f}' was not removed, either you are inside this directory or it is your home directory\n`); continue; }
       delete dir.c[name];
     }
     return { out: '', err, code: err ? 1 : 0 };
@@ -1445,7 +1448,7 @@ const COMMANDS = {
     if (vals.n) { if (vals.n.startsWith('+')) fromStart = true; n = parseInt(vals.n.replace('+', ''), 10); }
     const { texts, errs } = readInputs(this, rest, stdin, 'tail');
     const out = texts.map(t => { const l = lines(t); return join(fromStart ? l.slice(n - 1) : l.slice(Math.max(0, l.length - n))); }).join('');
-    const extra = flags.has('f') ? "\n[tail -f dosyayı canlı takip eder. Bu lab'da dosya değişmediği için burada duruyoruz]\n" : '';
+    const extra = flags.has('f') ? lt("\n[tail -f dosyayı canlı takip eder. Bu lab'da dosya değişmediği için burada duruyoruz]\n", '\n[tail -f follows the file live. Files do not change in this lab, so we stop here]\n') : '';
     return { out: out + extra, err: errs, code: errs ? 1 : 0 };
   },
 
@@ -1620,7 +1623,7 @@ const COMMANDS = {
             if (idx + 1 >= a && idx + 1 <= b) { if (m[3] === 'd') del = true; else { out.push(line); printed = true; } }
           } else if ((m = /^\$([dp])$/.exec(c))) {
             if (idx === ls.length - 1) { if (m[1] === 'd') del = true; else out.push(line); }
-          } else throw new Error("sed: bu lab'da desteklenmeyen expression, " + c);
+          } else throw new Error('sed: ' + lt("bu lab'da desteklenmeyen expression, ", 'expression not supported in this lab, ') + c);
         }
         if (!del && !quiet) out.push(line);
         void printed;
@@ -1665,7 +1668,7 @@ const COMMANDS = {
     }
     if ((m = /^\s*END\s*\{\s*print\s+NR\s*\}\s*$/.exec(prog))) return ok(ls.length + '\n');
     m = /^\s*(?:\/(.*?)\/|(NR|NF|\$\d+)\s*(==|!=|>=|<=|>|<)\s*("?[^{"]*"?))?\s*(?:\{\s*(.*?)\s*\})?\s*$/.exec(prog);
-    if (!m) return fail("awk: bu lab'da desteklenen pattern'ler /desen/ {print $1}, NR==2, -F, toplam için {s+=$2} END {print s}");
+    if (!m) return fail('awk: ' + lt("bu lab'da desteklenen pattern'ler /desen/ {print $1}, NR==2, -F, toplam için {s+=$2} END {print s}", 'patterns supported in this lab are /regex/ {print $1}, NR==2, -F, and for a sum {s+=$2} END {print s}'));
     const [, reSrc, lhs, op, rhsRaw, action] = m;
     const re = reSrc !== undefined ? new RegExp(reSrc) : null;
     ls.forEach((l, i) => {
@@ -1788,7 +1791,7 @@ const COMMANDS = {
 
   sudo(args, stdin) {
     if (!args.length) return fail('usage: sudo command');
-    if (args[0] === '-i' || args[0] === 'su' || (args[0] === '-s')) return ok("Interactive root shell bu lab'da kapalı. Her komutun başına sudo yazmak iyi bir alışkanlık.\n");
+    if (args[0] === '-i' || args[0] === 'su' || (args[0] === '-s')) return ok(lt("Interactive root shell bu lab'da kapalı. Her komutun başına sudo yazmak iyi bir alışkanlık.\n", 'The interactive root shell is disabled in this lab. Putting sudo before each command is a good habit.\n'));
     const was = this.isRoot;
     this.isRoot = true;
     try {
@@ -1796,7 +1799,7 @@ const COMMANDS = {
     } finally { this.isRoot = was; }
   },
 
-  su() { return fail("su: Authentication failure. Bu lab'da sudo kullan."); },
+  su() { return fail('su: Authentication failure. ' + lt("Bu lab'da sudo kullan.", 'Use sudo in this lab.')); },
 
   whoami() { return ok(this.user + '\n'); },
   id() { return ok(this.isRoot ? 'uid=0(root) gid=0(root) groups=0(root)\n' : 'uid=1000(burak) gid=1000(burak) groups=1000(burak),4(adm),27(sudo),999(docker)\n'); },
@@ -1866,7 +1869,7 @@ const COMMANDS = {
     let line;
     if (io && io.lines) { if (!io.lines.length) return { out: '', err: '', code: 1 }; line = io.lines.shift(); }
     else if (stdin != null) { const ls = lines(stdin); if (!ls.length) return { out: '', err: '', code: 1 }; line = ls[0]; }
-    else return fail('read: bu lab\'da klavyeden okuma yok. Dosyadan oku, ornek while read l; do ...; done < dosya', 1);
+    else return fail('read: ' + lt('bu lab\'da klavyeden okuma yok. Dosyadan oku, ornek while read l; do ...; done < dosya', 'this lab cannot read from the keyboard. Read from a file, for example while read l; do ...; done < file'), 1);
     void flags; void vals;
     const names = rest.length ? rest : ['REPLY'];
     const parts = line.trim().split(/\s+/);
@@ -1890,17 +1893,17 @@ const COMMANDS = {
     if (flags.has('e')) { this.ui.editor = { path: '__crontab__', display: 'crontab', content: this.crontab || '# m h dom mon dow command\n', root: false }; return ok(); }
     if (rest[0] === '-') { this.crontab = stdin || ''; return ok(); }
     if (rest[0]) { const r = this.readFile(rest[0], 'crontab'); if (r.err) return fail(r.err); this.crontab = r.data; return ok(); }
-    return fail('usage: crontab -l | -e | -r | dosya');
+    return fail('usage: crontab -l | -e | -r | ' + lt('dosya', 'file'));
   },
   /* Lab'da zaman akmaz. Bu komut bir cron dakikasini simule eder, crontab'daki her satir bir kez calisir */
   'cron-tick'(args) {
     const entries = lines(this.crontab).filter(l => l.trim() && !l.trim().startsWith('#'));
-    if (!entries.length) return fail('cron-tick: crontab bos, once crontab -e ile bir satir ekle');
+    if (!entries.length) return fail('cron-tick: ' + lt('crontab bos, once crontab -e ile bir satir ekle', 'crontab is empty, add a line with crontab -e first'));
     const out = [];
     const ts = new Date().toTimeString().slice(0, 8);
     for (const e of entries) {
       const parts = e.trim().split(/\s+/);
-      if (parts.length < 6) { out.push(`cron-tick: gecersiz satir, 5 zaman alani ve komut bekleniyor: ${e}`); continue; }
+      if (parts.length < 6) { out.push(lt(`cron-tick: gecersiz satir, 5 zaman alani ve komut bekleniyor: ${e}`, `cron-tick: invalid line, expected 5 time fields and a command, ${e}`)); continue; }
       const cmd = parts.slice(5).join(' ');
       const buf = []; const errs = [];
       const code = this.runScriptText(cmd, (t, cls) => (cls === 'err' ? errs : buf).push(t), null, 'cron');
@@ -1913,7 +1916,7 @@ const COMMANDS = {
   },
   false() { return { out: '', err: '', code: 1 }; },
   sleep() { return ok(); },
-  exit() { return ok('logout\n[Bu bir lab, kaçış yok 😄 Görev ekranına dönmek için alttaki sekmeleri kullan]\n'); },
+  exit() { return ok('logout\n' + lt('[Bu bir lab, kaçış yok 😄 Görev ekranına dönmek için alttaki sekmeleri kullan]\n', '[This is a lab, there is no escape 😄 Use the tabs below to return to the missions]\n')); },
   seq(args) {
     const n = args.map(Number);
     let [a, step, b] = n.length === 1 ? [1, 1, n[0]] : n.length === 2 ? [n[0], 1, n[1]] : n;
@@ -1932,7 +1935,7 @@ const COMMANDS = {
     const cmd = args.length ? args : ['echo'];
     return this.execSimple(cmd.concat(items), null, {});
   },
-  bash(args, stdin) { if (!args.length) return ok("Zaten bash shell'inin içindesin 🙂\n"); if (args[0] === '-c') return this.runScriptText(args.slice(1).join(' '), null, stdin) === undefined ? ok() : (() => { const buf = []; const errs = []; const c = this.runScriptText(args.slice(1).join(' '), (t, cls) => (cls === 'err' ? errs : buf).push(t), stdin); return { out: buf.join(''), err: errs.join(''), code: c }; })(); return this.runScript(args[0], args.slice(1), false, stdin); },
+  bash(args, stdin) { if (!args.length) return ok(lt("Zaten bash shell'inin içindesin 🙂\n", 'You are already inside a bash shell 🙂\n')); if (args[0] === '-c') return this.runScriptText(args.slice(1).join(' '), null, stdin) === undefined ? ok() : (() => { const buf = []; const errs = []; const c = this.runScriptText(args.slice(1).join(' '), (t, cls) => (cls === 'err' ? errs : buf).push(t), stdin); return { out: buf.join(''), err: errs.join(''), code: c }; })(); return this.runScript(args[0], args.slice(1), false, stdin); },
   sh(args, stdin) { return COMMANDS.bash.call(this, args, stdin); },
   source(args) { return this.runScript(args[0] || '', args.slice(1), false); },
 
@@ -1941,10 +1944,13 @@ const COMMANDS = {
     if (!c) return fail('What manual page do you want?');
     const info = manualOf(c);
     if (!info) return fail(`No manual entry for ${c}`, 16);
-    return ok(`${c.toUpperCase()}(1)\n\nAD\n    ${c}. ${info.d}\n\nKULLANIM\n${info.u.map(u => '    ' + u).join('\n')}\n\nÖRNEKLER\n${info.e.map(e => '    $ ' + e).join('\n')}\n`);
+    /* Ingilizce modda aciklama satiri Ingilizce komut sozlugunden gelir, varsa */
+    const enX = LAB_LANG === 'en' && typeof I18N_EN !== 'undefined' && I18N_EN.x && I18N_EN.x[c];
+    const desc = enX && typeof enX.d === 'string' ? enX.d : info.d;
+    return ok(`${c.toUpperCase()}(1)\n\n${lt('AD', 'NAME')}\n    ${c}. ${desc}\n\n${lt('KULLANIM', 'USAGE')}\n${info.u.map(u => '    ' + u).join('\n')}\n\n${lt('ÖRNEKLER', 'EXAMPLES')}\n${info.e.map(e => '    $ ' + e).join('\n')}\n`);
   },
   help() {
-    return ok("Linux Lab shell'i. Desteklenen komutlar\n\n" + Object.keys(allCommands()).filter(c => !c.startsWith('_')).sort().join('  ') + '\n\nBir komutun detayı için man komut yaz, örnek man grep\nPipe |, redirect > >> <, && || ; ve $(komut) destekleniyor.\n');
+    return ok(lt("Linux Lab shell'i. Desteklenen komutlar\n\n", 'Linux Lab shell. Supported commands\n\n') + Object.keys(allCommands()).filter(c => !c.startsWith('_')).sort().join('  ') + lt('\n\nBir komutun detayı için man komut yaz, örnek man grep\nPipe |, redirect > >> <, && || ; ve $(komut) destekleniyor.\n', '\n\nFor details on a command type man command, for example man grep\nPipes |, redirects > >> <, && || ; and $(command) are supported.\n'));
   },
 
   ps(args) {
@@ -1964,7 +1970,7 @@ const COMMANDS = {
       `Tasks: ${this.procs.length} total`, `%Cpu(s): ${Math.min(99.9, load).toFixed(1)} us`, '',
       '    PID USER       %CPU %MEM COMMAND'];
     sorted.forEach(p => out.push(`${String(p.pid).padStart(7)} ${p.user.padEnd(10)} ${p.cpu.toFixed(1).padStart(4)} ${p.mem.toFixed(1).padStart(4)} ${p.cmd.split(' ')[0]}`));
-    out.push('', '[Gerçek top canlı güncellenir, q ile çıkılır. Burada tek bir snapshot var]');
+    out.push('', lt('[Gerçek top canlı güncellenir, q ile çıkılır. Burada tek bir snapshot var]', '[Real top updates live, press q to quit. This is a single snapshot]'));
     return ok(join(out));
   },
   kill(args) {
@@ -1975,9 +1981,9 @@ const COMMANDS = {
       const i = this.procs.findIndex(p => p.pid === pid);
       if (i < 0) { err += `bash: kill: (${pid}) - No such process\n`; continue; }
       const p = this.procs[i];
-      if (pid === 1) { err += `bash: kill: (1) - init process'ini kill etmek sistemi kapatır. Lab izin vermiyor.\n`; continue; }
+      if (pid === 1) { err += 'bash: kill: (1) - ' + lt("init process'ini kill etmek sistemi kapatır. Lab izin vermiyor.\n", 'killing the init process shuts the system down. The lab does not allow it.\n'); continue; }
       if (!this.isRoot && p.user !== USER) { err += `bash: kill: (${pid}) - Operation not permitted\n`; continue; }
-      if (pid === 733) { err += `bash: kill: kendi shell'ini kill etmeye kalkma 🙂\n`; continue; }
+      if (pid === 733) { err += 'bash: kill: ' + lt("kendi shell'ini kill etmeye kalkma 🙂\n", 'do not try to kill your own shell 🙂\n'); continue; }
       this.procs.splice(i, 1);
     }
     return { out: '', err, code: err ? 1 : 0 };
@@ -2006,7 +2012,7 @@ const COMMANDS = {
   systemctl(args) {
     const [action, unitRaw] = args.filter(a => !a.startsWith('-'));
     const unit = svcName(unitRaw);
-    if (!action) return fail('systemctl list-units veya systemctl status servis');
+    if (!action) return fail(lt('systemctl list-units veya systemctl status servis', 'systemctl list-units or systemctl status service'));
     if (action === 'list-units' || action === '--failed' || args.includes('--failed')) {
       return ok(join(Object.entries(this.services).filter(([k]) => k !== 'ssh').map(([k, v]) => `${(k + '.service').padEnd(20)} loaded ${v === 'active' ? 'active   running' : v === 'failed' ? 'failed   failed ' : 'inactive dead   '}`)));
     }
@@ -2017,12 +2023,12 @@ const COMMANDS = {
       const dot = st === 'active' ? '●' : '×';
       const lines2 = [`${dot} ${unit}.service`, `     Loaded: loaded (/lib/systemd/system/${unit}.service; enabled)`,
         `     Active: ${st === 'active' ? 'active (running) since today' : st === 'failed' ? 'failed (Result: exit-code)' : 'inactive (dead)'}`];
-      if (unit === 'nginx' && st === 'failed') lines2.push('    Process: 901 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)', '', '💡 Detay için journalctl -u nginx');
+      if (unit === 'nginx' && st === 'failed') lines2.push('    Process: 901 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)', '', '💡 ' + lt('Detay için journalctl -u nginx', 'For details run journalctl -u nginx'));
       return { out: join(lines2), err: '', code: st === 'active' ? 0 : 3 };
     }
     if (action === 'is-active') return { out: (st === 'failed' ? 'failed' : st) + '\n', err: '', code: st === 'active' ? 0 : 3 };
     if (['start', 'stop', 'restart', 'reload', 'enable', 'disable'].includes(action)) {
-      if (!this.isRoot) return fail(`Failed to ${action} ${unit}.service: Access denied\n💡 Servis yönetimi root yetkisi ister, sudo kullan`);
+      if (!this.isRoot) return fail(`Failed to ${action} ${unit}.service: Access denied\n💡 ` + lt('Servis yönetimi root yetkisi ister, sudo kullan', 'Managing services needs root, use sudo'));
       if (action === 'stop') { this.services[unit] = 'inactive'; return ok(); }
       if (action === 'enable' || action === 'disable') return ok(`${action === 'enable' ? 'Created symlink' : 'Removed'} /etc/systemd/system/multi-user.target.wants/${unit}.service\n`);
       if (unit === 'nginx') {
@@ -2059,7 +2065,7 @@ const COMMANDS = {
       if (e) return fail(`nginx: [emerg] ${e}\nnginx: configuration file /etc/nginx/nginx.conf test failed`);
       return { out: '', err: 'nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful\n', code: 0 };
     }
-    return fail('nginx servisini systemctl ile yönet, config testi için sudo nginx -t');
+    return fail(lt('nginx servisini systemctl ile yönet, config testi için sudo nginx -t', 'manage the nginx service with systemctl, to test the config run sudo nginx -t'));
   },
 
   ip(args) {
@@ -2072,7 +2078,7 @@ const COMMANDS = {
     if (['n', 'neigh'].includes(sub)) return ok('192.168.1.1 dev eth0 lladdr a4:91:b1:00:0a:01 REACHABLE\n192.168.1.10 dev eth0 lladdr 3c:22:fb:7a:10:22 STALE\n');
     return fail('Usage: ip [ addr | route | link | neigh ]');
   },
-  ifconfig() { return ok('eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.42  netmask 255.255.255.0  broadcast 192.168.1.255\n\n[ifconfig eskidi, ip addr kullanmaya alis]\n'); },
+  ifconfig() { return ok('eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.42  netmask 255.255.255.0  broadcast 192.168.1.255\n\n' + lt('[ifconfig eskidi, ip addr kullanmaya alis]', '[ifconfig is outdated, get used to ip addr]') + '\n'); },
   ping(args) {
     const { vals, rest } = parseOpts(args, 'cW');
     const host = rest[0];
@@ -2092,7 +2098,7 @@ const COMMANDS = {
     for (let i = 1; i <= count; i++) { const t = +(base + Math.random() * base * 0.3).toFixed(2); times.push(t); out.push(`64 bytes from ${ip}: icmp_seq=${i} ttl=${ip.startsWith('127.') ? 64 : 117} time=${t} ms`); }
     const min = Math.min(...times), max = Math.max(...times), avg = times.reduce((a, b) => a + b, 0) / times.length;
     out.push('', `--- ${host} ping statistics ---`, `${count} packets transmitted, ${count} received, 0% packet loss, time ${(count - 1) * 1001}ms`, `rtt min/avg/max/mdev = ${min.toFixed(3)}/${avg.toFixed(3)}/${max.toFixed(3)}/0.120 ms`);
-    if (!vals.c) out.push('', "[Gerçek Linux'ta ping durmaz, Ctrl+C gerekir. Burada 4 paketle sınırlı. Bundan sonra -c kullan]");
+    if (!vals.c) out.push('', lt("[Gerçek Linux'ta ping durmaz, Ctrl+C gerekir. Burada 4 paketle sınırlı. Bundan sonra -c kullan]", '[On real Linux ping never stops, you need Ctrl+C. Here it is limited to 4 packets. Use -c from now on]'));
     return ok(join(out));
   },
   traceroute(args) {
@@ -2125,7 +2131,7 @@ const COMMANDS = {
     if (host === 'ifconfig.me' || host === 'icanhazip.com') return ok('84.104.22.17\n');
     if (host.startsWith('api.')) return ok('{"status":"ok","version":"2.4.1","uptime":86400}\n');
     if (head) return ok('HTTP/2 200\ncontent-type: text/html; charset=UTF-8\nserver: ECS\n');
-    return ok(`<!doctype html><html><head><title>${host}</title></head><body>Lab ortamında dış dünya simüle ediliyor.</body></html>\n`);
+    return ok(`<!doctype html><html><head><title>${host}</title></head><body>${lt('Lab ortamında dış dünya simüle ediliyor.', 'The outside world is simulated in the lab.')}</body></html>\n`);
   },
   wget(args) { return COMMANDS.curl.call(this, args.filter(a => !a.startsWith('-'))); },
   dig(args) {
@@ -2136,7 +2142,7 @@ const COMMANDS = {
     let ip = db[host];
     if (!ip && host.endsWith('.local')) {
       if (short) return ok('');
-      return ok(`; <<>> DiG 9.18 <<>> ${host}\n;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN\n;; Not: dig /etc/hosts dosyasina bakmaz, DNS sunucusuna sorar. getent hosts ${host} dene.\n`);
+      return ok(`; <<>> DiG 9.18 <<>> ${host}\n;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN\n;; ${lt(`Not: dig /etc/hosts dosyasina bakmaz, DNS sunucusuna sorar. getent hosts ${host} dene.`, `Note, dig does not read /etc/hosts, it asks the DNS server. Try getent hosts ${host}.`)}\n`);
     }
     if (!ip) ip = '93.184.215.14';
     if (short) return ok(ip + '\n');
@@ -2154,16 +2160,16 @@ const COMMANDS = {
       return r.out.trim() ? ok(r.out.trim() + '\t' + args[1] + '\n') : { out: '', err: '', code: 2 };
     }
     if (args[0] === 'passwd') return COMMANDS.grep.call(this, [args[1] ? '^' + args[1] + ':' : '', '/etc/passwd']);
-    return fail('getent: sadece hosts ve passwd destekleniyor');
+    return fail('getent: ' + lt('sadece hosts ve passwd destekleniyor', 'only hosts and passwd are supported'));
   },
   ssh(args) {
     const target = args.filter(a => !a.startsWith('-'))[0] || '';
-    if (/192\.168\.1\.10|localhost/.test(target)) return fail(`ssh: connect to host ${target.split('@').pop()} port 22: Connection refused\n💡 Bu sunucunun ssh port'u farklı olabilir, ss -tlnp ile bak`);
+    if (/192\.168\.1\.10|localhost/.test(target)) return fail(`ssh: connect to host ${target.split('@').pop()} port 22: Connection refused\n💡 ` + lt("Bu sunucunun ssh port'u farklı olabilir, ss -tlnp ile bak", 'This server may use a different ssh port, check with ss -tlnp'));
     return fail(`ssh: connect to host ${target.split('@').pop()} port 22: Connection timed out`);
   },
   nano(args) {
     const f = args.filter(a => !a.startsWith('-'))[0];
-    if (!f) return fail('nano: dosya adı ver, örnek nano notlar.txt');
+    if (!f) return fail('nano: ' + lt('dosya adı ver, örnek nano notlar.txt', 'give a file name, for example nano notes.txt'));
     const abs = this.resolve(f);
     const n = this.node(abs);
     if (n && n.t === 'd') return fail(`nano: ${f} is a directory`);
@@ -2209,14 +2215,14 @@ const COMMANDS = {
   },
   submit(args) {
     const ans = args.join(' ').trim();
-    if (!ans) return fail('submit: cevabı yaz, örnek submit 42');
+    if (!ans) return fail('submit: ' + lt('cevabı yaz, örnek submit 42', 'type your answer, for example submit 42'));
     this.lastSubmit = ans;
     this.ui.submit = ans;
-    return ok(`📨 Cevap gönderildi ${ans}\n`);
+    return ok(`📨 ${lt('Cevap gönderildi', 'Answer sent')} ${ans}\n`);
   },
-  cowsay(args) { return ok(cowsay(args.join(' ') || 'Moo! Linux öğreniyorum')); },
-  fortune() { return ok(FORTUNES[Math.floor(Math.random() * FORTUNES.length)] + '\n'); },
-  sl() { return ok('      ====        ________                ___________\n  _D _|  |_______/        \\__I_I_____===__|_________|\n   |(_)---  |   H\\________/ |   |        =|___ ___|\n   /     |  |   H  |  |     |   |         ||_| |_||\n  |      |  |   H  |__--------------------| [___] |\n  | ________|___H__/__|_____/[][]~\\_______|       |\n  |/ |   |-----------I_____I [][] []  D   |=======|_\n__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__\n |/-=|___|=    ||    ||    ||    |_____/~\\___/\n  \\_/      \\O=====O=====O=====O_/      \\_/\n\nls yazacaktin galiba 🚂\n'); },
+  cowsay(args) { return ok(cowsay(args.join(' ') || lt('Moo! Linux öğreniyorum', 'Moo! I am learning Linux'))); },
+  fortune() { return ok(lt(...FORTUNES[Math.floor(Math.random() * FORTUNES.length)]) + '\n'); },
+  sl() { return ok('      ====        ________                ___________\n  _D _|  |_______/        \\__I_I_____===__|_________|\n   |(_)---  |   H\\________/ |   |        =|___ ___|\n   /     |  |   H  |  |     |   |         ||_| |_||\n  |      |  |   H  |__--------------------| [___] |\n  | ________|___H__/__|_____/[][]~\\_______|       |\n  |/ |   |-----------I_____I [][] []  D   |=======|_\n__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__\n |/-=|___|=    ||    ||    ||    |_____/~\\___/\n  \\_/      \\O=====O=====O=====O_/      \\_/\n\n' + lt('ls yazacaktin galiba 🚂', 'You probably meant ls 🚂') + '\n'); },
   neofetch() { return ok('        .-/+oossssoo+/-.         burak@linuxlab\n    `:+ssssssssssssssssss+:`     --------------\n  -+ssssssssssssssssssyyssss+-   OS: Ubuntu 24.04 LTS x86_64\n.ossssssssssssssssssdMMMNysssso. Kernel: 6.8.0-45-generic\n/ssssssssssshdmmNNmmyNMMMMhssss/ Shell: bash 5.2\n+ssssssssshmydMMMMMMMNddddyssss+ Terminal: Linux Lab PWA\n/sssssssshNMMMyhhyyyyhmNMMMNhss/ CPU: Virtual CPU 2 cores\n.ssssssssdMMMNhsssssssssshNMMMd. Memory: 1.6GiB / 3.8GiB\n'); },
   matrix() { let o = ''; for (let i = 0; i < 8; i++) { let l = ''; for (let j = 0; j < 40; j++) l += Math.random() < 0.5 ? String.fromCharCode(0x30a0 + Math.floor(Math.random() * 96)) : ' '; o += l + '\n'; } return ok(o + '\nWake up, Neo...\n'); },
 };

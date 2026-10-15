@@ -888,7 +888,7 @@ function gitCommitSummary(st, c, label) {
   ch.forEach(x => { if (x.kind === 'new file') out.push(` create mode ${gitMode(x.file)} ${x.file}`); if (x.kind === 'deleted') out.push(` delete mode ${gitMode(x.file)} ${x.file}`); });
   return out;
 }
-function gitNoNet(what, url) { return fail(`fatal: unable to access '${url || GIT_REMOTE}/': Could not resolve host: ${(url || GIT_REMOTE).replace(/^https?:\/\//, '').split('/')[0]}\n💡 Bu lab'da network yok, ${what} gerçek bir remote ister. Local history yine de senin.`, 128); }
+function gitNoNet(what, url) { return fail(`fatal: unable to access '${url || GIT_REMOTE}/': Could not resolve host: ${(url || GIT_REMOTE).replace(/^https?:\/\//, '').split('/')[0]}\n💡 ` + lt(`Bu lab'da network yok, ${what} gerçek bir remote ister. Local history yine de senin.`, `This lab has no network, ${what} needs a real remote. Your local history is still yours.`), 128); }
 
 /* ---------- remote deposu ---------- */
 
@@ -951,13 +951,13 @@ function gitBisectStep(sh, root, st) {
   const b = st.bisect;
   if (b.good === null || b.bad === null) {
     const miss = b.bad === null ? 'bad' : 'good';
-    return ok(`Status: waiting for both good and bad commits, ${miss} commit still missing\n💡 git bisect ${miss} <rev> ile isaretle\n`);
+    return ok(`Status: waiting for both good and bad commits, ${miss} commit still missing\n💡 ` + lt(`git bisect ${miss} <rev> ile isaretle\n`, `mark it with git bisect ${miss} <rev>\n`));
   }
   const chain = gitHistory(st, b.bad).reverse();
   const gi = chain.findIndex(c => c.hash === b.good);
-  if (gi < 0) return fail('fatal: the good revision is not an ancestor of the bad revision, git bisect reset ile bastan basla');
+  if (gi < 0) return fail('fatal: the good revision is not an ancestor of the bad revision, ' + lt('git bisect reset ile bastan basla', 'start over with git bisect reset'));
   const cand = chain.slice(gi + 1);
-  if (!cand.length) return fail('fatal: good and bad revisions are the same, git bisect reset ile bastan basla');
+  if (!cand.length) return fail('fatal: good and bad revisions are the same, ' + lt('git bisect reset ile bastan basla', 'start over with git bisect reset'));
   if (cand.length === 1) {
     const c = cand[0];
     b.done = c.hash;
@@ -1266,7 +1266,7 @@ const GIT_SUB = {
     let target = rest[0];
     if (target === '-') { if (!st.prev) return fail('fatal: no previous branch'); target = st.prev; }
     if (!target) return ok(join(gitStatus(sh, root, st, false)));
-    if (st.bisect) return fail('fatal: bisect aktifken checkout yapma, once git bisect reset');
+    if (st.bisect) return fail('fatal: ' + lt('bisect aktifken checkout yapma, once git bisect reset', 'do not checkout while bisect is active, run git bisect reset first'));
     if (st.merge || st.rebase || st.cherry) return fail(`fatal: cannot switch branch while ${st.merge ? 'merging' : st.rebase ? 'rebasing' : 'cherry-picking'}\nConsider "git ${st.merge ? 'merge' : st.rebase ? 'rebase' : 'cherry-pick'} --abort" or ${st.merge ? '"git commit"' : '"git ' + (st.rebase ? 'rebase' : 'cherry-pick') + ' --continue"'}`, 128);
     const c = gitRev(st, target);
     if (!c) return fail(`error: pathspec '${target}' did not match any file(s) known to git`);
@@ -1328,7 +1328,7 @@ const GIT_SUB = {
     if (flags.has('u') || flags.has('--set-upstream-to')) {
       const v = [...flags].find(f => f.startsWith('--set-upstream-to='));
       const up = v ? v.slice(18) : rest[0]; const b = (v ? rest[0] : rest[1]) || st.branch;
-      if (!up || !up.includes('/')) return fail('fatal: branch name required, ornek git branch -u origin/main');
+      if (!up || !up.includes('/')) return fail('fatal: branch name required, ' + lt('ornek git branch -u origin/main', 'for example git branch -u origin/main'));
       st.upstream[b] = up;
       return ok(`branch '${b}' set up to track '${up}'.\n`);
     }
@@ -1360,7 +1360,7 @@ const GIT_SUB = {
     const head = gitHeadFiles(st);
     const conf = gitConflictFiles(st);
     if (conf.length) return fail('error: Committing is not possible because you have unmerged files.\nhint: Fix them up in the work tree, and then use \'git add/rm <file>\'\nhint: as appropriate to mark resolution and make a commit.\nfatal: Exiting because of an unresolved conflict.', 128);
-    if (st.rebase) return fail('fatal: rebase devam ediyor, git rebase --continue ile ilerle ya da git rebase --abort', 128);
+    if (st.rebase) return fail('fatal: ' + lt('rebase devam ediyor, git rebase --continue ile ilerle ya da git rebase --abort', 'a rebase is in progress, go on with git rebase --continue or run git rebase --abort'), 128);
     if (st.cherry) return gitFinishCherry(sh, root, st);
     if (flags.has('a') || flags.has('--all')) {
       const { unstaged, wt } = gitChanges(sh, root, st);
@@ -1381,7 +1381,7 @@ const GIT_SUB = {
     const staged = gitChangedFiles(head, st.index);
     if (!staged.length && !st.merge && !flags.has('--allow-empty')) return { out: join(gitStatus(sh, root, st, false)), err: '', code: 1 };
     if (msg === undefined && st.merge) msg = st.merge.msg;
-    if (msg === undefined || !msg.trim()) return fail('Aborting commit due to empty commit message.\n💡 git commit -m "feat: ne degisti ve neden"');
+    if (msg === undefined || !msg.trim()) return fail('Aborting commit due to empty commit message.\n💡 ' + lt('git commit -m "feat: ne degisti ve neden"', 'git commit -m "feat: what changed and why"'));
     const parents = st.merge ? [st.head, st.merge.other] : undefined;
     const c = gitNewCommit(st, msg, st.index, { parents, author: id[0], email: id[1] });
     const wasMerge = !!st.merge;
@@ -1468,14 +1468,14 @@ const GIT_SUB = {
     if (!spec) return fail(`fatal: There is no tracking information for the current branch.\nPlease specify which branch you want to rebase against.\n    git rebase <branch>`, 128);
     const onto = gitRev(st, spec);
     if (!onto) return fail(`fatal: invalid upstream '${spec}'`, 128);
-    if (!st.branch) return fail('fatal: detached HEAD uzerinde rebase yok, once bir branch\'e gec', 128);
+    if (!st.branch) return fail('fatal: ' + lt('detached HEAD uzerinde rebase yok, once bir branch\'e gec', 'no rebase on a detached HEAD, switch to a branch first'), 128);
     const head = gitHead(st);
     const base = gitMergeBase(st, head.hash, onto.hash);
     const list = base ? gitHistory(st, head.hash).filter(c => c.hash !== base.hash && !gitAncestors(st, base.hash).has(c.hash)).reverse() : gitHistory(st, head.hash).reverse();
     const linear = list.filter(c => gitParents(c).length < 2);
     if (flags.has('i') || flags.has('--interactive')) {
       const todo = gitRebaseTodoText(st, linear, onto);
-      return ok(join(todo.concat(['', `💡 Interactive rebase bir editor acar ve yukaridaki todo listesini duzenletir, bu lab'da editor acilmaz.`, `   pick satirlarini squash ya da fixup yapmak commit'leri birlestirir, reword mesaji degistirir, drop siler, sira degistirilebilir.`, `   Ayni sonucu elle almak icin: git reset --soft ${spec} ardindan git commit -m "tek mesaj". Tum commit'ler tek commit'e iner.`])));
+      return ok(join(todo.concat(['', lt(`💡 Interactive rebase bir editor acar ve yukaridaki todo listesini duzenletir, bu lab'da editor acilmaz.`, '💡 Interactive rebase opens an editor to edit the todo list above, this lab does not open an editor.'), lt(`   pick satirlarini squash ya da fixup yapmak commit'leri birlestirir, reword mesaji degistirir, drop siler, sira degistirilebilir.`, '   Changing pick lines to squash or fixup combines commits, reword changes the message, drop deletes, and the order can change.'), lt(`   Ayni sonucu elle almak icin: git reset --soft ${spec} ardindan git commit -m "tek mesaj". Tum commit'ler tek commit'e iner.`, `   To get the same result by hand run git reset --soft ${spec} then git commit -m "one message". All commits become one commit.`)])));
     }
     const dirty = gitDirtyError(sh, root, st, 'rebase');
     if (dirty) return fail('error: cannot rebase: You have unstaged changes.\nerror: Please commit or stash them.', 128);
@@ -1895,7 +1895,7 @@ const GIT_SUB = {
     const b = st.bisect;
     if (!sub) return fail('usage: git bisect [help|start|bad|good|new|old|terms|skip|next|reset|visualize|view|replay|log|run]');
     if (sub === 'start') {
-      if (b) return fail('fatal: zaten bisect icindesin, git bisect reset ile cik');
+      if (b) return fail('fatal: ' + lt('zaten bisect icindesin, git bisect reset ile cik', 'you are already bisecting, leave with git bisect reset'));
       const dirty = gitDirtyError(sh, root, st, 'checkout');
       if (dirty) return dirty;
       st.bisect = { branch: st.branch, head: st.head, good: null, bad: null, done: null, log: ['git bisect start'] };
@@ -1913,13 +1913,13 @@ const GIT_SUB = {
       st.branch = b.branch; st.bisect = null;
       return ok((prev.hash !== target.hash ? `Previous HEAD position was ${prev.hash} ${gitSubject(prev)}\n` : '') + (st.branch ? `Switched to branch '${st.branch}'\n` : `HEAD is now at ${target.hash}\n`));
     }
-    if (!b) return fail('You need to start by "git bisect start"\nDo you want me to do it for you [Y/n]? Burada Y yok, git bisect start yaz');
+    if (!b) return fail('You need to start by "git bisect start"\nDo you want me to do it for you [Y/n]? ' + lt('Burada Y yok, git bisect start yaz', 'There is no Y here, type git bisect start'));
     if (sub === 'log') return ok(join(b.log));
     if (sub === 'bad' || sub === 'good' || sub === 'new' || sub === 'old') {
       const isBad = sub === 'bad' || sub === 'new';
       const c = args[1] ? gitRev(st, args[1]) : gitHead(st);
       if (!c) return fail(`error: Bad rev input: ${args[1]}`);
-      if (b.done) return fail(`fatal: bisect bitti, ${b.done} is the first bad commit. git bisect reset ile cik`);
+      if (b.done) return fail(lt(`fatal: bisect bitti, ${b.done} is the first bad commit. git bisect reset ile cik`, `fatal: bisect is finished, ${b.done} is the first bad commit. Leave with git bisect reset`));
       if (isBad) b.bad = c.hash; else b.good = c.hash;
       b.log.push(`git bisect ${sub} ${c.full}`);
       return gitBisectStep(sh, root, st);
@@ -2000,7 +2000,7 @@ function gitClone(sh, args) {
     out.push('done.');
   } else {
     const f = gitFindRemoteByUrl(sh, src);
-    if (!f) return fail(`Cloning into '${name}'...\nfatal: unable to access '${src}/': Could not resolve host: ${src.replace(/^https?:\/\//, '').split('/')[0]}\n💡 Bu lab'da network yok. Once bir repo'da git remote add origin ${src} ve git push -u origin main yap, sonra clone o remote'tan gelir.`, 128);
+    if (!f) return fail(`Cloning into '${name}'...\nfatal: unable to access '${src}/': Could not resolve host: ${src.replace(/^https?:\/\//, '').split('/')[0]}\n💡 ` + lt(`Bu lab'da network yok. Once bir repo'da git remote add origin ${src} ve git push -u origin main yap, sonra clone o remote'tan gelir.`, `This lab has no network. First run git remote add origin ${src} and git push -u origin main in a repo, then clone comes from that remote.`), 128);
     const store = f.st.remotes[f.name];
     st = gitEmptyState('main');
     const reach = gitAncestors(f.st, Object.values(store.refs || {}).concat(Object.values(store.tags || {})));
@@ -2073,10 +2073,55 @@ collaborate
    push       Branch ya da tag'leri remote'a gonder, -u --tags --force-with-lease
    request-pull  Pull request metni uret
 `;
+const GIT_USAGE_EN = `usage: git [--version] [--help] <command> [<args>]
+
+Commands supported in this lab
+
+start a working area
+   init       Create an empty repo in the current directory
+   clone      Copy a local repo or a pushed fake remote
+
+work on the current change
+   add        Stage changes, . for all of them
+   mv         Move or rename a file with git
+   restore    Undo changes to a file, --staged to unstage
+   rm         Remove a file from the index and disk, --cached only the index
+
+examine the history and state
+   status     Working tree status
+   log        Commit history, --oneline --graph --all -p --stat main..feature
+   show       Show a commit or tag
+   diff       Differences between working tree, index and commits, --staged
+   blame      Who wrote each line
+   bisect     Find the bad commit with binary search
+   describe   Version name based on the nearest tag, --tags
+   shortlog   Summary by author, -sn
+   reflog     Every place HEAD has been, find a lost commit
+
+grow, mark and tweak your common history
+   branch     List, create, -d delete branches
+   checkout   Switch to a branch or commit, -b new branch
+   switch     Switch to a branch, -c new branch
+   commit     Commit what is staged, -m "message", --amend
+   merge      Merge a branch, fast-forward or --no-ff, --abort
+   rebase     Move commits onto another base, --continue --abort
+   cherry-pick Apply a single commit to this branch
+   revert     New commit that reverses a commit
+   reset      Move HEAD, --soft --mixed --hard
+   stash      Put changes aside, bring them back with pop
+   tag        List or create tags, -a -m annotated
+
+collaborate
+   remote     Add and list remotes, add -v
+   fetch      Get new commits from the remote
+   pull       fetch + merge
+   push       Send branches or tags to the remote, -u --tags --force-with-lease
+   request-pull  Generate pull request text
+`;
 
 function gitCommand(args) {
   const sub = args[0];
-  if (!sub || sub === 'help' || sub === '--help' || sub === '-h') return ok(GIT_USAGE);
+  if (!sub || sub === 'help' || sub === '--help' || sub === '-h') return ok(lt(GIT_USAGE, GIT_USAGE_EN));
   if (sub === '--version' || sub === 'version') return ok('git version 2.43.0\n');
   if (sub === 'init') return gitInit(this, args.slice(1));
   if (sub === 'clone') return gitClone(this, args.slice(1));
@@ -2086,7 +2131,7 @@ function gitCommand(args) {
     return fail('fatal: not a git repository (or any of the parent directories): .git', 128);
   }
   const st = gitLoad(this, root);
-  if (!st) return fail('fatal: .git/lab-state.json bozuk, Profil sekmesinden filesystem\'i sifirla', 128);
+  if (!st) return fail('fatal: ' + lt('.git/lab-state.json bozuk, Profil sekmesinden filesystem\'i sifirla', '.git/lab-state.json is corrupt, reset the filesystem from the Profile tab'), 128);
   const fn = GIT_SUB[sub];
   if (!fn) {
     const near = Object.keys(GIT_SUB).filter(k => k.startsWith(sub.slice(0, 2))).slice(0, 3);
