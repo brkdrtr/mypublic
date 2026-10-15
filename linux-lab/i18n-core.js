@@ -29,12 +29,13 @@ function locBadge(b) { if (!isEn() || !b) return b; const e = I18N_EN.badges[b.i
 function locX(entry, en) {
   if (!entry || !en) return entry;
   const out = Object.assign({}, entry);
-  ['d', 'tip', 'wt', 'num'].forEach(k => { if (typeof en[k] === 'string') out[k] = en[k]; });
+  ['d', 'tip', 'wt', 'num', 'ddpos'].forEach(k => { if (typeof en[k] === 'string') out[k] = en[k]; });
   if (entry.o && en.o) {
     out.o = {};
     for (const [k, spec] of Object.entries(entry.o)) {
       const t = en.o[k];
       out.o[k] = t == null ? spec : typeof t === 'string' ? Object.assign({}, spec, { t }) : Object.assign({}, spec, t);
+      if (spec.posAfter && t && t.posAfter && t.posAfter.length === spec.posAfter.length) out.o[k].posAfter = t.posAfter.slice();
     }
   }
   if (entry.ex && en.ex) out.ex = entry.ex.map((x, i) => [x[0], en.ex[i] || x[1]]);
